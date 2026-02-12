@@ -1,0 +1,12 @@
+{
+    "name": "administrador/mongo",
+    "authors": [
+        {
+            "name": "Flavio Garcia",
+            "email": "flavio-garcia15@hotmail.com"
+        }
+    ],
+    "require": {
+        "mongodb/mongodb": "^1.4"
+    }
+}
