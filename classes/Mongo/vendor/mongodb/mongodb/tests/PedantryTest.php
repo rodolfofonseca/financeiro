@@ -57,7 +57,7 @@ class PedantryTest extends TestCase
     public function provideProjectClassNames()
     {
         $classNames = [];
-        $srcDir = realpath(__DIR__ . '/../src/');
+        $srcDir = realpath(__DIR__ . '/src/');
 
         $files = new RegexIterator(new RecursiveIteratorIterator(new RecursiveDirectoryIterator($srcDir)), '/\.php$/i');
 

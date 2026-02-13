@@ -21,7 +21,7 @@ function fechar() {
 }
 function loader_sistema(boolean) {
     if (boolean == true) {
-        document.querySelector('#loader').style.display = 'block';
+        document.querySelector('#loader').style.display = 'flex';
     } else {
         document.querySelector('#loader').style.display = 'none';
     }

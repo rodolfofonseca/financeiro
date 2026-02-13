@@ -1,0 +1,128 @@
+<?php
+require_once 'Classes/bancoDeDados.php';
+require_once 'Interface.php';
+
+class Usuario implements InterfaceModelo{
+    private $id_usuario;
+    private $empresa;
+    private $nome_usuario;
+    private $email_usuario;
+    private $senha_usuario;
+    private $data_cadastro;
+    private $data_ultimo_login;
+    private $salario;
+    private $opcao = ['const' => 8];
+
+    public function tabela(){
+        return (string) 'usuarios';
+    }
+
+    public function colocar_dados($dados){
+        if(array_key_exists('codigo_usuario', $dados) == true){
+            if($dados['codigo_usuario'] != ''){
+                $this->id_usuario = model_id($dados['codigo_usuario']);
+            }
+        }
+
+        if(array_key_exists('empresa', $dados) == true){
+            $this->empresa = model_id($dados['empresa']);
+        }
+
+        if(array_key_exists('nome_usuario', $dados) == true){
+            $this->nome_usuario = (string) strtoupper($dados['nome_usuario']);
+        }
+
+        if(array_key_exists('email_usuario', $dados) == true){
+            $this->email_usuario = (string) $dados['email_usuario'];
+        }
+
+        if(array_key_exists('senha_usuario', $dados) == true){
+            $this->senha_usuario = (string) password_hash($dados['senha_usuario'], PASSWORD_DEFAULT, $this->opcao);
+        }
+
+        if(array_key_exists('salario', $dados) == true){
+            $this->salario = (double) doubleval($dados['salario']);
+        }
+    }
+
+    public function salvar_dados($dados){
+        $this->colocar_dados($dados);
+        $senha_vazia = (string) password_hash('', PASSWORD_DEFAULT, $this->opcao);
+        $retorno_operacao = (bool) false;
+
+        $retorno_checagem = (bool) model_check((string) $this->tabela(), (array) ['email_usuario', '===', (string) $this->email_usuario]);
+
+        if($retorno_checagem == true){
+            $retorno_pesquisa = (array) model_one((string) $this->tabela(), (array) ['email_usuario', '===', (string) $this->email_usuario]);
+
+            if(empty($retorno_pesquisa) == true){
+            }
+            $retorno_operacao = (bool) model_update((string) $this->tabela(), (array) ['email_usuario', '===', (string) $this->email_usuario], (array) ['nome_usuario' => (string) $this->nome_usuario, 'salario' => (double) $this->salario]);
+        }else{
+            $retorno_empresa = (array) model_one((string) 'empresa', (array) []);
+
+            if(empty($retorno_empresa) == false){
+                $this->empresa = $retorno_empresa['_id'];
+            }
+
+            $retorno_operacao = (bool) model_insert((string) $this->tabela(), (array) ['empresa'=> model_id($this->empresa), 'nome_usuario' => (string) $this->nome_usuario, 'email_usuario' => (string) $this->email_usuario, 'senha_usuario' => (string) $this->senha_usuario, 'data_cadastro' => model_date(), 'ultimo_login' => model_date(), 'salario' => (double) $this->salario]);
+        }
+
+        return (bool) $retorno_operacao;
+    }
+
+    /**
+     * Função responsável por realizar o login do usuário no sistema. Esta função recebe como parâmetro atrávés de array o login e senha e retorna o código se existir login e senha compatíveis senão retorna 0.
+     * @param array $dados ['login_usuario' => 'xxxx', 'senha_usuario' => (string) 'xxxxxx' ];
+     * @return array 
+     */
+    public function login_sistema($dados){
+        $this->colocar_dados($dados);
+
+        $retorno_usuario = (array) model_one($this->tabela(), ['email_usuario', '===', (string) $this->email_usuario]);
+
+        if(empty($retorno_usuario) == false){
+            $retorno_senha =  (bool) password_verify($dados['senha_usuario'], $retorno_usuario['senha_usuario']);
+
+            if($retorno_senha == true){
+                return (array) $retorno_usuario;
+            }else{
+                return (array) [];
+            }
+        }else{
+            return (array) [];
+        }
+    }
+
+    public function pesquisar_todos($dados){
+        return (array) model_all($this->tabela(), $dados['filtro'], $dados['ordenacao'], $dados['limite']);
+    }
+
+    public function pesquisar($dados){
+        return (array) model_one($this->tabela(), $dados['filtro']);
+    }
+
+    /**
+     * Função responsáel por pesquisar o login_usuario no banco de e retornar essa informação
+     * @param (ObjectfId) id_usuario identificador do usuário do tipo _id
+     * @param (string) login_usuario retorna o login do usuário
+     */
+    public function retornar_usuario($id_usuario){
+        $retorno_usuario = (array) $this->pesquisar((array) ['filtro' => (array) ['_id', '===', $id_usuario]]);
+
+        if(empty($retorno_usuario) == false){
+            if(array_key_exists('email_usuario', $retorno_usuario) == true){
+                return (string) $retorno_usuario['email_usuario'];
+            }else{
+                return (string) '';
+            }
+        }else{
+            return (string) '';
+        }
+    }
+
+    public function update_ultimo_login($dados){
+        $retorno = (bool) model_update((string) $this->tabela(), (array) ['_id', '===', $dados['codigo_usuario']], (array) ['ultimo_login' => model_date()]);
+    }
+}
+?>

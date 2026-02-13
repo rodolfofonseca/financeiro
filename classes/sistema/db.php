@@ -4,10 +4,10 @@ class DB {
   public $client = null;
   public $connection = null;
   public $filters = null;
-  public $db = 'sistema';
+  public $db = 'controleFinanceiro';
   public $table = null;
   public static $settings = [
-    'dns' => 'mongodb://127.0.0.1/',
+    'dns' => 'mongodb+srv://rodolfo:99010660@cluster0.qce4s4s.mongodb.net/sistema?retryWrites=true&w=majority',
     'authentication'=> [],
     'options' => [ 'typeMap' => [
       'array' => 'array',
@@ -148,7 +148,7 @@ class DB {
 
   function connect($table) {
     if ($this->client == null) {
-      $arquivo_configuracao = (string) str_replace('\\', '/', __DIR__) . '/../../configuracao.ini';
+      $arquivo_configuracao = (string) str_replace('\\', '/', __DIR__) . '/configuracao.ini';
       $dns = self::$settings['dns'];
       $authentication = self::$settings['authentication'];
 

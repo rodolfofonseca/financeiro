@@ -6,6 +6,9 @@ error_reporting(E_ALL & ~E_DEPRECATED);
 $url = '';
 define('URL', 'http://' . $url);
 define('DIRETORIO_SISTEMA', str_replace('\\', '/', __DIR__));
+
+require_once 'funcoes.php';
+
 function rota($procurar='index') {
   $atual = (string) 'index';
   $procurar = (string) strtolower($procurar);

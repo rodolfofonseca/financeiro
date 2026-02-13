@@ -41,32 +41,50 @@
   .push-11 {
     margin-left: 91.666667%;
   }  
-  
-  /* .loader {
-    position: fixed;
-    z-index: 999;
-    background: #DAF0E5;
-    width: 100%;
-    height: 100%;
-    top: 0;
-  }
-  
-  .loader>.loader-msg {
-    position: relative;
-    background: #FFF;
-    border: 1px solid #000;
-    margin: 0 auto;
-    width: 400px;
-    height: 250px;
-    display: block;
-    top: 100px;
-    text-align: center;
-  }
-  
-  .loader-msg>img {
-    display: block;
-    margin: 0 auto;
-  } */
   .botao_vertical_linha{margin-top: 30px !important;}
   .botao_grande{width:100% !important;}
   .img_table{width:100px !important; height:100px !important;} 
+
+  .loader-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    z-index: 999999;
+
+    backdrop-filter: blur(4px); /* efeito moderno */
+}
+
+/* Caixa branca tipo modal */
+.loader-content {
+    background: #ffffff;
+    padding: 40px 50px;
+    border-radius: 12px;
+    text-align: center;
+
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.loader-content p {
+    margin-top: 15px;
+    font-weight: 500;
+    color: #333;
+}
+
+/* Animação */
+@keyframes fadeIn {
+    from {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
