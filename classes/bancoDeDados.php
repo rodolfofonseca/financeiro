@@ -7,7 +7,8 @@ $url = '';
 define('URL', 'http://' . $url);
 define('DIRETORIO_SISTEMA', str_replace('\\', '/', __DIR__));
 
-require_once 'funcoes.php';
+require_once 'classes/funcoes.php';
+require_once 'classes/userFunctions.php';
 
 function rota($procurar='index') {
   $atual = (string) 'index';

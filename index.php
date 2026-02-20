@@ -25,17 +25,8 @@ router_add('index', function () {
 
         <script src="js/sistema.js?v=<?php echo filemtime('js/sistema.js'); ?>"></script>
         <script src="js/userJs.js?v=<?php echo filemtime('js/userJs.js'); ?>"></script>
-        <script>
-            function login_sistema(){
-                let email_usuario = document.querySelector('#email_usuario').value;
-                let senha_usuario = document.querySelector('#senha_usuario').value;
-
-                sistema.request.post('/index.php', {'rota':'login_usuario', 'email_usuario':email_usuario, 'senha_usuario':senha_usuario}, function(retorno){
-
-                });
-            }
-        </script>
     </head>
+
     <body class="bg-white">
         <div class="loader-modal" id="loader">
             <div class="spinner-grow text-light m-2" role="status">
@@ -58,39 +49,42 @@ router_add('index', function () {
                                                 <h5 class="mb-2">Login</h5>
                                                 <p class="mb-0">Digite os dados de acesso ao Dashboard</p>
                                             </div>
-                                            <div class="mb-3">
-                                                <label class="form-label">Email</label>
-                                                <div class="input-group">
-                                                    <span class="input-group-text border-end-0">
-                                                        <i class="isax isax-sms-notification"></i>
-                                                    </span>
-                                                    <input type="text" class="form-control border-start-0 ps-0" placeholder="Informa o email" id="email_usuario">
-                                                </div>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="form-label">Password</label>
-                                                <div class="pass-group input-group">
-                                                    <span class="input-group-text border-end-0">
-                                                        <i class="isax isax-lock"></i>
-                                                    </span>
-                                                    <span class="isax toggle-password isax-eye-slash"></span>
-                                                    <input type="password" class="pass-inputs form-control border-start-0 ps-0" placeholder="****************" id="senha_usuario">
-                                                </div>
-                                            </div>
-                                            <div class="d-flex align-items-center justify-content-between mb-3">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="form-check form-check-md mb-0">
-                                                        <input class="form-check-input" id="remember_me" type="checkbox">
-                                                        <label for="remember_me" class="form-check-label mt-0">Lembrar dados</label>
+                                            <form method="POST" action="index.php">
+                                                <input type="hidden" name="rota" value="login_usuario">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Email</label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text border-end-0">
+                                                            <i class="isax isax-sms-notification"></i>
+                                                        </span>
+                                                        <input type="text" class="form-control border-start-0 ps-0" placeholder="Informa o email" id="email_usuario" name="email_usuario">
                                                     </div>
                                                 </div>
-                                                <div class="text-end">
-                                                    <a href="forgot-password.html">Esqueceu a senha?</a>
+                                                <div class="mb-3">
+                                                    <label class="form-label">Password</label>
+                                                    <div class="pass-group input-group">
+                                                        <span class="input-group-text border-end-0">
+                                                            <i class="isax isax-lock"></i>
+                                                        </span>
+                                                        <span class="isax toggle-password isax-eye-slash"></span>
+                                                        <input type="password" class="pass-inputs form-control border-start-0 ps-0" placeholder="****************" id="senha_usuario" name="senha_usuario">
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div class="mb-1">
-                                                <button type="submit" class="btn bg-primary-gradient text-white w-100">Acessar Sistema</button>
-                                            </div>
+                                                <div class="d-flex align-items-center justify-content-between mb-3">
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="form-check form-check-md mb-0">
+                                                            <input class="form-check-input" id="remember_me" type="checkbox">
+                                                            <label for="remember_me" class="form-check-label mt-0">Lembrar dados</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-end">
+                                                        <a href="forgot-password.html">Esqueceu a senha?</a>
+                                                    </div>
+                                                </div>
+                                                <div class="mb-1">
+                                                    <button type="submit" class="btn bg-primary-gradient text-white w-100">Acessar Sistema</button>
+                                                </div>
+                                            </form>
                                             <div class="login-or">
                                                 <span class="span-or">Ou</span>
                                             </div>
@@ -113,9 +107,7 @@ router_add('index', function () {
         <script src="js/script.js"></script>
         <script src="js/alerta.js?v=<?php echo fileatime('js/alerta.js'); ?>"></script>
         <script>
-            window.addEventListener("load", function() {
-                document.getElementById("loader").style.display = "none";
-            });
+            document.querySelector("#loader").style.display = "none";
         </script>
     </body>
 
@@ -257,6 +249,9 @@ router_add('cadastro_usuario', function () {
         <script src="js/bootstrap.bundle.min.js"></script>
         <script src="js/script.js"></script>
         <script src="js/alerta.js?v=<?php echo fileatime('js/alerta.js'); ?>"></script>
+        <script>
+            document.querySelector("#loader").style.display = "none";
+        </script>
     </body>
 
     </html>
@@ -269,9 +264,21 @@ router_add('salvar_dados_usuario', function () {
     exit;
 });
 
-router_add('login_usuario', function(){
+router_add('login_usuario', function () {
     $objeto_usuario = new Usuario();
     $usuario = (array) $objeto_usuario->login_sistema($_REQUEST);
-exit;
+
+    if (empty($usuario) == false) {
+        session_start();
+        $_SESSION['codigo_usuario'] = $usuario['_id'];
+        $_SESSION['codigo_empresa'] = $usuario['empresa'];
+        $_SESSION['nome_usuario'] = $usuario['nome_usuario'];
+
+        header('location:dashboard.php');
+    } else {
+        // header('location:dashboard.php');
+        header('location:index.php');
+    }
+    exit;
 });
 ?>

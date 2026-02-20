@@ -32,17 +32,6 @@ function validar_acesso_administrador(tipo_usuario) {
         window.location.href = sistema.url('/dashboard.php', { 'rota': 'index' });
     }
 }
-function retornar_data(time_stamp, padrao = '') {
-    const data = new Date(time_stamp.$date.$numberLong.substring(0, 10) * 1000);
-
-    // return new Intl.DateTimeFormat("pt-BR", {dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo"}).format(data);
-
-    if (padrao == '' || padrao == 'BRAZIL' || padrao == 'BRASIL') {
-        return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeZone: "America/Sao_Paulo" }).format(data);
-    } else {
-        return new Intl.DateTimeFormat("en-CA", { dateStyle: "short", timeZone: "America/Sao_Paulo" }).format(data);
-    }
-}
 function validar_retorno(retorno, endereco = '', versao = 0) {
 	if (versao == 0) {
 		if (retorno.status == true) {

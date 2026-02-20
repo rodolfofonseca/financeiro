@@ -300,6 +300,15 @@ var sistema = (function (window) {
 
             return button;
         }),
+        gerar_div:(function(classe){
+            let div = document.createElement('div');
+
+            for(let contador = 0; contador < classe.length; contador++){
+                div.classList.add(classe[contador]);
+            }
+
+            return div;
+        }),
         gerar_option:(function(value, text){
             let option = document.createElement('option');
     
@@ -453,6 +462,14 @@ var sistema = (function (window) {
                         funcao(lista[item]);
                     }
                 }
+            }
+        }),
+        retornar_data:(function(time_stamp, padrao = ''){
+            const data = new Date(time_stamp.$date.$numberLong.substring(0, 10) * 1000);
+            if (padrao == '' || padrao == 'BRAZIL' || padrao == 'BRASIL') {
+                return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeZone: "America/Sao_Paulo" }).format(data);
+            } else {
+                return new Intl.DateTimeFormat("en-CA", { dateStyle: "short", timeZone: "America/Sao_Paulo" }).format(data);
             }
         }),
         listeners: {
@@ -1230,4 +1247,3 @@ cookies_filtro = () => {
     pathname = "_" + pathname.substr(0, pathname.search("/"))
     return pathname
 }
-  
