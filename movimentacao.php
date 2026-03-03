@@ -5,13 +5,15 @@ require_once 'modelos/Contas.php';
 
 router_add('index', function () {
     require_once 'includes/head.php';
-    
+
     $data_inicio = $data->format('Y-m-01');
     $ultimo_dia = $data->format('Y-m-t');
 ?>
     <script>
         const DATA_INICIAL = "<?php echo $data_inicio; ?>";
         const DATA_FINAL = "<?php echo $ultimo_dia; ?>";
+        const EMPRESA = "<?php echo $codigo_empresa; ?>";
+
         function cadastro_movimentacao(codigo_movimentacao) {
             window.location.href = sistema.url('/movimentacao.php', {
                 'rota': 'cadastro_movimentacao',
@@ -25,19 +27,29 @@ router_add('index', function () {
             let data_inicio = document.querySelector('#data_inicio').value;
             let data_final = document.querySelector('#data_final').value;
 
-            sistema.request.post('/movimentacao.php', {'rota':'pesquisar_contas', 'conta':conta, 'tipo_lancamento':tipo_lancamento, 'data_inicio':data_inicio, 'data_final':data_final}, function(retorno){
+            sistema.request.post('/movimentacao.php', {
+                'rota': 'pesquisar_contas',
+                'conta': conta,
+                'tipo_lancamento': tipo_lancamento,
+                'data_inicio': data_inicio,
+                'data_final': data_final,
+                'empresa':EMPRESA
+            }, function(retorno) {
                 let movimentacoes = retorno.dados;
                 let tamanho_retorno = movimentacoes.length;
                 let tabela = document.querySelector('#tabela_movimentacoes tbody');
 
+                console.log(retorno);
+
                 tabela = sistema.remover_linha_tabela(tabela);
 
-                if(tamanho_retorno == 0){
+                if (tamanho_retorno == 0) {
                     let linha = document.createElement('tr');
 
-                    linha.appendChild(sistema.gerar_td(['text-center'], 'NENHUMA MOVIMENTAÇÃO ENCONTRADA COM OS FILTROS PASSADOS!'), 'inner', true, '6');
-                }else{
-                    sistema.each(movimentacoes, function(index, movimentacao){
+                    linha.appendChild(sistema.gerar_td(['text-center'], 'NENHUMA MOVIMENTAÇÃO ENCONTRADA COM OS FILTROS PASSADOS!', 'inner', true, '10'));
+                    tabela.appendChild(linha);
+                } else {
+                    sistema.each(movimentacoes, function(index, movimentacao) {
 
                         let linha = document.createElement('tr');
 
@@ -46,26 +58,56 @@ router_add('index', function () {
                         linha.appendChild(sistema.gerar_td(['text-center'], sistema.number_format(movimentacao.valor_lancamento), 'inner'));
                         linha.appendChild(sistema.gerar_td(['text-center'], sistema.retornar_data(movimentacao.data_lancamento), 'inner'));
 
-                        if(movimentacao.tipo_lancamento == 'CREDITO'){
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_lancamento_'+movimentacao._id.$oid,'CREDITO',['btn', 'btn-success'], function visualizar(){}),'append'));
-                        }else{
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_lancamento_'+movimentacao._id.$oid,'DEBITO',['btn', 'btn-danger'], function visualizar(){}),'append'));
+                        if (movimentacao.tipo_lancamento == 'CREDITO') {
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_lancamento_' + movimentacao._id.$oid, 'CREDITO', ['btn', 'btn-success'], function visualizar() {}), 'append'));
+                        } else {
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_lancamento_' + movimentacao._id.$oid, 'DEBITO', ['btn', 'btn-danger'], function visualizar() {}), 'append'));
                         }
 
-                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_deletar_movimentacao_'+movimentacao._id.$oid, 'EXCLUIR', ['btn', 'btn-danger'], function deletar_movimentacao_botao(){deletar_movimentacao(movimentacao._id.$oid);}),'append'));
+                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_deletar_movimentacao_' + movimentacao._id.$oid, 'EXCLUIR', ['btn', 'btn-danger'], function deletar_movimentacao_botao() {
+                            deletar_movimentacao(movimentacao._id.$oid);
+                        }), 'append'));
                         tabela.appendChild(linha);
                     });
                 }
             });
         }
 
-        function deletar_movimentacao(codigo_movimentacao){
-            Swal.fire({title:"Confirmar Exclusão!", text:"Excluir a movimentação não retornar o valor para a conta. Confirma a exclusão?", icon:'warning', showCancelButton:true, confirmButtonColor: "#3085d6", cancelButtonColor: "#d33",confirmButtonText: "Sim, deletar movimentação!"}).then((result) => {
-                if(result.isConfirmed){
-                    sistema.request.post('/movimentacao.php', {'rota':'deletar_movimentacao', 'codigo_movimentacao':codigo_movimentacao}, function(retorno){
+        function deletar_movimentacao(codigo_movimentacao) {
+            Swal.fire({
+                title: "Confirmar Exclusão!",
+                text: "Excluir a movimentação não retornar o valor para a conta. Confirma a exclusão?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Sim, deletar movimentação!"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    sistema.request.post('/movimentacao.php', {
+                        'rota': 'deletar_movimentacao',
+                        'codigo_movimentacao': codigo_movimentacao
+                    }, function(retorno) {
                         validar_retorno(retorno, '/movimentacao.php');
                     });
                 }
+            });
+        }
+
+        function pesquisa_contas_select() {
+            let codigo_empresa = "<?php echo $_SESSION['codigo_empresa']; ?>";
+            sistema.request.post('/contas.php', {
+                'rota': 'pesquisar_contas',
+                'empresa': codigo_empresa,
+                'status': 'ATIVO'
+            }, function(retorno) {
+                let select = document.querySelector('#conta');
+                let conta = retorno.dados;
+
+                sistema.each(conta, function(index, contas) {
+                    let option = sistema.gerar_option(contas._id.$oid, contas.nome_conta);
+                    select.appendChild(option);
+                });
             });
         }
     </script>
@@ -116,13 +158,13 @@ router_add('index', function () {
                                     <input type="date" id="data_final" class="form-control">
                                 </div>
                             </div>
-                            <br/>
+                            <br />
                             <div class="row">
                                 <div class="col-3 push-9">
                                     <button class="btn btn-secondary w-100" onclick="pesquisar_movimentacao();">Pesquisar</button>
                                 </div>
                             </div>
-                            <br/>
+                            <br />
                             <div class="row">
                                 <div class="col-12">
                                     <div class="table-responsive">
@@ -139,7 +181,7 @@ router_add('index', function () {
                                             </thead>
                                             <tbody>
                                                 <tr>
-                                                    <td colspan="6" class="text-center">UTILIZE O FILTRO PARA FACILITAR A PESQUISA!</td>
+                                                    <td colspan="10" class="text-center">UTILIZE O FILTRO PARA FACILITAR A PESQUISA!</td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -156,6 +198,7 @@ router_add('index', function () {
                 document.querySelector('#data_inicio').value = DATA_INICIAL;
                 document.querySelector('#data_final').value = DATA_FINAL;
                 pesquisar_movimentacao();
+                pesquisa_contas_select();
             }
         </script>
     <?php
@@ -169,11 +212,13 @@ router_add('cadastro_movimentacao', function () {
     ?>
         <script>
             const HOJE = "<?php echo $hoje; ?>";
+            const EMPRESA = "<?php echo $codigo_empresa; ?>";
 
             function pesquisar_contas() {
                 sistema.request.post('/contas.php', {
                     'rota': 'pesquisar_contas',
-                    'status': 'ATIVO'
+                    'status': 'ATIVO',
+                    'empresa':EMPRESA
                 }, function(retorno) {
                     let contas = retorno.dados;
                     let select = document.querySelector('#conta');
@@ -192,16 +237,44 @@ router_add('cadastro_movimentacao', function () {
                 let tipo_lancamento = document.querySelector('#tipo_lancamento').value;
                 let valor_lancamento = document.querySelector('#valor_lancamento').value;
 
-                sistema.request.post('/movimentacao.php', {
-                    'rota': 'salvar_dados',
-                    'conta': conta,
-                    'descricao': descricao,
-                    'data_lancamento': data_lancamento,
-                    'tipo_lancamento': tipo_lancamento,
-                    'valor_lancamento': valor_lancamento
-                }, function(retorno) {
-                    validar_retorno(retorno, '/movimentacao.php');
-                });
+                let valida_conta = true;
+                let valida_descricao = true;
+                let valida_tipo_lancamento = true;
+                let valida_valor_lancamento = true;
+
+                if (conta == '') {
+                    alerta_campo_vazio('CONTA');
+                    valida_conta = false;
+                }
+
+                if (descricao == '') {
+                    alerta_campo_vazio('DESCRIÇÃO');
+                    valida_descricao = false;
+                }
+
+                if (tipo_lancamento == '') {
+                    alerta_campo_vazio('TIPO LANÇAMENTO');
+                    valida_tipo_lancamento = false;
+                }
+
+                if (valor_lancamento == '') {
+                    alerta_campo_vazio('VALOR');
+                    valida_valor_lancamento = false;
+                }
+
+                if (valida_conta == true && valida_descricao == true && valida_tipo_lancamento == true && valida_valor_lancamento == true) {
+                    sistema.request.post('/movimentacao.php', {
+                        'rota': 'salvar_dados',
+                        'conta': conta,
+                        'descricao': descricao,
+                        'data_lancamento': data_lancamento,
+                        'tipo_lancamento': tipo_lancamento,
+                        'valor_lancamento': valor_lancamento,'empresa':EMPRESA
+                    }, function(retorno) {
+                        validar_retorno(retorno, '/movimentacao.php');
+                    });
+                }
+
             }
 
             function limpar_dados() {
@@ -281,15 +354,16 @@ router_add('cadastro_movimentacao', function () {
         echo json_encode((array) ['status' => (bool) $objeto_movimentacao->salvar_dados($_REQUEST)], JSON_UNESCAPED_UNICODE);
     });
 
-    router_add('pesquisar_contas', function(){
+    router_add('pesquisar_contas', function () {
         $data = new DateTime();
         $objeto_movimentacao = new Movimentacao();
         $objeto_conta = new Contas();
 
-        $conta = (string) (isset($_REQUEST['conta'])?(string) $_REQUEST['conta']:'TODOS');
-        $tipo_lancamento = (string) (isset($_REQUEST['tipo_lancamento'])?(string)$_REQUEST['tipo_lancamento']:'TODOS');
-        $data_inicio = (isset($_REQUEST['data_inicio']) ? model_date($_REQUEST['data_inicio'], '00:00:00'):model_date($data->format('Y-m-01'), '00:00:00'));
-        $data_final = (isset($_REQUEST['data_final']) ? model_date($_REQUEST['data_final'], '23:59:59'):model_date($data->format('Y-m-t'), '23:59:59'));
+        $conta = (string) (isset($_REQUEST['conta']) ? (string) $_REQUEST['conta'] : 'TODOS');
+        $tipo_lancamento = (string) (isset($_REQUEST['tipo_lancamento']) ? (string)$_REQUEST['tipo_lancamento'] : 'TODOS');
+        $data_inicio = (isset($_REQUEST['data_inicio']) ? model_date($_REQUEST['data_inicio'], '00:00:00') : model_date($data->format('Y-m-01'), '00:00:00'));
+        $data_final = (isset($_REQUEST['data_final']) ? model_date($_REQUEST['data_final'], '23:59:59') : model_date($data->format('Y-m-t'), '23:59:59'));
+        $empresa = (isset($_REQUEST['empresa']) ? (string) $_REQUEST['empresa']:'');
 
         $retorno_validacao = (array) [];
         $filtro = (array) [];
@@ -299,25 +373,29 @@ router_add('cadastro_movimentacao', function () {
         array_push($filtro, ['data_lancamento', '>=', $data_inicio]);
         array_push($filtro, ['data_lancamento', '<=', $data_final]);
 
-        if($conta != 'TODOS'){
+        if ($conta != 'TODOS') {
             array_push($filtro, ['conta', '===', model_id($conta)]);
         }
 
-        if($tipo_lancamento != 'TODOS'){
+        if ($tipo_lancamento != 'TODOS') {
             array_push($filtro, ['tipo_lancamento', '===', (string) $tipo_lancamento]);
+        }
+
+        if($empresa != ''){
+            array_push($filtro, ['empresa', '===', model_id($empresa)]);
         }
 
         $filtro_pesquisa['filtro'] = (array) ['and' => (array) $filtro];
         $retorno_validacao = (array) $objeto_movimentacao->pesquisar_todos($filtro_pesquisa);
 
-        if(empty($retorno_validacao) == false){
-            foreach($retorno_validacao as $movimentacao){
+        if (empty($retorno_validacao) == false) {
+            foreach ($retorno_validacao as $movimentacao) {
                 $retorno_temporario = (array) [];
                 $retorno_conta = (array) $objeto_conta->pesquisar(['filtro' => (array) ['_id', '===', $movimentacao['conta']]]);
 
                 $retorno_temporario = (array) $movimentacao;
 
-                if(empty($retorno_conta) == false){
+                if (empty($retorno_conta) == false) {
                     $retorno_temporario['nome_conta'] = (string) $retorno_conta['nome_conta'];
                 }
 
@@ -326,20 +404,20 @@ router_add('cadastro_movimentacao', function () {
         }
 
         echo json_encode((array) ['dados' => (array) $retorno], JSON_UNESCAPED_UNICODE);
-        exit; 
+        exit;
     });
 
-    router_add('deletar_movimentacao', function(){
+    router_add('deletar_movimentacao', function () {
         $objeto_movimentacao = new Movimentacao();
-        $codigo_movimentacao = (string) (isset($_REQUEST['codigo_movimentacao']) ? (string) $_REQUEST['codigo_movimentacao']:'');
+        $codigo_movimentacao = (string) (isset($_REQUEST['codigo_movimentacao']) ? (string) $_REQUEST['codigo_movimentacao'] : '');
         $filtro = (array) [];
         $retorno = (bool) false;
 
-        if($codigo_movimentacao != ''){
+        if ($codigo_movimentacao != '') {
             $filtro['filtro'] = (array) ['_id', '===', model_id($codigo_movimentacao)];
             $retorno = (bool) $objeto_movimentacao->deletar_movimentacao($filtro);
         }
 
         echo json_encode(['status' => (bool) $retorno]);
     });
-?>
+        ?>

@@ -1,8 +1,11 @@
 <?php
 require_once 'classes/bancoDeDados.php';
 require_once 'modelos/Usuario.php';
+require_once 'modelos/Empresa.php';
 
 router_add('index', function () {
+    session_start();
+    $_SESSION = array();
 ?>
     <!DOCTYPE html>
     <html lang="pt-br">
@@ -112,7 +115,8 @@ router_add('index', function () {
     </body>
 
     </html>
-<?php
+    <?php
+    session_destroy();  
 });
 
 router_add('cadastro_usuario', function () {
@@ -144,12 +148,20 @@ router_add('cadastro_usuario', function () {
             let nome_usuario = document.querySelector('#nome_usuario').value;
             let email_usuario = document.querySelector('#email_usuario').value;
             let senha_usuario = document.querySelector('#senha_usuario').value;
+            let nome_empresa = document.querySelector('#nome_empresa').value;
+            let nome_fantasia = document.querySelector('#nome_fantasia').value;
+            let cnpj = document.querySelector('#cnpj').value;
+            let endereco = document.querySelector('#endereco').value;
 
             sistema.request.post('/index.php', {
                 'rota': 'salvar_dados_usuario',
                 'nome_usuario': nome_usuario,
                 'email_usuario': email_usuario,
-                'senha_usuario': senha_usuario
+                'senha_usuario': senha_usuario,
+                'nome_empresa': nome_empresa,
+                'nome_fantasia': nome_fantasia,
+                'cnpj': cnpj,
+                'endereco': endereco
             }, function(retorno) {
                 validar_retorno(retorno, '/index.php');
             });
@@ -190,30 +202,37 @@ router_add('cadastro_usuario', function () {
                                             <div class="mb-3">
                                                 <label class="form-label">Endereço Email</label>
                                                 <div class="input-group">
-                                                    <span class="input-group-text border-end-0">
-                                                        <i class="isax isax-sms-notification"></i>
-                                                    </span>
                                                     <input type="text" class="form-control border-start-0 ps-0" placeholder="Endereço Email" id="email_usuario">
                                                 </div>
                                             </div>
                                             <div class="mb-3">
                                                 <label class="form-label">Senha</label>
                                                 <div class="pass-group input-group">
-                                                    <span class="input-group-text border-end-0">
-                                                        <i class="isax isax-lock"></i>
-                                                    </span>
-                                                    <span class="isax toggle-password isax-eye-slash"></span>
                                                     <input type="password" class="pass-input form-control border-start-0 ps-0" placeholder="****************" id="senha_usuario">
                                                 </div>
                                             </div>
                                             <div class="mb-3">
-                                                <label class="form-label">Confime a Senha</label>
+                                                <label class="form-label">Nome Empresa</label>
                                                 <div class="pass-group input-group">
-                                                    <span class="input-group-text border-end-0">
-                                                        <i class="isax isax-lock"></i>
-                                                    </span>
-                                                    <span class="isax toggle-passwords isax-eye-slash"></span>
-                                                    <input type="password" class="pass-input form-control border-start-0 ps-0" placeholder="****************" id="confirme_senha">
+                                                    <input type="text" class="form-control border-start-0 ps-0" placeholder="Nome Empresa" id="nome_empresa">
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Nome Fantasia</label>
+                                                <div class="pass-group input-group">
+                                                    <input type="text" class="form-control border-start-0 ps-0" placeholder="Nome Fantasia" id="nome_fantasia">
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Nome CNPJ</label>
+                                                <div class="pass-group input-group">
+                                                    <input type="text" class="form-control border-start-0 ps-0" placeholder="CNPJ" id="cnpj">
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Endereço</label>
+                                                <div class="pass-group input-group">
+                                                    <input type="text" class="form-control border-start-0 ps-0" placeholder="Endereço" id="endereco">
                                                 </div>
                                             </div>
                                             <div class="d-flex align-items-center justify-content-between mb-3">
@@ -260,7 +279,31 @@ router_add('cadastro_usuario', function () {
 
 router_add('salvar_dados_usuario', function () {
     $objeto_usuario = new Usuario();
-    echo json_encode((array) ['status' => (bool) $objeto_usuario->salvar_dados($_REQUEST)], JSON_UNESCAPED_UNICODE);
+    $objeto_empresa = new Empresa();
+
+    $retorno_usuario = (bool) false;
+    $retorno_empresa = (bool) false;
+
+    $retorno_checagem = (bool) $objeto_empresa->checar_empresa((array) ['filtro' => (array) ['cnpj', '===', (string) $_REQUEST['cnpj']]]);
+
+    if ($retorno_checagem == false) {
+        $retorno_empresa = (bool) $objeto_empresa->salvar_dados($_REQUEST);
+
+        if ($retorno_empresa == true) {
+            $retorno_empresa_array = (array) $objeto_empresa->pesquisar((array) ['filtro' => (array) ['cnpj', '===', (string) $_REQUEST['cnpj']]]);
+            $_REQUEST['empresa'] = $retorno_empresa_array['_id'];
+
+            if (empty($retorno_empresa_array) == false) {
+                $retorno_usuario = (bool) $objeto_usuario->salvar_dados($_REQUEST);
+            }
+        }
+    }
+
+    if ($retorno_empresa == true && $retorno_usuario == true) {
+        echo json_encode((array) ['status' => (bool) true], JSON_UNESCAPED_UNICODE);
+    } else {
+        echo json_encode((array) ['status' => (bool) false], JSON_UNESCAPED_UNICODE);
+    }
     exit;
 });
 
@@ -273,6 +316,18 @@ router_add('login_usuario', function () {
         $_SESSION['codigo_usuario'] = $usuario['_id'];
         $_SESSION['codigo_empresa'] = $usuario['empresa'];
         $_SESSION['nome_usuario'] = $usuario['nome_usuario'];
+        $_SESSION['login_usuario'] = (string) 'Sem Login';
+        $_SESSION['tipo_usuario'] = (string) 'Administrador';
+
+        $objeto_usuario->update_ultimo_login((array) ['codigo_usuario' => $usuario['_id']]);
+
+        if(array_key_exists('login_usuario', $usuario) == true){
+            $_SESSION['login_usuario'] = (string) $usuario['login_usuario'];
+        }
+
+        if(array_key_exists('tipo_usuario', $usuario) == true){
+            $_SESSION['tipo_usuario'] = (string) $usuario['tipo_usuario'];
+        }
 
         header('location:dashboard.php');
     } else {
