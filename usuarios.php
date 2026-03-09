@@ -2,6 +2,52 @@
 require_once 'classes/bancoDeDados.php';
 require_once 'modelos/Usuario.php';
 
+router_add('alterar_com_pesquisa', function () {
+    $objeto_usuario = new Usuario();
+
+    echo json_encode((array) ['status' => (bool) $objeto_usuario->alterar_com_pesquisa($_REQUEST)], JSON_UNESCAPED_UNICODE);
+    exit;
+});
+
+router_add('pesquisa_usuario', function () {
+    $objeto_usuario = new Usuario();
+    $codigo_usuario = (string) (isset($_REQUEST['codigo_usuario']) ? (string) $_REQUEST['codigo_usuario'] : '');
+
+    $retorno_usuario = (array) [];
+
+    if ($codigo_usuario != '') {
+        $retorno_usuario = (array) $objeto_usuario->pesquisar((array) ['filtro' => (array) ['_id', '===', model_id($codigo_usuario)]]);
+    }
+
+    echo json_encode((array) ['dados' => (array) $retorno_usuario], JSON_UNESCAPED_UNICODE);
+    exit;
+});
+
+router_add('salvar_dados', function () {
+    $objeto_usuario = new Usuario();
+
+    echo json_encode(['status' => (bool) $objeto_usuario->salvar_dados($_REQUEST)], JSON_UNESCAPED_UNICODE);
+    exit;
+});
+
+router_add('pesquisar_usuarios', function(){
+    $objeto_usuario = new Usuario();
+    $empresa = (string) (isset($_REQUEST['empresa']) ? (string) $_REQUEST['empresa']:'');
+    $filtro_montando = (array) [];
+    $retorno = (array) [];
+
+    if($empresa != ''){
+        array_push($filtro_montando, (array) ['empresa', '===', model_id($empresa)]);
+    }
+
+    if(empty($filtro_montando) == false){
+        $retorno = (array) $objeto_usuario->pesquisar_todos((array) ['filtro' => (array) ['and' => (array) $filtro_montando], 'ordenacao' => (array) ['nome_usuario' => (bool) true], 'limite' => (int) 0]);
+    }
+
+    echo json_encode((array) ['dados' => (array) $retorno], JSON_UNESCAPED_UNICODE);
+    exit;
+});
+
 router_add('index', function () {
     include_once 'includes/head.php';
     $mensagem = (string) (isset($_REQUEST['retorno']) ? (string) $_REQUEST['retorno'] : 'false');
@@ -220,8 +266,14 @@ router_add('cadastrar_avatar', function () {
                     let tipo_usuario = document.querySelector('#tipo_usuario').value;
 
                     sistema.request.post('/usuarios.php', {
-                        'rota': 'salvar_dados', 'salario':salario, 'login_usuario':login_usuario, 'tipo_usuario':tipo_usuario, 'codigo_usuario':ID_USUARIO, 'email_usuario':email_usuario, 'nome_usuario':nome_usuario 
-                    }, function(retorno){
+                        'rota': 'salvar_dados',
+                        'salario': salario,
+                        'login_usuario': login_usuario,
+                        'tipo_usuario': tipo_usuario,
+                        'codigo_usuario': ID_USUARIO,
+                        'email_usuario': email_usuario,
+                        'nome_usuario': nome_usuario
+                    }, function(retorno) {
                         validar_retorno(retorno, '/usuarios.php');
                     });
                 }
@@ -307,32 +359,4 @@ router_add('cadastrar_avatar', function () {
                 }
             }
         }
-
-        router_add('alterar_com_pesquisa', function () {
-            $objeto_usuario = new Usuario();
-
-            echo json_encode((array) ['status' => (bool) $objeto_usuario->alterar_com_pesquisa($_REQUEST)], JSON_UNESCAPED_UNICODE);
-            exit;
-        });
-
-        router_add('pesquisa_usuario', function () {
-            $objeto_usuario = new Usuario();
-            $codigo_usuario = (string) (isset($_REQUEST['codigo_usuario']) ? (string) $_REQUEST['codigo_usuario'] : '');
-
-            $retorno_usuario = (array) [];
-
-            if ($codigo_usuario != '') {
-                $retorno_usuario = (array) $objeto_usuario->pesquisar((array) ['filtro' => (array) ['_id', '===', model_id($codigo_usuario)]]);
-            }
-
-            echo json_encode((array) ['dados' => (array) $retorno_usuario], JSON_UNESCAPED_UNICODE);
-            exit;
-        });
-
-        router_add('salvar_dados', function(){
-            $objeto_usuario = new Usuario();
-            
-            echo json_encode(['status' => (bool) $objeto_usuario->salvar_dados($_REQUEST)], JSON_UNESCAPED_UNICODE);
-        exit;
-        });
             ?>

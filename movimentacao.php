@@ -3,6 +3,79 @@ require_once 'classes/bancoDeDados.php';
 require_once 'modelos/Movimentacao.php';
 require_once 'modelos/Contas.php';
 
+router_add('salvar_dados', function () {
+        $objeto_movimentacao = new Movimentacao();
+
+        echo json_encode((array) ['status' => (bool) $objeto_movimentacao->salvar_dados($_REQUEST)], JSON_UNESCAPED_UNICODE);
+    });
+
+    router_add('pesquisar_contas', function () {
+        $data = new DateTime();
+        $objeto_movimentacao = new Movimentacao();
+        $objeto_conta = new Contas();
+
+        $conta = (string) (isset($_REQUEST['conta']) ? (string) $_REQUEST['conta'] : 'TODOS');
+        $tipo_lancamento = (string) (isset($_REQUEST['tipo_lancamento']) ? (string)$_REQUEST['tipo_lancamento'] : 'TODOS');
+        $data_inicio = (isset($_REQUEST['data_inicio']) ? model_date($_REQUEST['data_inicio'], '00:00:00') : model_date($data->format('Y-m-01'), '00:00:00'));
+        $data_final = (isset($_REQUEST['data_final']) ? model_date($_REQUEST['data_final'], '23:59:59') : model_date($data->format('Y-m-t'), '23:59:59'));
+        $empresa = (isset($_REQUEST['empresa']) ? (string) $_REQUEST['empresa']:'');
+
+        $retorno_validacao = (array) [];
+        $filtro = (array) [];
+        $filtro_pesquisa = (array) ['filtro' => (array) [], 'ordenacao' => (array) ['data_lancamento' => (bool) false], 'limite' => (int) 0];
+        $retorno = (array)[];
+
+        array_push($filtro, ['data_lancamento', '>=', $data_inicio]);
+        array_push($filtro, ['data_lancamento', '<=', $data_final]);
+
+        if ($conta != 'TODOS') {
+            array_push($filtro, ['conta', '===', model_id($conta)]);
+        }
+
+        if ($tipo_lancamento != 'TODOS') {
+            array_push($filtro, ['tipo_lancamento', '===', (string) $tipo_lancamento]);
+        }
+
+        if($empresa != ''){
+            array_push($filtro, ['empresa', '===', model_id($empresa)]);
+        }
+
+        $filtro_pesquisa['filtro'] = (array) ['and' => (array) $filtro];
+        $retorno_validacao = (array) $objeto_movimentacao->pesquisar_todos($filtro_pesquisa);
+
+        if (empty($retorno_validacao) == false) {
+            foreach ($retorno_validacao as $movimentacao) {
+                $retorno_temporario = (array) [];
+                $retorno_conta = (array) $objeto_conta->pesquisar(['filtro' => (array) ['_id', '===', $movimentacao['conta']]]);
+
+                $retorno_temporario = (array) $movimentacao;
+
+                if (empty($retorno_conta) == false) {
+                    $retorno_temporario['nome_conta'] = (string) $retorno_conta['nome_conta'];
+                }
+
+                array_push($retorno, $retorno_temporario);
+            }
+        }
+
+        echo json_encode((array) ['dados' => (array) $retorno], JSON_UNESCAPED_UNICODE);
+        exit;
+    });
+
+    router_add('deletar_movimentacao', function () {
+        $objeto_movimentacao = new Movimentacao();
+        $codigo_movimentacao = (string) (isset($_REQUEST['codigo_movimentacao']) ? (string) $_REQUEST['codigo_movimentacao'] : '');
+        $filtro = (array) [];
+        $retorno = (bool) false;
+
+        if ($codigo_movimentacao != '') {
+            $filtro['filtro'] = (array) ['_id', '===', model_id($codigo_movimentacao)];
+            $retorno = (bool) $objeto_movimentacao->deletar_movimentacao($filtro);
+        }
+
+        echo json_encode(['status' => (bool) $retorno]);
+    });
+
 router_add('index', function () {
     require_once 'includes/head.php';
 
@@ -145,8 +218,9 @@ router_add('index', function () {
                                     <label class="text">Tipo Lançamento</label>
                                     <select class="form-control" id="tipo_lancamento">
                                         <option value="TODOS">Todos os Lançamentos</option>
-                                        <option value="CREDITO">CREDITO</option>
+                                        <option value="CREDITO">CRÉDITO</option>
                                         <option value="DEBITO">DÉBITO</option>
+                                        <option value="TRANSFERENCIA">TRANSFERÊNCIA</option>
                                     </select>
                                 </div>
                                 <div class="col-3 text-center">
@@ -222,10 +296,15 @@ router_add('cadastro_movimentacao', function () {
                 }, function(retorno) {
                     let contas = retorno.dados;
                     let select = document.querySelector('#conta');
+                    let select_destino = document.querySelector('#conta_destino');
 
                     sistema.each(contas, function(index, conta) {
                         let option = sistema.gerar_option(conta._id.$oid, conta.nome_conta);
                         select.appendChild(option);
+                    });
+                    sistema.each(contas, function(index, conta) {
+                        let option = sistema.gerar_option(conta._id.$oid, conta.nome_conta);
+                        select_destino.appendChild(option);
                     });
                 });
             }
@@ -236,6 +315,7 @@ router_add('cadastro_movimentacao', function () {
                 let data_lancamento = document.querySelector('#data_lancamento').value;
                 let tipo_lancamento = document.querySelector('#tipo_lancamento').value;
                 let valor_lancamento = document.querySelector('#valor_lancamento').value;
+                let conta_destino = document.querySelector('#conta_destino').value;
 
                 let valida_conta = true;
                 let valida_descricao = true;
@@ -263,22 +343,23 @@ router_add('cadastro_movimentacao', function () {
                 }
 
                 if (valida_conta == true && valida_descricao == true && valida_tipo_lancamento == true && valida_valor_lancamento == true) {
-                    sistema.request.post('/movimentacao.php', {
-                        'rota': 'salvar_dados',
-                        'conta': conta,
-                        'descricao': descricao,
-                        'data_lancamento': data_lancamento,
-                        'tipo_lancamento': tipo_lancamento,
-                        'valor_lancamento': valor_lancamento,'empresa':EMPRESA
-                    }, function(retorno) {
-                        validar_retorno(retorno, '/movimentacao.php');
-                    });
+
+                    if(conta_destino != ''){
+                        sistema.request.post('/movimentacao.php', {'rota': 'salvar_dados', 'conta': conta, 'descricao': descricao, 'data_lancamento': data_lancamento, 'tipo_lancamento': tipo_lancamento, 'valor_lancamento': valor_lancamento,'empresa':EMPRESA, 'conta_destino':conta_destino }, function(retorno) {
+                            validar_retorno(retorno, '/movimentacao.php');
+                        });
+                    }else{
+                        sistema.request.post('/movimentacao.php', {'rota': 'salvar_dados', 'conta': conta, 'descricao': descricao, 'data_lancamento': data_lancamento, 'tipo_lancamento': tipo_lancamento, 'valor_lancamento': valor_lancamento,'empresa':EMPRESA}, function(retorno) {
+                            validar_retorno(retorno, '/movimentacao.php');
+                        });
+                    }
                 }
 
             }
 
             function limpar_dados() {
                 document.querySelector('#conta').value = '';
+                document.querySelector('#conta_destino').value = '';
                 document.querySelector('#tipo_lancamento').value = '';
                 document.querySelector('#data_lancamento').value = HOJE;
                 document.querySelector('#descricao').value = '';
@@ -302,27 +383,34 @@ router_add('cadastro_movimentacao', function () {
                         </div>
                         <div class="card-body">
                             <div class="row">
-                                <div class="col-3 text-center">
-                                    <label class="text">Conta</label>
+                                <div class="col-4 text-center">
+                                    <label class="text">Conta Origem</label>
                                     <select class="form-control" id="conta">
                                         <option value="">Selecione uma opção</option>
                                     </select>
                                 </div>
-                                <div class="col-3 text-center">
+                                <div class="col-2 text-center">
                                     <label class="text">Tipo de Lançamento</label>
                                     <select class="form-control" id="tipo_lancamento">
                                         <option value="">Selecione uma Opção</option>
                                         <option value="CREDITO">CREDITO</option>
                                         <option value="DEBITO">DÉBITO</option>
+                                        <option value="TRANSFERENCIA">TRANSFÊNCIA</option>
                                     </select>
                                 </div>
-                                <div class="col-3 text-center">
+                                <div class="col-2 text-center">
                                     <label class="text">Valor Lançamento</label>
                                     <input type="text" class="form-control" id="valor_lancamento" sistema-mask="moeda">
                                 </div>
-                                <div class="col-3 text-center">
+                                <div class="col-2 text-center">
                                     <label class="text">Data Lançamento</label>
                                     <input type="date" class="form-control" id="data_lancamento">
+                                </div>
+                                <div class="col-2 text-center">
+                                    <label class="text">Tipo de Lançamento</label>
+                                    <select class="form-control" id="conta_destino">
+                                        <option value="">Selecione uma Opção</option>
+                                    </select>
                                 </div>
                             </div>
                             <div class="row">
@@ -347,77 +435,4 @@ router_add('cadastro_movimentacao', function () {
         require_once 'includes/footer.php';
         exit;
     });
-
-    router_add('salvar_dados', function () {
-        $objeto_movimentacao = new Movimentacao();
-
-        echo json_encode((array) ['status' => (bool) $objeto_movimentacao->salvar_dados($_REQUEST)], JSON_UNESCAPED_UNICODE);
-    });
-
-    router_add('pesquisar_contas', function () {
-        $data = new DateTime();
-        $objeto_movimentacao = new Movimentacao();
-        $objeto_conta = new Contas();
-
-        $conta = (string) (isset($_REQUEST['conta']) ? (string) $_REQUEST['conta'] : 'TODOS');
-        $tipo_lancamento = (string) (isset($_REQUEST['tipo_lancamento']) ? (string)$_REQUEST['tipo_lancamento'] : 'TODOS');
-        $data_inicio = (isset($_REQUEST['data_inicio']) ? model_date($_REQUEST['data_inicio'], '00:00:00') : model_date($data->format('Y-m-01'), '00:00:00'));
-        $data_final = (isset($_REQUEST['data_final']) ? model_date($_REQUEST['data_final'], '23:59:59') : model_date($data->format('Y-m-t'), '23:59:59'));
-        $empresa = (isset($_REQUEST['empresa']) ? (string) $_REQUEST['empresa']:'');
-
-        $retorno_validacao = (array) [];
-        $filtro = (array) [];
-        $filtro_pesquisa = (array) ['filtro' => (array) [], 'ordenacao' => (array) ['data_lancamento' => (bool) false], 'limite' => (int) 0];
-        $retorno = (array)[];
-
-        array_push($filtro, ['data_lancamento', '>=', $data_inicio]);
-        array_push($filtro, ['data_lancamento', '<=', $data_final]);
-
-        if ($conta != 'TODOS') {
-            array_push($filtro, ['conta', '===', model_id($conta)]);
-        }
-
-        if ($tipo_lancamento != 'TODOS') {
-            array_push($filtro, ['tipo_lancamento', '===', (string) $tipo_lancamento]);
-        }
-
-        if($empresa != ''){
-            array_push($filtro, ['empresa', '===', model_id($empresa)]);
-        }
-
-        $filtro_pesquisa['filtro'] = (array) ['and' => (array) $filtro];
-        $retorno_validacao = (array) $objeto_movimentacao->pesquisar_todos($filtro_pesquisa);
-
-        if (empty($retorno_validacao) == false) {
-            foreach ($retorno_validacao as $movimentacao) {
-                $retorno_temporario = (array) [];
-                $retorno_conta = (array) $objeto_conta->pesquisar(['filtro' => (array) ['_id', '===', $movimentacao['conta']]]);
-
-                $retorno_temporario = (array) $movimentacao;
-
-                if (empty($retorno_conta) == false) {
-                    $retorno_temporario['nome_conta'] = (string) $retorno_conta['nome_conta'];
-                }
-
-                array_push($retorno, $retorno_temporario);
-            }
-        }
-
-        echo json_encode((array) ['dados' => (array) $retorno], JSON_UNESCAPED_UNICODE);
-        exit;
-    });
-
-    router_add('deletar_movimentacao', function () {
-        $objeto_movimentacao = new Movimentacao();
-        $codigo_movimentacao = (string) (isset($_REQUEST['codigo_movimentacao']) ? (string) $_REQUEST['codigo_movimentacao'] : '');
-        $filtro = (array) [];
-        $retorno = (bool) false;
-
-        if ($codigo_movimentacao != '') {
-            $filtro['filtro'] = (array) ['_id', '===', model_id($codigo_movimentacao)];
-            $retorno = (bool) $objeto_movimentacao->deletar_movimentacao($filtro);
-        }
-
-        echo json_encode(['status' => (bool) $retorno]);
-    });
-        ?>
+?>

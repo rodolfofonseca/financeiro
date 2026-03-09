@@ -318,6 +318,7 @@ router_add('login_usuario', function () {
         $_SESSION['nome_usuario'] = $usuario['nome_usuario'];
         $_SESSION['login_usuario'] = (string) 'Sem Login';
         $_SESSION['tipo_usuario'] = (string) 'Administrador';
+        $_SESSION['versao_sistema'] = (String) $usuario['versao_sistema'];
 
         $objeto_usuario->update_ultimo_login((array) ['codigo_usuario' => $usuario['_id']]);
 

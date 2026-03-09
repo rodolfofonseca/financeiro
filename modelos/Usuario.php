@@ -1,6 +1,7 @@
 <?php
 require_once 'Classes/bancoDeDados.php';
 require_once 'Interface.php';
+require_once 'Sistema.php';
 
 class Usuario implements InterfaceModelo{
     private $id_usuario;
@@ -8,11 +9,20 @@ class Usuario implements InterfaceModelo{
     private $nome_usuario;
     private $email_usuario;
     private $senha_usuario;
-    private $data_cadastro;
-    private $data_ultimo_login;
     private $login_usuario;
     private $tipo_usuario;
     private $salario;
+    private $cargo;
+    private $celular;
+    private $cep;
+    private $logradouro;
+    private $bairro;
+    private $uf;
+    private $estado;
+    private $numero;
+    
+    private $data_cadastro;
+    private $data_ultimo_login;
     private $opcao = ['const' => 8];
 
     public function tabela(){
@@ -48,14 +58,27 @@ class Usuario implements InterfaceModelo{
 
         $this->login_usuario = (string) (isset($dados['login_usuario']) ? (string) $dados['login_usuario']:'Sem Login');
         $this->tipo_usuario = (string) (isset($dados['tipo_usuario']) ? (string) $dados['tipo_usuario']:'Administrador');
+        $this->cargo = (string) (isset($dados['cargo']) ? (string) $dados['cargo']:'');
+        $this->celular = (string) (isset($dados['celular']) ? (string) $dados['celular']:'');
+        $this->cep = (string) (isset($dados['cep']) ? (string) $dados['cep']:'');
+        $this->logradouro = (string) (isset($dados['logradouro']) ? (string) $dados['logradouro']:'');
+        $this->bairro = (string) (isset($dados['bairro']) ? (string) $dados['bairro']:'');
+        $this->uf = (string) (isset($dados['uf']) ? (string) $dados['uf']:'');
+        $this->estado = (string) (isset($dados['estado']) ? (string) $dados['estado']:'');
+        $this->numero = (string) (isset($dados['numero']) ? (string) $dados['numero']:'');
     }
 
     public function salvar_dados($dados){
         $this->colocar_dados($dados);
         $senha_vazia = (string) password_hash('', PASSWORD_DEFAULT, $this->opcao);
         $retorno_operacao = (bool) false;
+        $retorno_checagem = (bool) false;
 
-        $retorno_checagem = (bool) model_check((string) $this->tabela(), (array) ['email_usuario', '===', (string) $this->email_usuario]);
+        if($this->tipo_usuario != 'CLIENTE'){
+            $retorno_checagem = (bool) model_check((string) $this->tabela(), (array) ['email_usuario', '===', (string) $this->email_usuario]);
+            }else if($this->tipo_usuario == 'CLIENTE' && $this->id_usuario != null){
+            $retorno_checagem = (bool) model_check((string) $this->tabela(), (array) ['_id', '===', (string) $this->id_usuario]);
+        }
 
         if($retorno_checagem == true){
             $retorno_pesquisa = (array) model_one((string) $this->tabela(), (array) ['email_usuario', '===', (string) $this->email_usuario]);
@@ -64,9 +87,9 @@ class Usuario implements InterfaceModelo{
                 return (bool) false;
             }
 
-            $retorno_operacao = (bool) model_update((string) $this->tabela(), (array) ['_id', '===', $this->id_usuario], (array) ['nome_usuario' => (string) $this->nome_usuario, 'salario' => (double) $this->salario, 'login_usuario' => (string) $this->login_usuario, 'tipo_usuario' => (string) $this->tipo_usuario]);
+            $retorno_operacao = (bool) model_update((string) $this->tabela(), (array) ['_id', '===', $this->id_usuario], (array) ['empresa' => $this->empresa, 'nome_usuario' => (string) $this->nome_usuario, 'salario' => (double) $this->salario, 'login_usuario' => (string) $this->login_usuario, 'tipo_usuario' => (string) $this->tipo_usuario, 'cargo' => (string) $this->cargo, 'celular' => (string) $this->celular, 'cep' => (string) $this->cep, 'logradouro' => (string) $this->logradouro, 'numero' => (string) $this->numero,'bairro' => (string) $this->bairro, 'uf' => (string) $this->uf, 'estado' => (string) $this->estado]);
         }else{
-            $retorno_operacao = (bool) model_insert((string) $this->tabela(), (array) ['empresa'=> model_id($this->empresa), 'nome_usuario' => (string) $this->nome_usuario, 'email_usuario' => (string) $this->email_usuario, 'senha_usuario' => (string) $this->senha_usuario, 'data_cadastro' => model_date(), 'ultimo_login' => model_date(), 'salario' => (double) $this->salario, 'login_usuario' => (string) $this->login_usuario, 'tipo_usuario' => (string) $this->tipo_usuario]);
+            $retorno_operacao = (bool) model_insert((string) $this->tabela(), (array) ['empresa' => $this->empresa, 'nome_usuario' => (string) $this->nome_usuario, 'email_usuario' => (string) $this->email_usuario, 'senha_usuario' => (string) $this->senha_usuario, 'data_cadastro' => model_date(), 'ultimo_login' => model_date(), 'salario' => (double) $this->salario, 'login_usuario' => (string) $this->login_usuario, 'tipo_usuario' => (string) $this->tipo_usuario, 'cargo' => (string) $this->cargo, 'celular' => (string) $this->celular, 'cep' => (string) $this->cep, 'logradouro' => (string) $this->logradouro, 'numero' => (string) $this->numero,'bairro' => (string) $this->bairro, 'uf' => (string) $this->uf, 'estado' => (string) $this->estado]);
         }
 
         return (bool) $retorno_operacao;
@@ -85,7 +108,17 @@ class Usuario implements InterfaceModelo{
         if(empty($retorno_usuario) == false){
             $retorno_senha =  (bool) password_verify($dados['senha_usuario'], $retorno_usuario['senha_usuario']);
 
+            $objeto_sistema = new Sistema();
+            $retorno_sistema = (array) $objeto_sistema->pesquisar(['empresa', '===', $retorno_usuario['empresa']]);
+
+            $versao_sistema = (string) 'alfa 0.0';
+
+            if(empty($retorno_sistema) == false){
+                $versao_sistema = (string) $retorno_sistema['versao_sistema'];
+            }
+
             if($retorno_senha == true){
+                $retorno_usuario['versao_sistema'] = (string) $versao_sistema;
                 return (array) $retorno_usuario;
             }else{
                 return (array) [];

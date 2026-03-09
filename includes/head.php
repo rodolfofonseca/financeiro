@@ -12,6 +12,7 @@ $login_usuario = (string) $_SESSION['login_usuario'];
 $codigo_usuario = (string) $_SESSION['codigo_usuario'];
 $codigo_empresa = (string) $_SESSION['codigo_empresa'];
 $tipo_usuario = (string) $_SESSION['tipo_usuario'];
+$versao_sistema  = (string) $_SESSION['versao_sistema'];
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -478,8 +479,17 @@ $tipo_usuario = (string) $_SESSION['tipo_usuario'];
 											<span class="menu-arrow"></span>
 										</a>
 										<ul>
-											<li><a href="contas.php">Cadastro Contas</a></li>
-											<li><a href="contas_pagar_receber.php">Contas Pagar/Receber</a></li>
+											<li><a href="contas.php">Cadastro de Contas</a></li>
+											<li><a href="clientes.php">Cadastro de Clientes</a></li>
+										</ul>
+									</li>
+									<li class="submenu">
+										<a href="javascript:void(0);">
+											<span>Contas</span>
+											<span class="menu-arrow"></span>
+										</a>
+										<ul>
+										<li><a href="contas_pagar_receber.php">Contas Pagar/Receber</a></li>
 										</ul>
 									</li>
 									<li class="submenu">
@@ -489,6 +499,16 @@ $tipo_usuario = (string) $_SESSION['tipo_usuario'];
 										</a>
 										<ul>
 											<li><a href="fechamento_contabil_geral.php">Fechamento Contábil Geral</a></li>
+										</ul>
+									</li>
+									<li class="submenu">
+										<a href="javascript:void(0);">
+											<span>Extratos</span>
+											<span class="menu-arrow"></span>
+										</a>
+										<ul>
+											<li><a href="extrato.php">Extrato</a></li>
+											<li><a href="item_extrato.php">Itens Extratos</a></li>
 										</ul>
 									</li>
 								</ul>

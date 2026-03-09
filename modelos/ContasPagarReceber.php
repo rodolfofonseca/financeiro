@@ -122,7 +122,7 @@ class ContasPagarReceber implements InterfaceModelo
 
     public function relatorio_contas_pagar($codigo_empresa)
     {
-        $pipeline = [['$match' => ['$or' => [['$and' => [['empresa' => model_id($codigo_empresa)], ['tipo_conta' => 'PAGAR'], ['status_conta' => 'AGUARDANDO']]], ['status_conta' => 'VENCIDO' ]]]], ['$group' => ['_id' => ['status_conta' => '$status_conta'], 'COUNT(*)' => ['$sum' => 1], 'SUM(valor_conta)' => ['$sum' => '$valor_conta']]], ['$project' => ['status_conta' => '$_id.status_conta', 'COUNT(*)' => '$COUNT(*)', 'SUM(valor_conta)' => '$SUM(valor_conta)', '_id' => 0]]];
+        $pipeline = [['$match' => ['$or' => [['$and' => [['empresa' => model_id($codigo_empresa)], ['tipo_conta' => 'PAGAR']]], ['status_conta' => 'VENCIDA' ], ['tipo_conta' => 'RECEBER']]]], ['$group' => ['_id' => ['status_conta' => '$status_conta'], 'COUNT(*)' => ['$sum' => 1], 'SUM(valor_conta)' => ['$sum' => '$valor_conta']]], ['$project' => ['status_conta' => '$_id.status_conta', 'COUNT(*)' => '$COUNT(*)', 'SUM(valor_conta)' => '$SUM(valor_conta)', '_id' => 0]]];
 
         $cursor = pesquisa_banco_aggregate((string) $this->tabela(), $pipeline);
 
