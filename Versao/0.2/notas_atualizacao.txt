@@ -1,0 +1,6 @@
+1. Desenvolvimento do módulo para fazer fechamento contábil
+2. Desenvolvimento de Gráficos para visualizar de forma melhorada dos saldos das contas e das contas a pagar.
+3. Desenvolvimento de uma página para apresentar o erro 404
+4. Correção do módulo de login
+5. Desenvolvimento do módulo de contas a pagar e a receber
+6. Desenvolvimento de página para alterar o dados dos usuários do sistema
