@@ -46,7 +46,7 @@ class FechamentoContabilGeral implements InterfaceModelo
     {
         $this->colocar_dados($dados);
 
-        file_put_contents('json.json', json_encode(['empresa' => $this->empresa, 'mes_referencia' => (int) $this->mes_referencia, 'ano_referencia' => (int) $this->ano_referencia, 'total_credito' => (float) $this->total_credito, 'total_debito' => (float) $this->total_debito, 'resultado' => (string) $this->resultado, 'data_fechamento' => $this->data_fechamento], JSON_UNESCAPED_UNICODE));
+        // file_put_contents('json.json', json_encode(['empresa' => $this->empresa, 'mes_referencia' => (int) $this->mes_referencia, 'ano_referencia' => (int) $this->ano_referencia, 'total_credito' => (float) $this->total_credito, 'total_debito' => (float) $this->total_debito, 'resultado' => (string) $this->resultado, 'data_fechamento' => $this->data_fechamento], JSON_UNESCAPED_UNICODE));
 
         if ($this->codigo_fechamento_contabil != null) {
             return (bool) model_update((string) $this->tabela(), ['_id', '===', $this->codigo_fechamento_contabil], (array) ['empresa' => $this->empresa, 'mes_referencia' => (int) $this->mes_referencia, 'ano_referencia' => (int) $this->ano_referencia, 'total_credito' => (float) $this->total_credito, 'total_debito' => (float) $this->total_debito, 'valor_resultado' => (double) $this->valor_resultado, 'resultado' => (string) $this->resultado, 'data_fechamento' => $this->data_fechamento]);

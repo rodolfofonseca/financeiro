@@ -10,7 +10,7 @@
         }
         ?>
         
-        <p class="text-dark">Versão : <?php echo $versao_sistema; ?></p>
+        <p class="text-dark">Versão : Alfa 0.0</p>
     </div>
 
 </footer>

@@ -91,13 +91,7 @@ router_add('index', function(){
 
         $atualizacao->executar_atualizacao();
 
-        $retorno = (array) model_all('empresa', []);
-
-        if(empty($retorno) == false){
-            foreach($retorno as $empresa){
-                model_insert('sistema', ['empresa'=> $empresa['_id'], 'versao_sistema' => 'alfa 0.2']);
-            }
-        }
+        model_update('sistema', [], ['versao_sistema' => 'alfa 0.2']);
 
         $atualizacao->exibir_mensagem('Criando tabela nota fiscal no banco de dados!');
         $atualizacao->criar_tabela_banco_dados((string) 'nota_fiscal', (array) [['empresa' => 'objectId', 'cliente_fornecedor' => 'objectId', 'data_cadastro' => 'date', 'data_nota' => 'date', 'valor_nota' => (float) 0, 'chave_nota' => 'string', 'tipo_nota' => (string) '']]);

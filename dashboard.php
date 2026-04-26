@@ -6,6 +6,7 @@ require_once 'modelos/FechamentoContabilGeral.php';
 
 router_add('index', function () {
     require_once 'includes/head.php';
+
     $ano_atual = $data->format('Y');
     $data_atual = $data->format('Y-m-01');
     $ano_conta_futura = $ano_atual - 1;
@@ -18,7 +19,7 @@ router_add('index', function () {
 
     $retorno_conta = (array) $objeto_conta->pesquisar_todos((array) ['filtro' => (array) ['empresa', '===', model_id($codigo_empresa)], 'ordenacao' => ['nome_conta' => (bool) true], 'limite' => 0]);
     $retorno_contas_pagar = (array) $objeto_contas_pagar_receber->relatorio_contas_pagar($codigo_empresa);
-    $retorno_contas_futuras = (array) $objeto_contas_pagar_receber->relatorio_contas_pagar_mensal($codigo_empresa, $ano_conta_futura.'-01-01', '00:00:00');
+    $retorno_contas_futuras = (array) $objeto_contas_pagar_receber->relatorio_contas_pagar_mensal($codigo_empresa, $ano_conta_futura . '-01-01', '00:00:00');
 
     $retorno_fechamento_contabil = (array) $objeto_fechamento_contabil_geral->pesquisar_todos(['filtro' => (array) ['and' => (array) [['ano_referencia', '===', (int) $ano_atual], ['empresa', '===', model_id($codigo_empresa)]]], 'ordenacao' => (array) ['mes_referencia' => (bool) true], 'limite' => (int) 12]);
 ?>
@@ -125,8 +126,8 @@ router_add('index', function () {
             sistema.each(CONTAS_PAGAR_RECEBER, function(contador, conta) {
                 let soma_contador = (contador + 1);
 
-                nomes['data' + soma_contador] = conta['status_conta'] + '-' + sistema.number_format(conta['SUM(valor_conta)']);
-                valor_contas.push(['data' + soma_contador, conta['COUNT(*)']]);
+                nomes['data' + soma_contador] = conta['tipo_conta'] + ' ' + conta['status_conta'] + ' ' + sistema.number_format(conta['SUM(valor_conta)']);
+                valor_contas.push(['data' + soma_contador, conta['SUM(valor_conta)']]);
             });
 
             var chart = c3.generate({
@@ -196,75 +197,65 @@ router_add('index', function () {
         }
 
         function historico_contas() {
-            let pago = ['data1'];
-            let vencida = ['data2'];
-            let aguardando = ['data3'];
 
-            let names = {
-                'data1': 'PAGO',
-                'data2': 'VENCIDA',
-                'data3': 'AGUARDANDO'
-            };
-
+            let series = {};
             let categories = [];
-            let dados = {};
+            let mesesUnicos = [];
 
             sistema.each(CONTAS_FUTURAS, function(contador, contas) {
 
-                let chave = contas.ano + '-' + ('0' + contas.mes).slice(-2);
+                let chaveMes = contas.ano + '-' + ('0' + contas.mes).slice(-2);
 
-                if (!dados[chave]) {
-                    dados[chave] = {
-                        pago: 0,
-                        vencida: 0,
-                        aguardando: 0
-                    };
+                let chaveSerie = contas.tipo_conta + ' - ' + contas.status_conta;
+
+                if (!mesesUnicos.includes(chaveMes)) {
+                    mesesUnicos.push(chaveMes);
                 }
 
-                if (contas.status_conta === 'PAGO') {
-                    dados[chave].pago = contas.total_valor;
+                if (!series[chaveSerie]) {
+                    series[chaveSerie] = [chaveSerie];
                 }
 
-                if (contas.status_conta === 'VENCIDA') {
-                    dados[chave].vencida = contas.total_valor;
+                if (!series[chaveSerie + '_' + chaveMes]) {
+                    series[chaveSerie + '_' + chaveMes] = contas.total_valor;
                 }
-
-                if (contas.status_conta === 'AGUARDANDO') {
-                    dados[chave].aguardando = contas.total_valor;
-                }
-
             });
 
-            sistema.each(dados, function(mes, valores) {
+            mesesUnicos.sort();
 
-                categories.push(mes);
+            let columns = [];
 
-                pago.push(valores.pago);
-                vencida.push(valores.vencida);
-                aguardando.push(valores.aguardando);
+            Object.keys(series).forEach(function(key) {
 
+                if (key.indexOf('_') === -1) {
+
+                    let arr = [key];
+
+                    mesesUnicos.forEach(function(mes) {
+
+                        let valor = series[key + '_' + mes] || 0;
+                        arr.push(valor);
+
+                    });
+
+                    columns.push(arr);
+                }
             });
 
             var chart = c3.generate({
                 bindto: '#historico_contas',
                 data: {
-                    columns: [
-                        pago,
-                        vencida,
-                        aguardando
-                    ],
-                    labels: true,
-                    type: 'spline',
-                    names
+                    columns: columns,
+                    type: 'spline'
                 },
                 axis: {
                     x: {
                         type: 'category',
-                        categories: categories
+                        categories: mesesUnicos
                     }
                 },
                 legend: {
-                    show: false
+                    show: true
                 },
                 padding: {
                     bottom: 0,
@@ -273,6 +264,7 @@ router_add('index', function () {
             });
         }
     </script>
+
     <div class="page-wrapper">
         <div class="content">
             <div class="page-header">

@@ -187,14 +187,19 @@ class DB {
 
   function insert($columns) {
     foreach ($columns as $key => $value) :
-      if (is_numeric($value)){
-        continue;
-      }else if(is_object($value)){
+  
+      if (is_bool($value) || is_int($value) || is_float($value)) {
         $columns[$key] = $value;
-      }else{
+  
+      } else if (is_object($value)) {
+        $columns[$key] = $value;
+  
+      } else if (is_string($value)) {
         $columns[$key] = str_replace(['"', "'"], "", $value);
       }
+  
     endforeach;
+  
     try {
       return $this
         ->connection
@@ -207,14 +212,19 @@ class DB {
 
   function update($filters, $columns=[]) {
     foreach ($columns as $key => $value) :
-      if (is_numeric($value)){
-        continue;
-      }else if(is_object($value)){
+  
+      if (is_bool($value) || is_int($value) || is_float($value)) {
         $columns[$key] = $value;
-      }else{
+  
+      } else if (is_object($value)) {
+        $columns[$key] = $value;
+  
+      } else if (is_string($value)) {
         $columns[$key] = str_replace(['"', "'"], "", $value);
       }
+  
     endforeach;
+
     try {
       return (bool) $this
         ->connection
@@ -291,6 +301,7 @@ class DB {
     }else{
       $options = ['sort' => $this->order($order), 'limit' => $limit];
     }
+
     // if($limit == 0){
     //   $options = ['projection' => ['_id' => 0], 'sort' => $this->order($order)];
     // }else{

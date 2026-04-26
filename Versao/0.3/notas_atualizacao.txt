@@ -1,0 +1,2 @@
+1. Adição do cliente/fornecedor no módulo de contas a pagar e receber, para depois poder pesquisar as contas específicas por clientes.
+2. Correção do módulo de fechamento contábil, antes o valor quando a empresa fechava no negativo não ficava ( - ).

@@ -1,6 +1,7 @@
 <?php
 require_once 'classes/bancoDeDados.php';
 require_once 'modelos/Interface.php';
+require_once 'modelos/ContasPagarReceber.php';
 
 class DocumentosComprovantes implements InterfaceModelo
 {
@@ -16,7 +17,8 @@ class DocumentosComprovantes implements InterfaceModelo
         return (string) 'documentos_comprovantes';
     }
 
-    public function modelo(){
+    public function modelo()
+    {
         return (array) ['empresa' => 'objectId', 'codigo_local' => 'objectId', 'local_documento' => (string) '', 'data_cadastro' => 'date'];
     }
     public function colocar_dados($dados)
@@ -52,35 +54,37 @@ class DocumentosComprovantes implements InterfaceModelo
     public function salvar_dados_arquivos($dados, $file)
     {
         $this->colocar_dados($dados);
+        
         $this->arquivo = $file;
+        $extensao = pathinfo($this->arquivo["arquivo"]["name"], PATHINFO_EXTENSION);
+        $nome_arquivo = (string) '';
 
         $retorno_banco = (bool) false;
+        $retorno = (bool) false;
         $retorno_checagem = (bool) model_check((string) $this->tabela(), (array) ['codigo_local', '===', $this->codigo_local]);
 
-        if($retorno_checagem == true){
+        if ($retorno_checagem == true) {
             $retorno_banco = (bool) model_update((string) $this->tabela(), ['codigo_local', '===', $this->codigo_local], (array) ['data_cadastro' => model_date()]);
-        }else{
+        } else {
             $retorno_banco = (bool) model_insert((string) $this->tabela(), (array) ['empresa' => $this->empresa, 'codigo_local' => $this->codigo_local, 'local_documento' => (string) $this->local_documento, 'data_cadastro' => $this->data_cadastro]);
         }
 
         if ($retorno_banco == true) {
-            $nome_arquivo = (string) '';
-            $extensao = pathinfo($this->arquivo["arquivo"]["name"], PATHINFO_EXTENSION);
+            $objeto_conta_pagar_receber = new ContasPagarReceber();
+                $nome_arquivo = (string) 'anexos/comprovantes/contas_pagar_receber_boletos/' . $this->codigo_local . "." . $extensao;
+                $retorno = (bool) $objeto_conta_pagar_receber->alterar_anexo_boleto($this->codigo_local);
 
-            if ($this->local_documento == 'CONTAS_PAGAR_RECEBER') {
-                $nome_arquivo = (string) 'anexos/comprovantes/contas_pagar_receber/' . $this->codigo_local . "." . $extensao;
-                require_once 'modelos/ContasPagarReceber.php';
-
-                $objeto_conta_pagar_receber = new ContasPagarReceber();
-
-                $retorno = (bool) $objeto_conta_pagar_receber->alterar_anexo_documento($this->codigo_local);
-            }
-
-            if (move_uploaded_file($this->arquivo['arquivo']['tmp_name'], $nome_arquivo)) {
-                return (bool) true;
-            } else {
+            if($retorno == true){
+                if (move_uploaded_file($this->arquivo['arquivo']['tmp_name'], $nome_arquivo)) {
+                    return (bool) true;
+                } else {
+                    return (bool) false;
+                }
+            }else{
                 return (bool) false;
             }
+        } else {
+            return (bool) false;
         }
     }
 }

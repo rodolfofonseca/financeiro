@@ -99,7 +99,7 @@ router_add('index', function(){
                 model_insert('sistema', ['empresa'=> $empresa['_id'], 'versao_sistema' => 'alfa 0.1']);
             }
         }
-        header("Location: index.php?rota=exibir_notas");
+        // header("Location: index.php?rota=exibir_notas");
 
       ?>
       <input type="hidden" id="mensagens" value='<?php echo json_encode($mensagens); ?>' />

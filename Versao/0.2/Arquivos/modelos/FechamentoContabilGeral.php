@@ -63,7 +63,7 @@ class FechamentoContabilGeral implements InterfaceModelo
     }
 
     public function pesquisar_todos($filtro)
-    {
+    { 
         return (array) model_all((string) $this->tabela(), (array) $filtro['filtro'], (array) $filtro['ordenacao'], (int) $filtro['limite']);
     }
 
@@ -101,7 +101,7 @@ class FechamentoContabilGeral implements InterfaceModelo
             $this->valor_resultado = (double) arredondar($this->total_credito, '-', $this->total_debito, 2);
         }else if($this->total_credito < $this->total_debito){
             $this->resultado = (string) 'NEGATIVO';
-            $this->valor_resultado = (double) arredondar($this->total_debito, '-', $this->total_credito, 2);
+            $this->valor_resultado = (double) arredondar($this->total_credito, '-', $this->total_debito, 2);
         }else{
             $this->resultado = (string) 'NEUTRO';
         }

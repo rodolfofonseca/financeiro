@@ -184,7 +184,7 @@ router_add('index', function(){
                         <div class="row">
                             <div class="col-6 text-center">
                                 <label class="text">Nome Item</label>
-                                <input type="text" class="form-control" id="nome_item_extrato">
+                                <input type="text" class="form-control text-uppercase" id="nome_item_extrato">
                             </div>
                             <div class="col-6 text-center">
                                 <label class="text">Tipo Item Holerite</label>
