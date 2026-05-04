@@ -14,6 +14,43 @@ dns = "mongodb+srv://MEU_LOGIN:MINHA_SENHA.@alguma_coisa_que_o_mongo_cria_automa
 
 Rodar as atualizações da pasta Versão
 
+## Docker (desenvolvimento local)
+
+Este repositório inclui uma configuração Docker que executa:
+- PHP + Apache (servindo a raiz deste repositório)
+- MongoDB (em um container)
+
+### Início rápido
+
+1) Inicie os containers:
+
+```bash
+docker compose up --build
+```
+
+2) Abra:
+- `http://localhost:8080/`
+
+### Configuração do banco de dados
+
+O app lê o arquivo `configuracao.ini` a partir da raiz do projeto. No Docker, nós montamos [`docker/configuracao.ini`](docker/configuracao.ini) em `/var/www/html/configuracao.ini`.
+
+Config padrão (Docker):
+
+```ini
+[DB]
+db = "controleFinanceiro"
+dns = "mongodb://mongo:27017"
+; username = ""
+; password = ""
+```
+
+Se você quiser usar o MongoDB Atlas/Mongo remoto, atualize `docker/configuracao.ini` com a sua string de conexão (ou monte o seu próprio `configuracao.ini`).
+
+### Persistência de uploads
+
+Os uploads ficam em `anexos/`. O Docker Compose usa um volume nomeado para `/var/www/html/anexos` para que os arquivos enviados persistam entre reinicializações/rebuilds.
+
 # financeiro
 Sistema de controle financeiro para pessoas físicas e jurídicas
 

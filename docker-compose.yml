@@ -1,0 +1,25 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/var/www/html
+      - ./docker/configuracao.ini:/var/www/html/configuracao.ini:ro
+      - ./docker/php.ini:/usr/local/etc/php/conf.d/zz-custom.ini:ro
+      - anexos_data:/var/www/html/anexos
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:
+  anexos_data:
+
