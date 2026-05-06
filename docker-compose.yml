@@ -3,11 +3,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    env_file:
+      - ./.env
     ports:
       - "8080:80"
     volumes:
       - ./:/var/www/html
-      - ./docker/configuracao.ini:/var/www/html/configuracao.ini:ro
       - ./docker/php.ini:/usr/local/etc/php/conf.d/zz-custom.ini:ro
       - anexos_data:/var/www/html/anexos
     depends_on:

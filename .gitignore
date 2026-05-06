@@ -1,5 +1,6 @@
 configuracao.ini
 configuracao_usuario.ini
+.env
 teste.php
 documentos.code-workspace
 login.html

@@ -1,18 +1,19 @@
 # Instalação
-Criar um arquivo chamado "configuracao.ini"
-Nele criar a seguinte configuração no banco de dados mongodb
 
-[DB]
-db = "NOME DO SEU BANCO DE DADOS"
-dns = "DNS DO SEU BANCO DE DADOS";
+Este projeto usa **variáveis de ambiente** para configuração.
 
+## Desenvolvimento local
 
-ex:
-[DB]
-db = "banco_de_dados_de_exemplo"
-dns = "mongodb+srv://MEU_LOGIN:MINHA_SENHA.@alguma_coisa_que_o_mongo_cria_automatico.mongodb.net/sistema?retryWrites=true&w=majority"
+1) Crie um arquivo `.env` na raiz do repositório (você pode começar a partir do `.env.example`).
 
-Rodar as atualizações da pasta Versão
+Exemplo:
+
+```env
+MONGODB_URI=mongodb://127.0.0.1:27017
+MONGODB_DBNAME=controleFinanceiro
+```
+
+2) Execute os scripts de atualização na pasta `Versao/` quando necessário.
 
 ## Docker (desenvolvimento local)
 
@@ -33,19 +34,20 @@ docker compose up --build
 
 ### Configuração do banco de dados
 
-O app lê o arquivo `configuracao.ini` a partir da raiz do projeto. No Docker, nós montamos [`docker/configuracao.ini`](docker/configuracao.ini) em `/var/www/html/configuracao.ini`.
+O app lê as variáveis de ambiente do arquivo `.env` (na raiz do projeto). No Docker, o `docker compose` injeta essas variáveis via `env_file`.
 
 Config padrão (Docker):
 
-```ini
-[DB]
-db = "controleFinanceiro"
-dns = "mongodb://mongo:27017"
-; username = ""
-; password = ""
+```env
+MONGODB_URI=mongodb://mongo:27017
+MONGODB_DBNAME=controleFinanceiro
+
+# Opcional (apenas se o seu Mongo exigir autenticação)
+# MONGODB_USERNAME=
+# MONGODB_PASSWORD=
 ```
 
-Se você quiser usar o MongoDB Atlas/Mongo remoto, atualize `docker/configuracao.ini` com a sua string de conexão (ou monte o seu próprio `configuracao.ini`).
+Se você quiser usar o MongoDB Atlas/Mongo remoto, atualize o arquivo `.env` com a sua string de conexão.
 
 ### Persistência de uploads
 

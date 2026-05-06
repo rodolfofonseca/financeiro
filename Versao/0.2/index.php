@@ -180,25 +180,11 @@ class Atualizacoes{
    * Função responsável por carregas a configuração do banco de dados.
    */
   private function carregar_configuracao(){
-    $arquivo_configuracao = (string) str_replace('\\', '/', __DIR__) . '/../../configuracao.ini';
-    $this->dns = $this->settings['dns'];
+    $this->dns = (string) (getenv('MONGODB_URI') ?: $this->settings['dns']);
+    $this->nome_banco = (string) (getenv('MONGODB_DBNAME') ?: $this->nome_banco);
+    $this->dns_password = $this->dns;
+
     $authentication = $this->settings['authentication'];
-
-    if (file_exists($arquivo_configuracao) == true) {
-      $configuracao = (array) parse_ini_file($arquivo_configuracao, true);
-
-      if (isset($configuracao['DB']['db']) == true) {
-        $this->nome_banco = (string) $configuracao['DB']['db'];
-      }
-
-      if (isset($configuracao['DB']['dns']) == true) {
-        $this->dns = (string) $configuracao['DB']['dns'];
-      }
-
-      if (isset($configuracao['DB']['dns']) == true) {
-        $this->dns_password = (string) $configuracao['DB']['dns'];
-      }
-    }
 
     $this->cliente_banco_dados = (new MongoDB\Client($this->dns, $authentication)); 
   }
