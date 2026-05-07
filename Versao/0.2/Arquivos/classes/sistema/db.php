@@ -148,30 +148,20 @@ class DB {
 
   function connect($table) {
     if ($this->client == null) {
-      $arquivo_configuracao = (string) str_replace('\\', '/', __DIR__) . '/../../configuracao.ini';
-        
-      $dns = self::$settings['dns'];
-      $authentication = self::$settings['authentication'];
-      
-      if (file_exists($arquivo_configuracao) == true) {
-        $configuracao = (array) parse_ini_file($arquivo_configuracao, true);
-        
-        if (isset($configuracao['DB']['db']) == true) {
-          $this->db = (string) $configuracao['DB']['db'];
-        }
+      $dns = (string) (getenv('MONGODB_URI') ?: self::$settings['dns']);
+      $dbName = (string) (getenv('MONGODB_DBNAME') ?: $this->db);
+      $authentication = (array) self::$settings['authentication'];
 
-        if (isset($configuracao['DB']['dns']) == true) {
-          $dns = (string) $configuracao['DB']['dns'];
-        }
-
-        if (isset($configuracao['DB']['username']) == true) {
-          $authentication['username'] = (string) $configuracao['DB']['username'];
-        }
-
-        if (isset($configuracao['DB']['password']) == true) {
-          $authentication['password'] = (string) $configuracao['DB']['password'];
-        }
+      $username = getenv('MONGODB_USERNAME');
+      $password = getenv('MONGODB_PASSWORD');
+      if ($username !== false && $username !== '') {
+        $authentication['username'] = (string) $username;
       }
+      if ($password !== false && $password !== '') {
+        $authentication['password'] = (string) $password;
+      }
+
+      $this->db = $dbName;
 
       $this->client = (new MongoDB\Client(
         $dns,

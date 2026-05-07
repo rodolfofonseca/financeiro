@@ -1,7 +1,7 @@
 <?php
-require_once 'Classes/bancoDeDados.php';
-require_once 'Interface.php';
-require_once 'Sistema.php';
+require_once __DIR__ . '/../classes/bancoDeDados.php';
+require_once __DIR__ . '/Interface.php';
+require_once __DIR__ . '/Sistema.php';
 
 class Usuario implements InterfaceModelo
 {

@@ -1,18 +1,57 @@
 # Instalação
-Criar um arquivo chamado "configuracao.ini"
-Nele criar a seguinte configuração no banco de dados mongodb
 
-[DB]
-db = "NOME DO SEU BANCO DE DADOS"
-dns = "DNS DO SEU BANCO DE DADOS";
+Este projeto usa **variáveis de ambiente** para configuração.
 
+## Desenvolvimento local
 
-ex:
-[DB]
-db = "banco_de_dados_de_exemplo"
-dns = "mongodb+srv://MEU_LOGIN:MINHA_SENHA.@alguma_coisa_que_o_mongo_cria_automatico.mongodb.net/sistema?retryWrites=true&w=majority"
+1) Crie um arquivo `.env` na raiz do repositório (você pode começar a partir do `.env.example`).
 
-Rodar as atualizações da pasta Versão
+Exemplo:
+
+```env
+MONGODB_URI=mongodb://127.0.0.1:27017
+MONGODB_DBNAME=controleFinanceiro
+```
+
+2) Execute os scripts de atualização na pasta `Versao/` quando necessário.
+
+## Docker (desenvolvimento local)
+
+Este repositório inclui uma configuração Docker que executa:
+- PHP + Apache (servindo a raiz deste repositório)
+- MongoDB (em um container)
+
+### Início rápido
+
+1) Inicie os containers:
+
+```bash
+docker compose up --build
+```
+
+2) Abra:
+- `http://localhost:8080/`
+
+### Configuração do banco de dados
+
+O app lê as variáveis de ambiente do arquivo `.env` (na raiz do projeto). No Docker, o `docker compose` injeta essas variáveis via `env_file`.
+
+Config padrão (Docker):
+
+```env
+MONGODB_URI=mongodb://mongo:27017
+MONGODB_DBNAME=controleFinanceiro
+
+# Opcional (apenas se o seu Mongo exigir autenticação)
+# MONGODB_USERNAME=
+# MONGODB_PASSWORD=
+```
+
+Se você quiser usar o MongoDB Atlas/Mongo remoto, atualize o arquivo `.env` com a sua string de conexão.
+
+### Persistência de uploads
+
+Os uploads ficam em `anexos/`. O Docker Compose usa um volume nomeado para `/var/www/html/anexos` para que os arquivos enviados persistam entre reinicializações/rebuilds.
 
 # financeiro
 Sistema de controle financeiro para pessoas físicas e jurídicas

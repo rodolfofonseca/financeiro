@@ -1,6 +1,6 @@
 <?php
-require_once 'Sistema/db.php';
-include_once 'Mongo/Mongo.php';
+require_once __DIR__ . '/sistema/db.php';
+include_once __DIR__ . '/Mongo/Mongo.php';
 
 function router_add($rota, $pagina) {
   $rota_atual = $_REQUEST['rota'] ?? 'index';
