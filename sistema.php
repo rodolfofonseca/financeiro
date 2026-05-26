@@ -2,6 +2,7 @@
 require_once 'classes/bancoDeDados.php';
 require_once 'modelos/Sistema.php';
 require_once 'modelos/ContasContabeis.php';
+require_once 'modelos/Usuario.php';
 
 router_add('excluir_conta_contabil', function () {
     $objeto_conta_contabil = new ContasContabeis();
@@ -53,15 +54,18 @@ router_add('pesquisar_conta_contabil', function () {
  */
 router_add('pesquisar_sistema', function () {
     $objeto_sistema = new Sistema();
+    $objeto_usuario = new Usuario();
 
     $empresa = (string) (isset($_REQUEST['empresa']) ? (string) $_REQUEST['empresa'] : '');
     $retorno = (array) [];
+    $retorno_usuario = (array) [];
 
     if ($empresa != '') {
         $retorno = (array) $objeto_sistema->pesquisar((array) ['filtro' => (array) ['empresa', '===', model_id($empresa)]]);
+        $retorno_usuario = (array) $objeto_usuario->pesquisar_todos((array) ['filtro' => (array) ['empresa', '===', model_id($empresa)], 'ordenacao' => (array) ['nome_usuario' => (bool) true], 'limite' => (int) 0]);
     }
 
-    echo json_encode((array) ['dados' => (array) $retorno], JSON_UNESCAPED_UNICODE);
+    echo json_encode((array) ['dados' => (array) $retorno, 'usuarios' => (array) $retorno_usuario], JSON_UNESCAPED_UNICODE);
 });
 
 /** 
@@ -95,6 +99,8 @@ router_add('index', function () {
                 'empresa': EMPRESA
             }, function(retorno) {
                 let sistema_usuario = retorno.dados;
+                let usuarios = retorno.usuarios;
+
                 let modulo_contabil = 0;
                 let pedidos = 0;
                 let cloudinary = 0;
@@ -193,6 +199,27 @@ router_add('index', function () {
                 document.querySelector('#conta_vendas_a_vista').value = conta_vendas_a_vista;
 
                 SISTEMA = sistema_usuario._id;
+
+                let cliente_padrao = document.querySelector('#cliente_padrao');
+                let fornecedor_padrao = document.querySelector('#fornecedor_padrao');
+
+                sistema.each(usuarios, function(index, usuario){
+                let option = sistema.gerar_option(usuario._id.$oid, usuario.nome_usuario);    
+                
+                if(usuario.tipo_usuario == 'CLIENTE'){
+                        cliente_padrao.appendChild(option);
+                    }else{
+                        fornecedor_padrao.appendChild(option);
+                    }
+                });
+
+                if(sistema_usuario.hasOwnProperty('cliente_padrao') == true){
+                    document.querySelector('#cliente_padrao').value = sistema_usuario.cliente_padrao.$oid;
+                }
+
+                if(sistema_usuario.hasOwnProperty('fornecedor_padrao') == true){
+                    document.querySelector('#fornecedor_padrao').value = sistema_usuario.fornecedor_padrao.$oid;
+                }
             });
         }
 
@@ -216,6 +243,8 @@ router_add('index', function () {
             let conta_custo_mercadorias_vendidas = document.querySelector('#conta_custo_mercadorias_vendidas').value;
             let conta_custo_servicos_prestados = document.querySelector('#conta_custo_servicos_prestados').value;
             let conta_apuracao_resultado = document.querySelector('#conta_apuracao_resultado').value;
+            let cliente_padrao = document.querySelector('#cliente_padrao').value;
+            let fornecedor_padrao = document.querySelector('#fornecedor_padrao').value;
 
             let dados = {
                 'rota': 'salvar_dados',
@@ -236,7 +265,9 @@ router_add('index', function () {
                 'conta_servicos_a_prazo':conta_servicos_a_prazo,
                 'conta_custo_mercadorias_vendidas':conta_custo_mercadorias_vendidas,
                 'conta_custo_servicos_prestados':conta_custo_servicos_prestados,
-                'conta_apuracao_resultado':conta_apuracao_resultado
+                'conta_apuracao_resultado':conta_apuracao_resultado,
+                'cliente_padrao':cliente_padrao,
+                'fornecedor_padrao':fornecedor_padrao
             };
             
             sistema.request.post('/sistema.php', dados, function(retorno) {
@@ -366,7 +397,7 @@ router_add('index', function () {
                     sistema.each(contas_contabeis, function(index, conta) {
                         let linha = document.createElement('tr');
 
-                        linha.appendChild(sistema.gerar_td(['text-center'], conta.nome_conta, 'inner'));
+                        linha.appendChild(sistema.gerar_td(['text-start'], validar_grau_conta(conta.grau_conta, conta.nome_conta), 'inner'));
                         linha.appendChild(sistema.gerar_td(['text-center'], validar_grau_conta(conta.grau_conta, conta.conta_contabil), 'inner'));
 
                         if (conta.grau_conta == 1) {
@@ -418,6 +449,11 @@ router_add('index', function () {
             });
         }
 
+        /**
+         * Função responsável por excluir uma conta contábil do sistema.
+         * @param {*} codigo_conta 
+         * 
+         * */
         function excluir_conta(codigo_conta) {
             Swal.fire({
                 title: "Quer mesmo deletar?",
@@ -477,16 +513,16 @@ router_add('index', function () {
                                         <option value="SIM">SIM</option>
                                     </select>
                                 </div>
-                                <div class="col-1 text-center" style="display: none;">
+                                <div class="col-1 text-center" style="display:none;">
                                     <label class="text">Pedidos</label>
                                     <select class="form-control" id="pedidos" disabled="true">
                                         <option value="0">NÃO</option>
                                         <option value="1">SIM</option>
                                     </select>
                                 </div>
-                                <div class="col-1 text-center" style="display: none;">
+                                <div class="col-1 text-center" style="display:none;">
                                     <label class="text">Módulo Contábil</label>
-                                    <select class="form-control" id="modulo_contabil" disabled="true">
+                                    <select class="form-control" id="modulo_contabil">
                                         <option value="0">NÃO</option>
                                         <option value="1">SIM</option>
                                     </select>
@@ -507,10 +543,25 @@ router_add('index', function () {
                                 </div>
                             </div>
                             <br/>
-                            <div class="row" style="display: none;">
+                            <div class="row">
+                                <div class="col-3 text-center">
+                                    <label class="text">Cliente Padrão</label>
+                                    <select class="form-control" id="cliente_padrao">
+                                        <option value="">Selecione Uma Opção</option>
+                                    </select>
+                                </div>
+                                <div class="col-3 text-center">
+                                    <label class="text">Fornecedor Padrão</label>
+                                    <select class="form-control" id="fornecedor_padrao">
+                                        <option value="">Selecione Uma Opção</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <br/>
+                            <div class="row">
                                 <div class="col-3 text-center">
                                     <label class="text">Capital Social</label>
-                                    <input type="text" class="form-control" id="conta_capital_social" sistema-maks="conta-contabil">
+                                    <input type="text" class="form-control" id="conta_capital_social" sistema-mask="conta-contabil">
                                 </div>
                                 <div class="col-3 text-center">
                                     <label class="text">Lucros a apropriar</label>
@@ -526,7 +577,7 @@ router_add('index', function () {
                                 </div>
                             </div>
                             <br/>
-                            <div class="row" style="display: none;">
+                            <div class="row">
                                 <div class="col-3 text-center">
                                     <label class="text">Vendas a Prazo</label>
                                     <input type="text" class="form-control" id="conta_vendas_a_prazo" sistema-mask="conta-contabil">
@@ -545,7 +596,7 @@ router_add('index', function () {
                                 </div>
                             </div>
                             <br/>
-                            <div class="row" style="display: none;">
+                            <div class="row">
                                 <div class="col-3 text-center">
                                     <label class="text">Custo dos Serviços Prestados</label>
                                     <input type="text" class="form-control" id="conta_custo_servicos_prestados" sistema-mask="conta-contabil">

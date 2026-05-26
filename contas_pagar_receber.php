@@ -1,11 +1,106 @@
 <?php
 require_once 'classes/bancoDeDados.php';
 require_once 'classes/Extenso.php';
+require_once 'classes/CodigoBarras/EAN13.php';
+
 require_once 'modelos/ContasPagarReceber.php';
 require_once 'modelos/Empresa.php';
 require_once 'modelos/DocumentosComprovantes.php';
 require_once 'modelos/Usuario.php';
 require_once 'modelos/ContasFornecedores.php';
+
+include_once 'classes/PHPSpreadsheet/PHPSpreadsheet.php';
+
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+
+/**
+ * Função responsável por montar o corpo do excell das contas
+ * @param mixed $sheet - objeto do excell
+ * @param mixed $contas - array contendo as informações das contas
+ * @param int $linha - Variável contendo o valor da linha do excell
+ * @return mixed - Retorna o objeto do excell com o corpo montado
+ */
+function montar_corpo_excell_contas($sheet, $contas, $linha)
+{
+    $sheet->getStyle('A' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+
+    if (array_key_exists('nome_usuario', $contas['pessoa']) == true) {
+        $sheet->setCellValue('A' . $linha, (string) $contas['pessoa']['nome_usuario']);
+    } else {
+        $sheet->setCellValue('A' . $linha, (string) $contas['pessoa']['nome_usuario']);
+    }
+
+    $sheet->getStyle('B' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+    $sheet->setCellValue('B' . $linha, (string) $contas['nome_conta']);
+
+    $sheet->getStyle('C' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+    $sheet->setCellValue('C' . $linha, (string) $contas['descricao']);
+
+    $sheet->getStyle('D' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+    if (array_key_exists('transacao', $contas) == true) {
+        $sheet->setCellValue('D' . $linha, (string) $contas['transacao']);
+    } else {
+        $sheet->setCellValue('D' . $linha, (string) '');
+    }
+
+    $sheet->getStyle('E' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+    $sheet->getCell('E' . $linha)->setValue((string) $contas['valor_conta'])->getStyle()->getNumberFormat()->setFormatCode('#,##0.00');
+
+    $sheet->getStyle('F' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+    if ($contas['status_conta'] == 'PAGO') {
+        $sheet->getCell('F' . $linha)->setValue((string) $contas['valor_pago'])->getStyle()->getNumberFormat()->setFormatCode('#,##0.00');
+    } else {
+        $sheet->setCellValue('F' . $linha, (string) '');
+    }
+
+    $sheet->getStyle('G' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+    if ($contas['tipo_juro_desconto'] != '') {
+        $sheet->getCell('G' . $linha)->setValue((string) $contas['valor_juro_desconto'])->getStyle()->getNumberFormat()->setFormatCode('#,##0.00');
+    } else {
+        $sheet->setCellValue('G' . $linha, (string) '');
+    }
+
+    $sheet->getStyle('H' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+    if ($contas['tipo_juro_desconto'] != '') {
+        $sheet->setCellValue('H' . $linha, (string) $contas['tipo_juro_desconto']);
+    } else {
+        $sheet->setCellValue('H' . $linha, (string) '');
+    }
+
+    $sheet->getStyle('I' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+    $sheet->setCellValue('I' . $linha, (string) convert_date($contas['data_vencimento']));
+
+    $sheet->getStyle('J' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+    if ($contas['status_conta'] == 'VENCIDA' || $contas['status_conta'] == 'AGUARDANDO') {
+
+    } else {
+        $sheet->setCellValue('J' . $linha, (string) convert_date($contas['data_baixa']));
+    }
+
+    $sheet->getStyle('K' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+    if ($contas['tipo_conta'] == 'RECEBER') {
+        $sheet->getStyle('K' . $linha)->getFont()->setBold(true);
+    } else {
+        $sheet->getStyle('K' . $linha)->getFont()->setBold(false);
+    }
+    $sheet->setCellValue('K' . $linha, (string) $contas['tipo_conta']);
+
+    $sheet->getStyle('L' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+    if ($contas['status_conta'] == 'VENCIDA') {
+        $sheet->getStyle('L' . $linha)->getFont()->setBold(true);
+    } else {
+        $sheet->getStyle('L' . $linha)->getFont()->setBold(false);
+    }
+
+    $sheet->setCellValue('L' . $linha, (string) $contas['status_conta']);
+
+    return $sheet;
+}
 
 /** 
  * !Função responsável por verificar se a rota ativa é a de anexar comprovante
@@ -17,7 +112,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $objeto_documentos_comprovantes = new DocumentosComprovantes();
 
             if ($_POST['rota'] == 'anexar_documentos') {
-                // model_insert('teste', ['nome' => $_POST]);
 
                 $retorno = (bool) $objeto_documentos_comprovantes->salvar_dados_arquivos($_POST, $_FILES);
 
@@ -48,6 +142,131 @@ router_add('pesquisar_conta', function () {
     exit;
 });
 
+/**
+ * !Rota responsável por gerar um arquivo do excell
+ */
+router_add('gerar_excell', function () {
+    $login_usuario = (string) (isset($_REQUEST['login_usuario']) ? (string) strtoupper($_REQUEST['login_usuario']) : '');
+    $vencimento_anterior = (bool) (isset($_REQUEST['vencimentos_anteriores']) ? (bool) filter_var($_REQUEST['vencimentos_anteriores'], FILTER_VALIDATE_BOOLEAN) : false);
+    $retorno_vencimentos_anteriores = (array) [];
+
+    $objeto_contas_pagar_receber = new ContasPagarReceber();
+    $retorno_contas = (array) $objeto_contas_pagar_receber->pesquisar_contas($_REQUEST);
+
+    if ($vencimento_anterior == true) {
+        $filtro_montando = (array) [];
+        $filtro = (array) ['filtro' => (array) [], 'ordenacao' => (array) ['data_vencimento' => (bool) true], 'limite' => (int) 0];
+
+        $empresa = (string) (isset($_REQUEST['empresa']) ? (string) $_REQUEST['empresa'] : '');
+        $data_vencimento = (string) (isset($_REQUEST['data_vencimento_inicio']) ? (string) $_REQUEST['data_vencimento_inicio'] : '');
+
+        if ($empresa != '') {
+            array_push($filtro_montando, ['empresa', '===', model_id($empresa)]);
+        }
+
+        if ($data_vencimento != '') {
+            array_push($filtro_montando, ['data_vencimento', '<=', model_date($data_vencimento, '00:00:00')]);
+        }
+
+        array_push($filtro_montando, ['status_conta', '===', (string) 'VENCIDA']);
+        $filtro['filtro'] = (array) ['and' => (array) $filtro_montando];
+        $retorno_vencimento_anteriores = (array) $objeto_contas_pagar_receber->pesquisar_todos($filtro);
+    }
+
+    if (empty($retorno_contas) == true) {
+        echo json_encode((array) ['status' => false, 'link' => ''], JSON_UNESCAPED_UNICODE);
+    } else {
+        $pasta = (string) 'anexos/excell';
+
+        if (is_dir($pasta) == false) {
+            mkdir($pasta, 0777, true);
+        }
+
+        $spreadsheet = new Spreadsheet();
+        $planilha = $spreadsheet->getActiveSheet();
+
+        foreach (array('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K') as $coluna) {
+            $planilha->getColumnDimension($coluna)->setAutoSize(true);
+        }
+
+        $spreadsheet->getProperties()->setCreator("Usuario")->setLastModifiedBy(strval($login_usuario))->setTitle("RELATORIO");
+
+        $negrito = (array) ['font' => ['bold' => true]];
+        $borda = [
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                    'color' => ['argb' => '00000000'],
+                ],
+            ],
+        ];
+
+        $linha = (int) 1;
+
+        $spreadsheet->setActiveSheetIndex(0);
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $sheet->getStyle('A' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A' . $linha)->getFont()->setBold(true);
+        $sheet->setCellValue('A' . $linha, 'FORNECEDOR');
+        $sheet->getStyle('B' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('B' . $linha)->getFont()->setBold(true);
+        $sheet->setCellValue('B' . $linha, 'NOME CONTA');
+        $sheet->getStyle('C' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('C' . $linha)->getFont()->setBold(true);
+        $sheet->setCellValue('C' . $linha, 'DESCRIÇÃO');
+        $sheet->getStyle('D' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('D' . $linha)->getFont()->setBold(true);
+        $sheet->setCellValue('D' . $linha, 'TRANSAÇÃO');
+        $sheet->getStyle('E' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('E' . $linha)->getFont()->setBold(true);
+        $sheet->setCellValue('E' . $linha, 'VALOR CONTA');
+        $sheet->getStyle('E' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('F' . $linha)->getFont()->setBold(true);
+        $sheet->setCellValue('F' . $linha, 'VALOR PAGO');
+        $sheet->getStyle('F' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('G' . $linha)->getFont()->setBold(true);
+        $sheet->setCellValue('G' . $linha, 'VALOR JURO DESCONTO');
+        $sheet->getStyle('G' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('H' . $linha)->getFont()->setBold(true);
+        $sheet->setCellValue('H' . $linha, 'TIPO JURO DESCONTO');
+        $sheet->getStyle('H' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('I' . $linha)->getFont()->setBold(true);
+        $sheet->setCellValue('I' . $linha, 'DATA VENCIMENTO');
+        $sheet->getStyle('I' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('J' . $linha)->getFont()->setBold(true);
+        $sheet->setCellValue('J' . $linha, 'DATA BAIXA');
+        $sheet->getStyle('J' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('K' . $linha)->getFont()->setBold(true);
+        $sheet->setCellValue('K' . $linha, 'TIPO CONTA');
+        $sheet->getStyle('K' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('L' . $linha)->getFont()->setBold(true);
+        $sheet->setCellValue('L' . $linha, 'STATUS CONTA');
+
+        if ($vencimento_anterior == true) {
+            if(empty($retorno_vencimento_anteriores) == false){
+                foreach($retorno_vencimento_anteriores as $contas){
+                    $linha++;
+                    $sheet = montar_corpo_excell_contas($sheet, $contas, $linha);
+                }
+            }
+        }
+
+        foreach ($retorno_contas as $contas) {
+            $linha++;
+            $sheet = montar_corpo_excell_contas($sheet, $contas, $linha);
+        }
+
+        $writer = new Xlsx($spreadsheet);
+        $writer->save($pasta . '/relatorio_contas_pagar_receber.xlsx');
+        echo json_encode([
+            'status' => true,
+            'resposta' => $pasta . '/relatorio_contas_pagar_receber.xlsx'
+        ]);
+    }
+    exit;
+});
+
 /** 
  * !Rota responsáel por salvar os dados da conta no banco de dados
  */
@@ -63,75 +282,8 @@ router_add('salvar_dados', function () {
  */
 router_add('pesquisar_contas', function () {
     $objeto_contas_pagar_receber = new ContasPagarReceber();
-    $filtro = (array) ['filtro' => (array) [], 'ordenacao' => (array) ['data_vencimento' => (bool) true], 'limite' => (int) 0];
-    $filtro_montando = (array) [];
-    $retorno_final = (array) [];
 
-    $nome_conta = (string) (isset($_REQUEST['nome_conta']) ? (string) $_REQUEST['nome_conta'] : '');
-    $descricao = (string) (isset($_REQUEST['descricao']) ? (string) $_REQUEST['descricao'] : '');
-    $tipo_conta = (string) (isset($_REQUEST['tipo_conta']) ? (string) $_REQUEST['tipo_conta'] : 'TODOS');
-    $status_conta = (string) (isset($_REQUEST['status_conta']) ? (string) $_REQUEST['status_conta'] : 'TODOS');
-    $data_inicio_cadastro = (string) (isset($_REQUEST['data_cadastro_inicio']) ? (string) $_REQUEST['data_cadastro_inicio'] : '');
-    $data_fim_cadastro = (string) (isset($_REQUEST['data_cadastro_fim']) ? (string) $_REQUEST['data_cadastro_fim'] : '');
-    $data_vencimento_inicio = (string) (isset($_REQUEST['data_vencimento_inicio']) ? (string) $_REQUEST['data_vencimento_inicio'] : '');
-    $data_vencimento_fim = (string) (isset($_REQUEST['data_vencimento_fim']) ? (string) $_REQUEST['data_vencimento_fim'] : '');
-    $data_baixa_inicio = (string) (isset($_REQUEST['data_baixa_inicio']) ? (string) $_REQUEST['data_baixa_inicio'] : '');
-    $data_baixa_fim = (string) (isset($_REQUEST['data_baixa_fim']) ? (string) $_REQUEST['data_baixa_fim'] : '');
-    $empresa = (string) (isset($_REQUEST['empresa']) ? (string) $_REQUEST['empresa'] : '');
-    $cliente_fornecedor = (string) (isset($_REQUEST['cliente_fornecedor']) ? (string) $_REQUEST['cliente_fornecedor'] : '');
-
-    if ($nome_conta != '') {
-        array_push($filtro_montando, (array) ['nome_conta', '=', (string) strtoupper($nome_conta)]);
-    }
-
-    if ($descricao != '') {
-        array_push($filtro_montando, (array) ['descricao', '=', (string) $descricao]);
-    }
-
-    if ($tipo_conta != 'TODOS') {
-        array_push($filtro_montando, (array) ['tipo_conta', '===', (string) $tipo_conta]);
-    }
-
-    if ($status_conta != 'TODOS') {
-        array_push($filtro_montando, (array) ['status_conta', '===', (string) $status_conta]);
-    }
-
-    if ($empresa != '') {
-        array_push($filtro_montando, (array) ['empresa', '===', model_id($empresa)]);
-    }
-
-    if ($data_inicio_cadastro != '') {
-        array_push($filtro_montando, (array) ['data_cadastro', '>=', model_date($data_inicio_cadastro)]);
-    }
-
-    if ($data_fim_cadastro != '') {
-        array_push($filtro_montando, (array) ['data_cadastro', '<=', model_date($data_fim_cadastro)]);
-    }
-
-    if ($data_vencimento_inicio != '') {
-        array_push($filtro_montando, (array) ['data_vencimento', '>=', model_date($data_vencimento_inicio)]);
-    }
-
-    if ($data_vencimento_fim != '') {
-        array_push($filtro_montando, (array) ['data_vencimento', '<=', model_date($data_vencimento_fim)]);
-    }
-
-    if ($data_baixa_inicio != '') {
-        array_push($filtro_montando, (array) ['data_baixa', '>=', model_date($data_baixa_inicio)]);
-    }
-
-    if ($data_baixa_fim != '') {
-        array_push($filtro_montando, (array) ['data_baixa', '<=', model_date($data_baixa_fim)]);
-    }
-
-    if ($cliente_fornecedor != '') {
-        array_push($filtro_montando, (array) ['cliente_fornecedor', '===', model_id($cliente_fornecedor)]);
-    }
-
-    $filtro['filtro'] = (array) ['and' => (array) $filtro_montando];
-    $retorno_contas_sem_cliente_fornecedor = (array) $objeto_contas_pagar_receber->pesquisar_todos($filtro);
-
-    echo json_encode((array) ['dados' => (array) $retorno_contas_sem_cliente_fornecedor], JSON_UNESCAPED_UNICODE);
+    echo json_encode((array) ['dados' => (array) $objeto_contas_pagar_receber->pesquisar_contas($_REQUEST)], JSON_UNESCAPED_UNICODE);
     exit;
 });
 
@@ -200,11 +352,11 @@ router_add('imprimir_arquivo', function () {
 
         $nomeDownload = basename($caminho);
 
-        if (ob_get_level()) ob_end_clean();
+        if (ob_get_level())
+            ob_end_clean();
 
         header('Content-Type: application/octet-stream');
         header('Content-Disposition: inline; filename="' . basename($caminho) . '"');
-        // header('Content-Disposition: attachment; filename="' . $nomeDownload . '"');
         header('Content-Length: ' . filesize($caminho));
         header('Content-Transfer-Encoding: binary');
 
@@ -354,7 +506,7 @@ router_add('imprimir_promissoria', function () {
     }
 
     $valor_extenso = $extesao->converte($valor_conta, true, false);
-?>
+    ?>
     <style>
         .nota {
             max-width: 800px;
@@ -401,7 +553,8 @@ router_add('imprimir_promissoria', function () {
                 Ao(s) <span class="linha d-inline-block w-25"><?php echo $nome_empresa; ?></span> na data de
                 <span class="linha d-inline-block w-25"> <?php echo $data_vencimento_conta; ?></span>,
                 pagarei por esta única via de <strong>NOTA PROMISSÓRIA</strong> a quantia de
-                <strong>R$ <?php echo $valor_conta; ?></strong> Valor por extenso: <strong><?php echo $valor_extenso; ?></strong> à
+                <strong>R$ <?php echo $valor_conta; ?></strong> Valor por extenso:
+                <strong><?php echo $valor_extenso; ?></strong> à
             </p>
 
             <p>
@@ -430,9 +583,9 @@ router_add('imprimir_promissoria', function () {
 
         </div>
 
-    <?php
+        <?php
 
-    require_once 'includes/footer_sem.php';
+        require_once 'includes/footer_sem.php';
 });
 
 /** 
@@ -460,6 +613,7 @@ router_add('index', function () {
             const DATA_INICIO = "<?php echo $data_inicio; ?>";
             const DATA_FIM = "<?php echo $data_fim; ?>";
             const ANEXA_DOCUMENTOS = <?php echo ($anexa_documentos == true) ? 1 : 0; ?>;
+            const LOGIN_USUARIO = "<?php echo $login_usuario; ?>";
 
             /** 
              * Função responsável por abrir o módulo de cadastro de contas
@@ -470,6 +624,44 @@ router_add('index', function () {
                     'rota': 'cadastro_contas',
                     'codigo_conta_pagar_receber': codigo_conta_pagar_receber
                 })
+            }
+
+            function gerar_excell() {
+                let nome_conta = document.querySelector('#nome_conta').value;
+                let descricao = document.querySelector('#descricao').value;
+                let tipo_conta = document.querySelector('#tipo_conta').value;
+                let status_conta = document.querySelector('#status_conta').value;
+                let data_cadastro_inicio = document.querySelector('#data_cadastro_inicio').value;
+                let data_cadastro_fim = document.querySelector('#data_cadastro_fim').value;
+                let data_baixa_inicio = document.querySelector('#data_baixa_inicio').value;
+                let data_baixa_fim = document.querySelector('#data_baixa_fim').value;
+                let data_vencimento_inicio = document.querySelector('#data_vencimento_inicio').value;
+                let data_vencimento_fim = document.querySelector('#data_vencimento_fim').value;
+                let cliente_fornecedor = document.querySelector('#cliente_fornecedor').value;
+                let vencimentos_anteriores = document.querySelector('#visualizar_vencidas_anteriores').checked;
+
+                if (data_vencimento_inicio == '') {
+                    data_vencimento_inicio = DATA_INICIO;
+                }
+
+                if (data_vencimento_fim == '') {
+                    data_vencimento_fim = DATA_FIM;
+                }
+
+                if (LOGIN_USUARIO == '') {
+                    this.Swal.fire('ATENÇÃO', 'Nome de usuário inválido!', 'warning');
+                    return;
+                }
+
+                let dados = { 'rota': 'gerar_excell', 'empresa': EMPRESA, 'nome_conta': nome_conta, 'descricao': descricao, 'tipo_conta': tipo_conta, 'status_conta': status_conta, 'data_cadastro_inicio': data_cadastro_inicio, 'data_cadastro_fim': data_cadastro_fim, 'data_baixa_inicio': data_baixa_inicio, 'data_baixa_fim': data_baixa_fim, 'data_vencimento_inicio': data_vencimento_inicio, 'data_vencimento_fim': data_vencimento_fim, 'cliente_fornecedor': cliente_fornecedor, 'vencimentos_anteriores': vencimentos_anteriores, 'login_usuario': LOGIN_USUARIO };
+
+                sistema.request.post('/contas_pagar_receber.php', dados, function (retorno) {
+                    if (retorno.status == false) {
+                        this.Swal.fire('ATENÇÃO', 'Nenhum conta encontrada, com os filtros passsados!', 'warning');
+                    } else {
+                        sistema.download('', retorno.resposta);
+                    }
+                });
             }
 
             /** 
@@ -510,7 +702,7 @@ router_add('index', function () {
                     'data_vencimento_fim': data_vencimento_fim,
                     'empresa': EMPRESA,
                     'cliente_fornecedor': cliente_fornecedor
-                }, function(retorno) {
+                }, function (retorno) {
                     let contas = retorno.dados;
                     let tabela_contas = document.querySelector('#tabela_contas tbody');
                     let tamanho_retorno = contas.length;
@@ -532,19 +724,31 @@ router_add('index', function () {
                         linha.appendChild(sistema.gerar_td(['text-center'], 'NENHUMA CONTA ENCONTRADA, COM OS FILTROS PASSADOS!', 'inner', true, 15));
                         tabela_contas.appendChild(linha);
                     } else {
-                        sistema.each(contas, function(index, conta) {
+                        sistema.each(contas, function (index, conta) {
 
                             let linha = document.createElement('tr');
 
                             if (conta.hasOwnProperty('pessoa') == true) {
-                                linha.appendChild(sistema.gerar_td(['text-left'], sistema.cortar_string(conta.pessoa.nome_usuario, 15), 'inner', false, '', conta.pessoa.nome_usuario));
+                                linha.appendChild(sistema.gerar_td(['text-left'], '<strong>' + sistema.cortar_string(conta.pessoa.nome_usuario, 15) + '</strong>', 'inner', false, '', conta.pessoa.nome_usuario));
                             } else {
                                 linha.appendChild(sistema.gerar_td(['text-center'], '', 'inner'));
                             }
 
                             linha.appendChild(sistema.gerar_td(['text-let'], sistema.cortar_string(conta.nome_conta, 15), 'inner', false, '', conta.nome_conta));
                             linha.appendChild(sistema.gerar_td(['text-left'], sistema.cortar_string(conta.descricao, 30), 'inner', false, '', conta.descricao));
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.number_format(conta.valor_conta), 'inner'));
+
+                            if (conta.hasOwnProperty('transacao') == true) {
+                                linha.appendChild(sistema.gerar_td(['text-left'], conta.transacao, 'inner', false, '', conta.transacao));
+                            } else {
+                                linha.appendChild(sistema.gerar_td(['text-left'], '', 'inner', false, '', ''));
+                            }
+
+                            if (conta.tipo_conta == 'PAGAR') {
+                                linha.appendChild(sistema.gerar_td(['text-center', 'fw-bold', 'text-danger'], sistema.number_format(conta.valor_conta), 'inner'));
+                            } else {
+                                linha.appendChild(sistema.gerar_td(['text-center', 'fw-bold', 'text-success'], sistema.number_format(conta.valor_conta), 'inner'));
+                            }
+
                             linha.appendChild(sistema.gerar_td(['text-center'], sistema.retornar_data(conta.data_vencimento), 'inner'));
 
                             if (conta.status_conta == 'AGUARDANDO' || conta.status_conta == 'VENCIDA' || conta.status_conta == 'VENCIDO') {
@@ -555,19 +759,19 @@ router_add('index', function () {
                             }
 
                             if (conta.tipo_conta == 'PAGAR') {
-                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_conta_' + conta._id.$oid, 'PAGAR', ['btn', 'btn-outline-danger'], function tipo_conta() {}), 'append'));
+                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_conta_' + conta._id.$oid, 'PAGAR', ['btn', 'btn-outline-danger'], function tipo_conta() { }), 'append'));
                             } else {
-                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_conta_' + conta._id.$oid, 'RECEBER', ['btn', 'btn-outline-success'], function tipo_conta() {}), 'append'));
+                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_conta_' + conta._id.$oid, 'RECEBER', ['btn', 'btn-outline-success'], function tipo_conta() { }), 'append'));
                             }
 
                             if (conta.status_conta == 'AGUARDANDO') {
-                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_conta_' + conta._id.$oid, 'AGUARDANDO', ['btn', 'btn-outline-secondary'], function status_conta() {}), 'append'));
+                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_conta_' + conta._id.$oid, 'AGUARDANDO', ['btn', 'btn-outline-secondary'], function status_conta() { }), 'append'));
                             } else if (conta.status_conta == 'PAGO') {
-                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_conta_' + conta._id.$oid, 'PAGO', ['btn', 'btn-outline-success'], function status_conta() {}), 'append'));
+                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_conta_' + conta._id.$oid, 'PAGO', ['btn', 'btn-outline-success'], function status_conta() { }), 'append'));
                             } else if (conta.status_conta == 'CANCELADO') {
-                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_conta_' + conta._id.$oid, 'CANCELADO', ['btn', 'btn-outline-warning'], function status_conta() {}), 'append'));
+                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_conta_' + conta._id.$oid, 'CANCELADO', ['btn', 'btn-outline-warning'], function status_conta() { }), 'append'));
                             } else if (conta.status_conta == 'VENCIDA' || conta.status_conta == 'VENCIDO') {
-                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_conta_' + conta._id.$oid, 'VENCIDA', ['btn', 'btn-outline-danger'], function status_conta() {}), 'append'));
+                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_conta_' + conta._id.$oid, 'VENCIDA', ['btn', 'btn-outline-danger'], function status_conta() { }), 'append'));
                             }
 
                             let botao = document.createElement('button');
@@ -582,7 +786,7 @@ router_add('index', function () {
                                 botao.disabled = true;
                             }
 
-                            botao.addEventListener('click', function() {
+                            botao.addEventListener('click', function () {
                                 document.querySelector('#valor_conta').value = sistema.number_format(conta.valor_conta);
                                 document.querySelector('#data_vencimento').value = sistema.retornar_data(conta.data_vencimento, 'AMERICANO');
                                 document.querySelector('#codigo_conta_pagar_receber').value = conta._id.$oid;
@@ -601,7 +805,7 @@ router_add('index', function () {
                                         botao_boleto.dataset.bsToggle = 'modal';
                                         botao_boleto.dataset.bsTarget = '#modal_anexar_documentos';
 
-                                        botao_boleto.addEventListener('click', function() {
+                                        botao_boleto.addEventListener('click', function () {
                                             document.querySelector('#codigo_local').value = conta._id.$oid;
                                             document.querySelector('#nome_conta_anexo_documentos').value = conta.nome_conta;
                                             document.querySelector('#empresa_anexo_documento').value = EMPRESA;
@@ -615,7 +819,7 @@ router_add('index', function () {
                                         botao_baixar_arquivo.classList.add('btn');
                                         botao_baixar_arquivo.classList.add('btn-info');
 
-                                        botao_baixar_arquivo.onclick = function() {
+                                        botao_baixar_arquivo.onclick = function () {
                                             abrir_modal_download_arquivo(conta._id.$oid, 'CONTAS_PAGAR_RECEBER_BOLETOS');
                                         }
 
@@ -630,7 +834,7 @@ router_add('index', function () {
                                     botao_boleto.dataset.bsToggle = 'modal';
                                     botao_boleto.dataset.bsTarget = '#modal_anexar_documentos';
 
-                                    botao_boleto.addEventListener('click', function() {
+                                    botao_boleto.addEventListener('click', function () {
                                         document.querySelector('#codigo_local').value = conta._id.$oid;
                                         document.querySelector('#nome_conta_anexo_documentos').value = conta.nome_conta;
                                         document.querySelector('#empresa_anexo_documento').value = EMPRESA;
@@ -652,7 +856,7 @@ router_add('index', function () {
                                         botao_documentos.classList.add('btn-success');
                                         botao_documentos.dataset.bsToggle = 'modal';
                                         botao_documentos.dataset.bsTarget = '#modal_anexar_documentos';
-                                        botao_documentos.addEventListener('click', function() {
+                                        botao_documentos.addEventListener('click', function () {
                                             document.querySelector('#codigo_local').value = conta._id.$oid;
                                             document.querySelector('#nome_conta_anexo_documentos').value = conta.nome_conta;
                                             document.querySelector('#empresa_anexo_documento').value = EMPRESA;
@@ -666,7 +870,7 @@ router_add('index', function () {
                                         botao_baixar_arquivo.classList.add('btn');
                                         botao_baixar_arquivo.classList.add('btn-info');
 
-                                        botao_baixar_arquivo.onclick = function() {
+                                        botao_baixar_arquivo.onclick = function () {
                                             abrir_modal_download_arquivo(conta._id.$oid, 'CONTAS_PAGAR_RECEBER');
                                         }
 
@@ -675,9 +879,9 @@ router_add('index', function () {
                                 }
 
                                 linha.appendChild(sistema.gerar_td(['text-center'], botao, 'append'));
-                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_imprimir_conta_' + conta._id.$oid, 'IMPRIMIR', ['btn', 'btn-secondary', 'disabled'], function imprimir_conta_botao() {}), 'append'));
-                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_excluir_conta_' + conta._id.$oid, 'EXCLUIR', ['btn', 'btn-danger', 'disabled'], function imprimir_conta_botao() {}), 'append'));
-                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_editar_conta_' + conta._id.$oid, 'EDITAR', ['btn', 'btn-primary', 'disabled'], function baixar_conta_botao() {}), 'append'));
+                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_imprimir_conta_' + conta._id.$oid, 'IMPRIMIR', ['btn', 'btn-secondary', 'disabled'], function imprimir_conta_botao() { }), 'append'));
+                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_excluir_conta_' + conta._id.$oid, 'EXCLUIR', ['btn', 'btn-danger', 'disabled'], function imprimir_conta_botao() { }), 'append'));
+                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_editar_conta_' + conta._id.$oid, 'EDITAR', ['btn', 'btn-primary', 'disabled'], function baixar_conta_botao() { }), 'append'));
                             } else {
                                 linha.appendChild(sistema.gerar_td(['text-center'], '', 'inner'));
                                 linha.appendChild(sistema.gerar_td(['text-center'], botao, 'append'));
@@ -687,7 +891,7 @@ router_add('index', function () {
                                         abrir_modal_impressao_promissoria(conta._id.$oid);
                                     }), 'append'));
                                 } else {
-                                    linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_imprimir_conta_' + conta._id.$oid, 'IMPRIMIR', ['btn', 'btn-secondary', 'disabled'], function imprimir_conta_botao() {}), 'append'));
+                                    linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_imprimir_conta_' + conta._id.$oid, 'IMPRIMIR', ['btn', 'btn-secondary', 'disabled'], function imprimir_conta_botao() { }), 'append'));
                                 }
 
                                 linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_excluir_conta_' + conta._id.$oid, 'EXCLUIR', ['btn', 'btn-danger'], function excluir_conta_botao() {
@@ -704,7 +908,7 @@ router_add('index', function () {
                                             sistema.request.post('/contas_pagar_receber.php', {
                                                 'rota': 'excluir_conta',
                                                 'codigo_conta': conta._id.$oid
-                                            }, function(retorno) {
+                                            }, function (retorno) {
                                                 if (retorno.status == true) {
                                                     Swal.fire({
                                                         title: "Deletado!",
@@ -718,9 +922,12 @@ router_add('index', function () {
                                                         icon: "error"
                                                     });
                                                 }
-                                                window.location.href = sistema.url('/contas_pagar_receber.php', {
-                                                    'rota': 'index'
-                                                });
+
+                                                setTimeout(() => {
+                                                    window.location.href = sistema.url('/contas_pagar_receber.php', {
+                                                        'rota': 'index'
+                                                    });
+                                                }), 3000;
                                             });
                                         }
 
@@ -742,7 +949,7 @@ router_add('index', function () {
                                 } else if (conta.status_conta == 'VENCIDA' || conta.status_conta == 'VENCIDO') {
                                     total_contas_pagar_vencidas = total_contas_pagar_vencidas + conta.valor_conta;
                                 }
-                            } else{
+                            } else {
                                 if (conta.status_conta == 'AGUARDANDO') {
                                     total_contas_receber_aguardando = total_contas_receber_aguardando + conta.valor_conta;
                                 } else if (conta.status_conta == 'PAGO') {
@@ -762,18 +969,18 @@ router_add('index', function () {
 
                     let linha = document.createElement('tr');
 
-                    linha.appendChild(sistema.gerar_td(['text-start'], 'PG. AGUAR.: R$: <strong>' + sistema.number_format(total_contas_pagar_aguardando, 2, ',') + '</strong>', 'inner'));
-                    linha.appendChild(sistema.gerar_td(['text-start'], 'PG. CANCE.: R$: <strong>' + sistema.number_format(total_contas_pagar_canceladas, 2, ',') + '</strong>', 'inner'));
-                    linha.appendChild(sistema.gerar_td(['text-start'], 'PG. VENCI.: R$: <strong>' + sistema.number_format(total_contas_pagar_vencidas, 2, ',') + '</strong>', 'inner'));
-                    linha.appendChild(sistema.gerar_td(['text-start'], 'PG. PAGAS: R$: <strong>' + sistema.number_format(total_contas_pagar_pagas, 2, ',') + '</strong>', 'inner'));
+                    linha.appendChild(sistema.gerar_td(['text-start', 'text-info'], 'PG. AGUAR.: R$: <strong>' + sistema.number_format(total_contas_pagar_aguardando, 2, ',') + '</strong>', 'inner'));
+                    linha.appendChild(sistema.gerar_td(['text-start', 'text-warning'], 'PG. CANCE.: R$: <strong>' + sistema.number_format(total_contas_pagar_canceladas, 2, ',') + '</strong>', 'inner'));
+                    linha.appendChild(sistema.gerar_td(['text-start', 'text-danger'], 'PG. VENCI.: R$: <strong>' + sistema.number_format(total_contas_pagar_vencidas, 2, ',') + '</strong>', 'inner'));
+                    linha.appendChild(sistema.gerar_td(['text-start', 'text-success'], 'PG. PAGAS: R$: <strong>' + sistema.number_format(total_contas_pagar_pagas, 2, ',') + '</strong>', 'inner'));
 
                     linha.appendChild(sistema.gerar_td(['text-start'], '', 'inner'));
-                    
-                    linha.appendChild(sistema.gerar_td(['text-start'], 'RB. AGUAR.: R$: <strong>' + sistema.number_format(total_contas_receber_aguardando, 2, ',') + '</strong>', 'inner'));
-                    linha.appendChild(sistema.gerar_td(['text-start'], 'RB. CANCE.: R$: <strong>' + sistema.number_format(total_contas_receber_canceladas, 2, ',') + '</strong>', 'inner'));
-                    linha.appendChild(sistema.gerar_td(['text-start'], 'RB. VENCI.: R$:<strong> ' + sistema.number_format(total_contas_receber_vencidas, 2, ',') + '</strong>', 'inner'));
-                    linha.appendChild(sistema.gerar_td(['text-start'], 'RB. PAGAS: R$: <strong>' + sistema.number_format(total_contas_receber_pagas, 2, ',') + '</strong>', 'inner'));
-                    
+
+                    linha.appendChild(sistema.gerar_td(['text-start', 'text-info'], 'RB. AGUAR.: R$: <strong>' + sistema.number_format(total_contas_receber_aguardando, 2, ',') + '</strong>', 'inner'));
+                    linha.appendChild(sistema.gerar_td(['text-start', 'text-warning'], 'RB. CANCE.: R$: <strong>' + sistema.number_format(total_contas_receber_canceladas, 2, ',') + '</strong>', 'inner'));
+                    linha.appendChild(sistema.gerar_td(['text-start', 'text-danger'], 'RB. VENCI.: R$:<strong> ' + sistema.number_format(total_contas_receber_vencidas, 2, ',') + '</strong>', 'inner'));
+                    linha.appendChild(sistema.gerar_td(['text-start', 'text-success'], 'RB. PAGAS: R$: <strong>' + sistema.number_format(total_contas_receber_pagas, 2, ',') + '</strong>', 'inner'));
+
                     linha.appendChild(sistema.gerar_td(['text-start'], '', 'inner'));
                     linha.appendChild(sistema.gerar_td(['text-start'], '', 'inner'));
                     linha.appendChild(sistema.gerar_td(['text-start'], '', 'inner'));
@@ -865,13 +1072,13 @@ router_add('index', function () {
                     'rota': 'pesquisar_contas',
                     'empresa': EMPRESA,
                     'status': 'ATIVO'
-                }, function(retorno) {
+                }, function (retorno) {
                     let contas = retorno.dados;
                     let tamanho_retorno = contas.length;
                     if (tamanho_retorno > 0) {
                         let select_conta = document.querySelector('#conta');
 
-                        sistema.each(contas, function(index, conta) {
+                        sistema.each(contas, function (index, conta) {
                             select_conta.appendChild(sistema.gerar_option(conta._id.$oid, conta.nome_conta + " | " + sistema.number_format(conta.saldo_conta)));
                         });
                     }
@@ -904,7 +1111,7 @@ router_add('index', function () {
                     'anexa_documentos': 'NAO'
                 };
 
-                sistema.request.post('/contas_pagar_receber.php', objeto_json, function(retorno) {
+                sistema.request.post('/contas_pagar_receber.php', objeto_json, function (retorno) {
                     validar_retorno(retorno, '/contas_pagar_receber.php');
                 });
 
@@ -931,12 +1138,12 @@ router_add('index', function () {
                 sistema.request.post('/clientes.php', {
                     'rota': 'pesquisar_clientes',
                     'empresa': EMPRESA,
-                    'tipo_usuario': 'CLIENTE_FORNECEDOR'
-                }, function(retorno) {
+                    'tipo_usuario': ''
+                }, function (retorno) {
                     let select = document.querySelector('#cliente_fornecedor');
                     let cliente_fornecedor = retorno.dados;
 
-                    sistema.each(cliente_fornecedor, function(index, cliente) {
+                    sistema.each(cliente_fornecedor, function (index, cliente) {
                         select.appendChild(sistema.gerar_option(cliente._id.$oid, cliente.nome_usuario));
                     });
                 });
@@ -951,7 +1158,8 @@ router_add('index', function () {
                     </div>
                     <div class="d-flex my-xl-auto right-content align-items-center flex-wrap gap-2">
                         <div class="dropdown">
-                            <button class="btn btn-primary d-flex align-items-center justify-content-center" onclick="cadastro_contas('');">
+                            <button class="btn btn-primary d-flex align-items-center justify-content-center"
+                                onclick="cadastro_contas('');">
                                 Cadastrar Conta
                             </button>
                         </div>
@@ -959,15 +1167,17 @@ router_add('index', function () {
                 </div>
                 <?php
                 if ($mensagem == true) {
-                ?>
+                    ?>
                     <div class="alert alert-danger" role="alert">
                         <h5 class="alert-heading text-dark">⚠️ Atenção</h5>
                         <p class="text-dark mb-2">Você possui contas vencidas de meses anteriores.</p>
                         <p class="mb-0">
-                            <button class="btn btn-primary d-flex align-items-center justify-content-center" data-bs-toggle="modal" data-bs-target="#modal_contas_vencidas_anteriores">VER CONTAS VENCIDAS</button>
+                            <button class="btn btn-primary d-flex align-items-center justify-content-center"
+                                data-bs-toggle="modal" data-bs-target="#modal_contas_vencidas_anteriores">VER CONTAS
+                                VENCIDAS</button>
                         </p>
                     </div>
-                <?php
+                    <?php
                 }
                 ?>
                 <div class="row">
@@ -990,7 +1200,8 @@ router_add('index', function () {
                                     </div>
                                     <div class="col-3">
                                         <label class="text">Descrição</label>
-                                        <input type="text" class="form-control" id="descricao" placeholder="Descrição da Conta">
+                                        <input type="text" class="form-control" id="descricao"
+                                            placeholder="Descrição da Conta">
                                     </div>
                                     <div class="col-2 text-center">
                                         <label class="text">Tipo Conta</label>
@@ -1023,11 +1234,13 @@ router_add('index', function () {
                                     </div>
                                     <div class="col-2 text-center">
                                         <label class="text">Dt. Venci. Início</label>
-                                        <input type="date" class="form-control" id="data_vencimento_inicio" value="<?php echo $data_inicio; ?>">
+                                        <input type="date" class="form-control" id="data_vencimento_inicio"
+                                            value="<?php echo $data_inicio; ?>">
                                     </div>
                                     <div class="col-2 text-center">
                                         <label class="text">Data Vencimento Fim</label>
-                                        <input type="date" class="form-control" id="data_vencimento_fim" value="<?php echo $data_fim; ?>">
+                                        <input type="date" class="form-control" id="data_vencimento_fim"
+                                            value="<?php echo $data_fim; ?>">
                                     </div>
                                     <div class="col-2 text-center">
                                         <label class="text">Dt. baixa Início</label>
@@ -1040,8 +1253,21 @@ router_add('index', function () {
                                 </div>
                                 <br />
                                 <div class="row">
-                                    <div class="col-3 push-9">
-                                        <button class="btn btn-secondary w-100" onclick="pesquisar_contas();">Pesquisar</button>
+                                    <div class="col-2 text-center push-4">
+                                        <div class="form-check form-switch mb-2">
+                                            <input class="form-check-input" type="checkbox" role="switch"
+                                                id="visualizar_vencidas_anteriores">
+                                            <label class="form-check-label" for="visualizar_vencidas_anteriores">Visualizar
+                                                Venc. Anteriores</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-3">
+                                        <button class="btn btn-light w-100 text-uppercase" onclick="gerar_excell();">Gerar
+                                            Excell</button>
+                                    </div>
+                                    <div class="col-3">
+                                        <button class="btn btn-secondary w-100"
+                                            onclick="pesquisar_contas();">Pesquisar</button>
                                     </div>
                                 </div>
                                 <br />
@@ -1054,6 +1280,7 @@ router_add('index', function () {
                                                         <th scope="col">Cliente/Fornecedor</th>
                                                         <th scope="col">Nome Conta</th>
                                                         <th scope="col">Descrição</th>
+                                                        <th scope="col">Transação</th>
                                                         <th scope="col">Valor</th>
                                                         <th scope="col">Vencimento</th>
                                                         <th scope="col">baixa</th>
@@ -1069,7 +1296,8 @@ router_add('index', function () {
                                                 </thead>
                                                 <tbody>
                                                     <tr>
-                                                        <td colspan="15" class="text-center">UTILIZE O FILTRO PARA FACILITAR A PESQUISA!</td>
+                                                        <td colspan="15" class="text-center">UTILIZE O FILTRO PARA FACILITAR
+                                                            A PESQUISA!</td>
                                                     </tr>
                                                 </tbody>
                                             </table>
@@ -1081,11 +1309,12 @@ router_add('index', function () {
                     </div>
                 </div>
             </div>
-            <div class="modal fade" id="modal_baixar_conta" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+            <div class="modal fade" id="modal_baixar_conta" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel"
+                aria-hidden="true">
                 <div class="modal-dialog modal-lg modal-dialog-centered">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h4 class="modal-title" id="myLargeModalLabel">baixa de Contas</h4>
+                            <h4 class="modal-title" id="myLargeModalLabel">Baixa de Contas</h4>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
@@ -1095,7 +1324,8 @@ router_add('index', function () {
                             <div class="row">
                                 <div class="col-6 text-center">
                                     <label class="text">Valor Conta</label>
-                                    <input type="text" class="form-control" id="valor_conta" placeholder="Valor Conta" sistema-mask="moeda" disabled="true">
+                                    <input type="text" class="form-control" id="valor_conta" placeholder="Valor Conta"
+                                        sistema-mask="moeda" disabled="true">
                                 </div>
                                 <div class="col-6 text-center">
                                     <label class="text">Data Vencimento</label>
@@ -1106,11 +1336,13 @@ router_add('index', function () {
                             <div class="row">
                                 <div class="col-3 text-center">
                                     <label class="text">Valor Pago</label>
-                                    <input type="text" class="form-control" id="valor_pago" sistema-mask="moeda" placeholder="Valor Pago" onblur="validar_juro_desconto();">
+                                    <input type="text" class="form-control" id="valor_pago" sistema-mask="moeda"
+                                        placeholder="Valor Pago" onblur="validar_juro_desconto();">
                                 </div>
                                 <div class="col-3 text-center">
                                     <label class="text">Juro/Desconto</label>
-                                    <input type="text" class="form-control" id="valor_juro_desconto" sistema-mask="moeda" placeholder="Juro/Desconto" sistema-mask="moeda">
+                                    <input type="text" class="form-control" id="valor_juro_desconto" sistema-mask="moeda"
+                                        placeholder="Juro/Desconto" sistema-mask="moeda">
                                 </div>
                                 <div class="col-3 text-center">
                                     <label class="text">Tipo Juro/Desconto</label>
@@ -1137,7 +1369,8 @@ router_add('index', function () {
                             <br />
                             <div class="row">
                                 <div class="col-4 push-4">
-                                    <button type="button" class="btn btn-danger w-100" data-bs-dismiss="modal" aria-label="Close">Fechar</button>
+                                    <button type="button" class="btn btn-danger w-100" data-bs-dismiss="modal"
+                                        aria-label="Close">Fechar</button>
                                 </div>
                                 <div class="col-4">
                                     <button class="btn btn-success w-100" onclick="baixar_conta();">Baixar</button>
@@ -1147,7 +1380,8 @@ router_add('index', function () {
                     </div>
                 </div>
             </div>
-            <div class="modal fade" id="modal_anexar_documentos" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+            <div class="modal fade" id="modal_anexar_documentos" tabindex="-1" role="dialog"
+                aria-labelledby="myLargeModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-lg modal-dialog-centered">
                     <div class="modal-content">
                         <div class="modal-header">
@@ -1163,7 +1397,8 @@ router_add('index', function () {
                                 <div class="row">
                                     <div class="col-6">
                                         <label class="text">Nome Conta</label>
-                                        <input type="text" class="form-control" name="nome_conta" id="nome_conta_anexo_documentos" disabled="true">
+                                        <input type="text" class="form-control" name="nome_conta"
+                                            id="nome_conta_anexo_documentos" disabled="true">
                                     </div>
                                     <div class="col-6">
                                         <label class="text">Tipo</label>
@@ -1188,7 +1423,8 @@ router_add('index', function () {
                                         <input type="reset" class="btn btn-info btn-lg w-100" value="Limpar Campos" />
                                     </div>
                                     <div class="col-4">
-                                        <button class="btn btn-danger btn-lg w-100" onclick="retornar(event, true);">Voltar</button>
+                                        <button class="btn btn-danger btn-lg w-100"
+                                            onclick="retornar(event, true);">Voltar</button>
                                     </div>
                                 </div>
                             </form>
@@ -1196,7 +1432,8 @@ router_add('index', function () {
                     </div>
                 </div>
             </div>
-            <div class="modal fade" id="modal_contas_vencidas_anteriores" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+            <div class="modal fade" id="modal_contas_vencidas_anteriores" tabindex="-1" role="dialog"
+                aria-labelledby="myLargeModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-lg modal-dialog-centered">
                     <div class="modal-content">
                         <div class="modal-header">
@@ -1223,7 +1460,13 @@ router_add('index', function () {
                                                 if ($mensagem == true) {
                                                     foreach ($retorno_contas_vencidas as $contas) {
                                                         echo "<tr>";
-                                                        echo "<td class='text-left'>" . $contas['pessoa']['nome_usuario'] . "</td>";
+
+                                                        if (array_key_exists('pessoa', $contas) == true) {
+                                                            echo "<td class='text-left'>" . $contas['pessoa']['nome_usuario'] . "</td>";
+                                                        } else {
+                                                            echo "<td class='text-left'></td>";
+                                                        }
+
                                                         echo "<td class='text-left'>" . $contas['nome_conta'] . "</td>";
                                                         echo "<td class='text-left'>" . $contas['descricao'] . "</td>";
                                                         echo "<td class='text-left'>" . formatar_numero($contas['valor_conta'], 2, ',') . "</td>";
@@ -1251,7 +1494,7 @@ router_add('index', function () {
                 </div>
             </div>
             <script>
-                window.onload = function() {
+                window.onload = function () {
                     document.querySelector('#data_baixa').value = DATA_HOJE;
                     pesquisar_contas();
                     pesquisar_conta_bancaria();
@@ -1272,28 +1515,32 @@ router_add('index', function () {
                     // }
                 }
             </script>
-        <?php
-        include_once 'includes/footer.php';
-        exit;
-    });
+            <?php
+            include_once 'includes/footer.php';
+            exit;
+});
 
-    /** 
-     * TODO Rota responsável por cadastrar no banco de dados novas contas.
-     */
-    router_add('cadastro_contas', function () {
-        include_once 'includes/head.php';
+/** 
+ * TODO Rota responsável por cadastrar no banco de dados novas contas.
+ */
+router_add('cadastro_contas', function () {
+    include_once 'includes/head.php';
 
-        $data_hoje = $data->format('Y-m-d');
-        $data->add(new DateInterval('P30D'));
-        $data_vencimento = $data->format('Y-m-d');
+    $objeto_codigo_barras = new EAN13();
+    $transacao = (string) $objeto_codigo_barras->getFullCode('');
 
-        $codigo_conta_pagar_receber = (string) (isset($_REQUEST['codigo_conta_pagar_receber']) ? (string) $_REQUEST['codigo_conta_pagar_receber'] : '');
-        ?>
+    $data_hoje = $data->format('Y-m-d');
+    $data->add(new DateInterval('P30D'));
+    $data_vencimento = $data->format('Y-m-d');
+
+    $codigo_conta_pagar_receber = (string) (isset($_REQUEST['codigo_conta_pagar_receber']) ? (string) $_REQUEST['codigo_conta_pagar_receber'] : '');
+    ?>
             <script>
                 const HOJE = "<?php echo $data_hoje; ?>";
                 const DATA_VENCIMENTO = "<?php echo $data_vencimento; ?>";
                 const EMPRESA = "<?php echo $codigo_empresa; ?>";
                 const CODIGO_CONTA_PAGAR_RECEBER = "<?php echo $codigo_conta_pagar_receber; ?>";
+                const TRANSACAO = "<?php echo $transacao; ?>";
 
                 let QUANTIDADE_PARCELAS_RECORRENTES = 0;
 
@@ -1315,6 +1562,7 @@ router_add('index', function () {
                         let tipo_conta = document.querySelector('#tipo_conta').value;
                         let status_conta = document.querySelector('#status_conta').value;
                         let conta_fornecedor = document.querySelector('#conta_fornecedor').value;
+                        let transacao = document.querySelector('#transacao').value;
 
                         let dados = {
                             'rota': 'salvar_dados',
@@ -1333,10 +1581,11 @@ router_add('index', function () {
                             'tipo_conta': tipo_conta,
                             'status_conta': status_conta,
                             'cliente_fornecedor': cliente_fornecedor,
-                            'conta_fornecedor': conta_fornecedor
+                            'conta_fornecedor': conta_fornecedor,
+                            'transacao': transacao
                         };
 
-                        sistema.request.post('/contas_pagar_receber.php', dados, function(retorno) {
+                        sistema.request.post('/contas_pagar_receber.php', dados, function (retorno) {
                             validar_retorno(retorno, '/contas_pagar_receber.php');
                         });
                     } else {
@@ -1345,13 +1594,13 @@ router_add('index', function () {
                         let contas = [];
                         let executando = true;
 
-                        linhas.forEach(function(linha, index) {
+                        linhas.forEach(function (linha, index) {
                             let i = index + 1;
 
                             if (executando == true) {
                                 let elemento = document.querySelector('#tipo_conta_' + i);
 
-                                if (!elemento) {} else {
+                                if (!elemento) { } else {
                                     let conta = {};
                                     conta.empresa = EMPRESA;
 
@@ -1362,6 +1611,7 @@ router_add('index', function () {
                                     conta.data_vencimento = document.querySelector('#data_vencimento_' + i).value;
                                     conta.tipo_conta = document.querySelector("#tipo_conta_" + i).value;
                                     conta.conta_fornecedor = document.querySelector('#conta_fornecedor').value;
+                                    conta.transacao = document.querySelector('#transacao').value;
 
                                     contas.push(conta);
 
@@ -1377,7 +1627,7 @@ router_add('index', function () {
                         sistema.request.post('/contas_pagar_receber.php', {
                             'rota': 'cadastro_contas_recorrentes',
                             'objeto_json': json
-                        }, function(retorno) {
+                        }, function (retorno) {
                             validar_retorno(retorno, '/contas_pagar_receber.php');
                         });
                     }
@@ -1456,12 +1706,12 @@ router_add('index', function () {
                     sistema.request.post('/clientes.php', {
                         'rota': 'pesquisar_clientes',
                         'empresa': EMPRESA,
-                        'tipo_usuario': 'CLIENTE_FORNECEDOR'
-                    }, function(retorno) {
+                        'tipo_usuario': ''
+                    }, function (retorno) {
                         let select = document.querySelector('#cliente_fornecedor');
                         let cliente_fornecedor = retorno.dados;
 
-                        sistema.each(cliente_fornecedor, function(index, cliente) {
+                        sistema.each(cliente_fornecedor, function (index, cliente) {
                             select.appendChild(sistema.gerar_option(cliente._id.$oid, cliente.nome_usuario));
                         });
                     });
@@ -1521,38 +1771,45 @@ router_add('index', function () {
                                     <div class="card-title">Cadastro de Contas A Pagar E Receber</div>
                                 </div>
                                 <div class="card-body">
-                                    <input type="hidden" class="form-control text-uppercase" id="nome_conta" placeholder="Nome da Conta">
+                                    <input type="hidden" class="form-control text-uppercase" id="nome_conta"
+                                        placeholder="Nome da Conta">
                                     <div class="row">
                                         <div class="col-3 text-center">
                                             <label class="text">Cliente/Fornecedor</label>
-                                            <select class="form-control" id="cliente_fornecedor" onchange="pesquisar_contas_fornecedor();">
+                                            <select class="form-control" id="cliente_fornecedor"
+                                                onchange="pesquisar_contas_fornecedor();">
                                                 <option value="">Selecione uma opção</option>
                                             </select>
                                         </div>
                                         <div class="col-3 text-center">
                                             <label class="text">Nome Conta</label>
-                                            <select class="form-control" id="conta_fornecedor" onchange="colocar_nome_conta();">
+                                            <select class="form-control" id="conta_fornecedor"
+                                                onchange="colocar_nome_conta();">
                                                 <option value="">Selecione Uma Opção</option>
                                             </select>
                                         </div>
                                         <div class="col-6 text-center">
                                             <label class="text">Descrição</label>
-                                            <input type="text" class="form-control text-uppercase" id="descricao" placeholder="Descrição da Conta">
+                                            <input type="text" class="form-control text-uppercase" id="descricao"
+                                                placeholder="Descrição da Conta">
                                         </div>
                                     </div>
                                     <br />
                                     <div class="row">
                                         <div class="col-3 text-center">
                                             <label class="text">Valor Conta</label>
-                                            <input type="text" class="form-control" id="valor_conta" placeholder="Valor Conta" sistema-mask="moeda">
+                                            <input type="text" class="form-control" id="valor_conta"
+                                                placeholder="Valor Conta" sistema-mask="moeda">
                                         </div>
                                         <div class="col-3 tex-center">
                                             <label class="text">Valor Pago</label>
-                                            <input type="text" class="form-control" id="valor_pago" placeholder="Valor pago" sistema-mask="moeda">
+                                            <input type="text" class="form-control" id="valor_pago" placeholder="Valor pago"
+                                                sistema-mask="moeda">
                                         </div>
                                         <div class="col-3 text-center">
                                             <label class="text">Valor Juro/Desconto</label>
-                                            <input type="text" class="form-control" id="valor_juro_desconto" placeholder="Valor Juro/Desconto" sistema-mask="moeda">
+                                            <input type="text" class="form-control" id="valor_juro_desconto"
+                                                placeholder="Valor Juro/Desconto" sistema-mask="moeda">
                                         </div>
                                         <div class="col-3 text-center">
                                             <label class="text">Tipo Juro/Desconto</label>
@@ -1580,14 +1837,14 @@ router_add('index', function () {
                                     </div>
                                     <br />
                                     <div class="row">
-                                        <div class="col-6 text-center">
+                                        <div class="col-4 text-center">
                                             <label class="text">Tipo Conta</label>
                                             <select class="form-control" id="tipo_conta">
                                                 <option value="PAGAR">PAGAR</option>
                                                 <option value="RECEBER">RECEBER</option>
                                             </select>
                                         </div>
-                                        <div class="col-6 text-center">
+                                        <div class="col-4 text-center">
                                             <label class="text">Status Conta</label>
                                             <select class="form-control" id="status_conta">
                                                 <option value="AGUARDANDO">AGUARDANDO</option>
@@ -1596,11 +1853,16 @@ router_add('index', function () {
                                                 <option value="VENCIDA">VENCIDA</option>
                                             </select>
                                         </div>
+                                        <div class="col-4 text-center">
+                                            <label class="text">Transação</label>
+                                            <input type="text" class="form-control" id="transacao" disabled="true">
+                                        </div>
                                     </div>
                                     <br />
                                     <div class="row">
                                         <div class="col-3 push-9">
-                                            <button class="btn btn-primary w-100" onclick="cadastro_conta_recorrente();">CONTA RECORRENTE</button>
+                                            <button class="btn btn-primary w-100 bg-lg"
+                                                onclick="cadastro_conta_recorrente();">CONTA RECORRENTE</button>
                                         </div>
                                     </div>
                                     <br />
@@ -1620,7 +1882,8 @@ router_add('index', function () {
                                     <div class="row">
                                         <div class="col-12">
                                             <div class="table-responsive">
-                                                <table class="table table-nowrap text-nowrap table-hover" id="tabela_contas_recorrentes">
+                                                <table class="table table-nowrap text-nowrap table-hover"
+                                                    id="tabela_contas_recorrentes">
                                                     <thead>
                                                         <tr class="text-center">
                                                             <th scope="col">#</th>
@@ -1645,9 +1908,10 @@ router_add('index', function () {
                     </div>
                 </div>
                 <script>
-                    window.onload = function() {
+                    window.onload = function () {
                         document.querySelector('#data_cadastro').value = HOJE;
                         document.querySelector('#data_vencimento').value = DATA_VENCIMENTO;
+                        document.querySelector('#transacao').value = TRANSACAO;
 
                         pesquisar_cliente_fornecedor();
 
@@ -1655,10 +1919,16 @@ router_add('index', function () {
                             sistema.request.post('/contas_pagar_receber.php', {
                                 'rota': 'pesquisar_conta',
                                 'codigo_conta_pagar_receber': CODIGO_CONTA_PAGAR_RECEBER
-                            }, function(retorno) {
+                            }, function (retorno) {
                                 let conta = retorno.dados;
+
                                 document.querySelector('#nome_conta').value = conta.nome_conta;
                                 document.querySelector('#descricao').value = conta.descricao;
+                                document.querySelector('#tipo_juro_desconto').value = conta.tipo_juro_desconto;
+                                document.querySelector('#tipo_conta').value = conta.tipo_conta;
+                                document.querySelector('#data_cadastro').value = sistema.retornar_data(conta.data_cadastro, 'AMERICANO');
+                                document.querySelector('#data_vencimento').value = sistema.retornar_data(conta.data_vencimento, 'AMERICANO');
+                                document.querySelector('#status_conta').value = conta.status_conta;
 
                                 if (conta.valor_conta != 0) {
                                     document.querySelector('#valor_conta').value = sistema.number_format(conta.valor_conta);
@@ -1672,34 +1942,32 @@ router_add('index', function () {
                                     document.querySelector('#valor_juro_desconto').value = sistema.number_format(conta.valor_juro_desconto);
                                 }
 
-                                document.querySelector('#tipo_juro_desconto').value = conta.tipo_juro_desconto;
-                                document.querySelector('#tipo_conta').value = conta.tipo_conta;
-                                document.querySelector('#data_cadastro').value = sistema.retornar_data(conta.data_cadastro, 'AMERICANO');
-                                document.querySelector('#data_vencimento').value = sistema.retornar_data(conta.data_vencimento, 'AMERICANO');
-
                                 if (conta.status_conta != 'AGUARDANDO' && conta.status_conta != 'VENCIDO') {
                                     document.querySelector('#data_baixa').value = sistema.retornar_data(conta.data_baixa, 'AMERICANO');
                                 }
-                                document.querySelector('#status_conta').value = conta.status_conta;
 
                                 if (conta.hasOwnProperty('cliente_fornecedor') == true) {
                                     document.querySelector('#cliente_fornecedor').value = conta.cliente_fornecedor.$oid;
+                                }
+
+                                if (conta.hasOwnProperty('transacao') == true) {
+                                    document.querySelector('#transacao').value = conta.transacao;
                                 }
                             });
                         }
                     }
                 </script>
-            <?php
-            include_once 'includes/footer.php';
-        });
+                <?php
+                include_once 'includes/footer.php';
+});
 
-        /**
-         * TODO Rota responsável por realizar o vinculo do fornecedor a conta
-         */
-        router_add('contas_fornecedores', function () {
-            include_once 'includes/head.php';
-            $codigo_conta = (string) (isset($_REQUEST['codigo_conta']) ? (string) $_REQUEST['codigo_conta'] : '');
-            ?>
+/**
+ * ! Rota responsável por realizar o vinculo do fornecedor a conta
+ */
+router_add('contas_fornecedores', function () {
+    include_once 'includes/head.php';
+    $codigo_conta = (string) (isset($_REQUEST['codigo_conta']) ? (string) $_REQUEST['codigo_conta'] : '');
+    ?>
                 <script>
                     const DATA_HOJE = "<?php echo DATA_HOJE; ?>";
                     const CODIGO_CONTA = "<?php echo $codigo_conta; ?>";
@@ -1730,7 +1998,7 @@ router_add('index', function () {
                         sistema.request.post('/clientes.php', {
                             'rota': 'pesquisar_clientes',
                             'empresa': EMPRESA,
-                            'tipo_usuario': 'CLIENTE_FORNECEDOR'
+                            'tipo_usuario': ''
                         }, (retorno) => {
                             let fornecedores = retorno.dados;
                             let tamanho_retorno = fornecedores.length;
@@ -1781,7 +2049,7 @@ router_add('index', function () {
                             'descricao_conta': descricao_conta,
                             'status_conta': status_conta,
                             'data_cadastro': data_cadastro
-                        }, function(retorno) {
+                        }, function (retorno) {
                             validar_retorno(retorno, '/contas_pagar_receber.php', 0, 'contas_fornecedores_pesquisa');
                         });
                     }
@@ -1860,16 +2128,16 @@ router_add('index', function () {
                             }
                         }
                     </script>
-                <?php
-                include_once 'includes/footer.php';
-            });
+                    <?php
+                    include_once 'includes/footer.php';
+});
 
-            /**
-             * Rota responsável por realizar a pesqusia do fornecedor a conta
-             */
-            router_add('contas_fornecedores_pesquisa', function () {
-                include_once 'includes/head.php';
-                ?>
+/**
+ * !Rota responsável por realizar a pesqusia do fornecedor a conta
+ */
+router_add('contas_fornecedores_pesquisa', function () {
+    include_once 'includes/head.php';
+    ?>
                     <script>
                         const EMPRESA = "<?php echo $codigo_empresa; ?>";
 
@@ -1888,7 +2156,7 @@ router_add('index', function () {
                             sistema.request.post('/clientes.php', {
                                 'rota': 'pesquisar_clientes',
                                 'empresa': EMPRESA,
-                                'tipo_usuario': 'FORNECEDOR'
+                                'tipo_usuario': ''
                             }, (retorno) => {
                                 let fornecedores = retorno.dados;
                                 let tamanho_retorno = fornecedores.length;
@@ -1939,9 +2207,9 @@ router_add('index', function () {
                                         linha.appendChild(sistema.gerar_td(['text-start'], conta.descricao_conta, 'inner'));
 
                                         if (conta.status_conta == true) {
-                                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_conta_' + conta._id.$oid, 'ATIVO', ['btn', 'btn-outline-success'], () => {}), 'append'));
+                                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_conta_' + conta._id.$oid, 'ATIVO', ['btn', 'btn-outline-success'], () => { }), 'append'));
                                         } else {
-                                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_conta_' + conta._id.$oid, 'INATIVO', ['btn', 'btn-outline-danger'], () => {}), 'append'));
+                                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_conta_' + conta._id.$oid, 'INATIVO', ['btn', 'btn-outline-danger'], () => { }), 'append'));
                                         }
 
                                         linha.appendChild(sistema.gerar_td(['text-center'], sistema.retornar_data(conta.data_cadastro), 'inner'));
@@ -1963,7 +2231,8 @@ router_add('index', function () {
                                 </div>
                                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap gap-2">
                                     <div class="dropdown">
-                                        <button class="btn btn-primary d-flex align-items-center justify-content-center" onclick="cadastro_contas('');">
+                                        <button class="btn btn-primary d-flex align-items-center justify-content-center"
+                                            onclick="cadastro_contas('');">
                                             Fazer Vínculo
                                         </button>
                                     </div>
@@ -2003,14 +2272,16 @@ router_add('index', function () {
                                             <br />
                                             <div class="row">
                                                 <div class="col-3 push-9">
-                                                    <button class="btn btn-secondary w-100" onclick="pesquisar_contas_fornecedores();">PESQUISAR</button>
+                                                    <button class="btn btn-secondary w-100"
+                                                        onclick="pesquisar_contas_fornecedores();">PESQUISAR</button>
                                                 </div>
                                             </div>
                                             <br />
                                             <div class="row">
                                                 <div class="col-12">
                                                     <div class="table-responsive">
-                                                        <table class="table table-nowrap text-nowrap table-hover" id="tabela_fornecedor_conta">
+                                                        <table class="table table-nowrap text-nowrap table-hover"
+                                                            id="tabela_fornecedor_conta">
                                                             <thead>
                                                                 <tr class="text-center text-uppercase">
                                                                     <th scope="col">Nome Cliente/Fornecedor</th>
@@ -2023,7 +2294,8 @@ router_add('index', function () {
                                                             </thead>
                                                             <tbody>
                                                                 <tr>
-                                                                    <td colspan="10" class="text-center">UTILIZE O FILTRO PARA FACILITAR A PESQUISA!</td>
+                                                                    <td colspan="10" class="text-center">UTILIZE O FILTRO
+                                                                        PARA FACILITAR A PESQUISA!</td>
                                                                 </tr>
                                                             </tbody>
                                                         </table>
@@ -2041,8 +2313,8 @@ router_add('index', function () {
                                 pesquisar_contas_fornecedores();
                             }
                         </script>
-                    <?php
-                    include_once 'includes/footer.php';
-                    exit;
-                });
-                    ?>
+                        <?php
+                        include_once 'includes/footer.php';
+                        exit;
+});
+?>

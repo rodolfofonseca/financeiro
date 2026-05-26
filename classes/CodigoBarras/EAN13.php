@@ -5,7 +5,11 @@ class EAN13
     private $checkDigit;
     private $fullCode;
 
-    public function __construct($code12)
+    public function __construct(){
+        
+    }
+
+    private function validateCheckDigit($code12)
     {
         if (!preg_match('/^\d{12}$/', $code12)) {
             throw new InvalidArgumentException("O código deve conter exatamente 12 dígitos numéricos.");
@@ -25,9 +29,9 @@ class EAN13
 
         foreach ($digits as $index => $digit) {
             if (($index % 2) == 0) {
-                $sumOdd += (int)$digit;
+                $sumOdd += (int) $digit;
             } else {
-                $sumEven += (int)$digit;
+                $sumEven += (int) $digit;
             }
         }
 
@@ -37,14 +41,23 @@ class EAN13
         return ($remainder == 0) ? 0 : (10 - $remainder);
     }
 
-    public function getFullCode()
+    /**
+     * Função responsável por validar a quantidade de digitos de um código de barras, recebendo 12 digitos, calculando o 13
+     * @param string $code12 - Código que será calculado
+     * @return string
+     */
+    public function getFullCode($code12 = '')
     {
-        return $this->fullCode;
-    }
+        if($code12 == ''){ 
+            $code12 = (string) microtime(true);
+            $code12 = (string) str_replace('.', '', $code12);
+            $code12 = (string) str_replace(' ', '', $code12);
 
-    public function __toString()
-    {
-        return $this->fullCode;
+            $code12 = (string) substr($code12,0,12);
+        }
+
+        $this->validateCheckDigit($code12);
+        return (string) $this->fullCode;
     }
 }
 ?>

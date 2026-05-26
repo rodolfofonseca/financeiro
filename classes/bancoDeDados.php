@@ -11,7 +11,7 @@ date_default_timezone_set('America/Sao_Paulo');
 $data = new DateTime();
 
 require_once __DIR__ . '/sistema/env.php';
-env_load_dotenv((string) (dirname(__DIR__) . '/.env'));
+env_load_dotenv((string) (dirname(__DIR__) . '/configuracao.env'));
 
 require_once 'funcoes.php';
 require_once 'userFunctions.php';

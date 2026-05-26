@@ -3,65 +3,34 @@ require_once 'classes/bancoDeDados.php';
 require_once 'modelos/Movimentacao.php';
 require_once 'modelos/Contas.php';
 
+include_once 'classes/PHPSpreadsheet/PHPSpreadsheet.php';
+
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+
+
+/** 
+ * TODO Rota responsável por salvar os dados da movimentação
+ */
 router_add('salvar_dados', function () {
     $objeto_movimentacao = new Movimentacao();
 
     echo json_encode((array) ['status' => (bool) $objeto_movimentacao->salvar_dados($_REQUEST)], JSON_UNESCAPED_UNICODE);
 });
 
+/** 
+ * TODO Rota responsável por pesquisar as movimentações
+ */
 router_add('pesquisar_contas', function () {
-    $data = new DateTime();
     $objeto_movimentacao = new Movimentacao();
-    $objeto_conta = new Contas();
 
-    $conta = (string) (isset($_REQUEST['conta']) ? (string) $_REQUEST['conta'] : 'TODOS');
-    $tipo_lancamento = (string) (isset($_REQUEST['tipo_lancamento']) ? (string)$_REQUEST['tipo_lancamento'] : 'TODOS');
-    $data_inicio = (isset($_REQUEST['data_inicio']) ? model_date($_REQUEST['data_inicio'], '00:00:00') : model_date($data->format('Y-m-01'), '00:00:00'));
-    $data_final = (isset($_REQUEST['data_final']) ? model_date($_REQUEST['data_final'], '23:59:59') : model_date($data->format('Y-m-t'), '23:59:59'));
-    $empresa = (isset($_REQUEST['empresa']) ? (string) $_REQUEST['empresa'] : '');
-
-    $retorno_validacao = (array) [];
-    $filtro = (array) [];
-    $filtro_pesquisa = (array) ['filtro' => (array) [], 'ordenacao' => (array) ['data_lancamento' => (bool) false], 'limite' => (int) 0];
-    $retorno = (array)[];
-
-    array_push($filtro, ['data_lancamento', '>=', $data_inicio]);
-    array_push($filtro, ['data_lancamento', '<=', $data_final]);
-
-    if ($conta != 'TODOS') {
-        array_push($filtro, ['conta', '===', model_id($conta)]);
-    }
-
-    if ($tipo_lancamento != 'TODOS') {
-        array_push($filtro, ['tipo_lancamento', '===', (string) $tipo_lancamento]);
-    }
-
-    if ($empresa != '') {
-        array_push($filtro, ['empresa', '===', model_id($empresa)]);
-    }
-
-    $filtro_pesquisa['filtro'] = (array) ['and' => (array) $filtro];
-    $retorno_validacao = (array) $objeto_movimentacao->pesquisar_todos($filtro_pesquisa);
-
-    if (empty($retorno_validacao) == false) {
-        foreach ($retorno_validacao as $movimentacao) {
-            $retorno_temporario = (array) [];
-            $retorno_conta = (array) $objeto_conta->pesquisar(['filtro' => (array) ['_id', '===', $movimentacao['conta']]]);
-
-            $retorno_temporario = (array) $movimentacao;
-
-            if (empty($retorno_conta) == false) {
-                $retorno_temporario['nome_conta'] = (string) $retorno_conta['nome_conta'];
-            }
-
-            array_push($retorno, $retorno_temporario);
-        }
-    }
-
-    echo json_encode((array) ['dados' => (array) $retorno], JSON_UNESCAPED_UNICODE);
+    echo json_encode((array) ['dados' => (array) $objeto_movimentacao->pesquisar_movimentacoes($_REQUEST)], JSON_UNESCAPED_UNICODE);
     exit;
 });
 
+/**
+ * TODO Rota responsável por excluir uma movimentação do banco de dados
+ */
 router_add('deletar_movimentacao', function () {
     $objeto_movimentacao = new Movimentacao();
     $codigo_movimentacao = (string) (isset($_REQUEST['codigo_movimentacao']) ? (string) $_REQUEST['codigo_movimentacao'] : '');
@@ -76,17 +45,98 @@ router_add('deletar_movimentacao', function () {
     echo json_encode(['status' => (bool) $retorno]);
 });
 
+router_add('gerar_excell', function () {
+    $objeto_movimentacao = new Movimentacao();
+    $login_usuario = (string) (isset($_REQUEST['login_usuario']) ? (string) $_REQUEST['login_usuario'] : '');
+
+    $retorno_movimentacaoo = (array) $objeto_movimentacao->pesquisar_movimentacoes($_REQUEST);
+    $json_retorno = (array) ['status' => (bool) false, 'link' => (string) ''];
+
+    if (empty($retorno_movimentacaoo) == true) {
+        echo json_encode((array) $json_retorno, JSON_UNESCAPED_UNICODE);
+    } else {
+        $pasta = 'anexos/excell';
+
+        if (is_dir($pasta) == false) {
+            mkdir($pasta, 0777, true);
+        }
+
+        $spreadsheet = new Spreadsheet();
+        $planilha = $spreadsheet->getActiveSheet();
+        foreach (array('A', 'B', 'C', 'D', 'E') as $coluna) {
+            $planilha->getColumnDimension($coluna)->setAutoSize(true);
+        }
+
+        $spreadsheet->getProperties()->setCreator("Usuario")->setLastModifiedBy(strval($login_usuario))->setTitle("MOVIMENTACAO");
+
+        $linha = (int) 1;
+
+        $spreadsheet->setActiveSheetIndex(0);
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $sheet->getStyle('A' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A' . $linha)->getFont()->setBold(true);
+        $sheet->setCellValue('A' . $linha, 'NOME CONTA');
+        $sheet->getStyle('B' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('B' . $linha)->getFont()->setBold(true);
+        $sheet->setCellValue('B' . $linha, 'DESCRIÇÃO');
+        $sheet->getStyle('C' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('C' . $linha)->getFont()->setBold(true);
+        $sheet->setCellValue('C' . $linha, 'VALOR');
+        $sheet->getStyle('D' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('D' . $linha)->getFont()->setBold(true);
+        $sheet->setCellValue('D' . $linha, 'DATA');
+        $sheet->getStyle('E' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('E' . $linha)->getFont()->setBold(true);
+        $sheet->setCellValue('E' . $linha, 'TIPO LANÇAMENTO');
+
+        foreach ($retorno_movimentacaoo as $movimentacao) {
+            $linha++;
+            $sheet->getStyle('A' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+            $sheet->setCellValue('A' . $linha, (string) $movimentacao['nome_conta']);
+
+            $sheet->getStyle('B' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+            $sheet->setCellValue('B' . $linha, (string) $movimentacao['descricao']);
+
+            $sheet->getStyle('C' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $sheet->getCell('C' . $linha)->setValue((string) $movimentacao['valor_lancamento'])->getStyle()->getNumberFormat()->setFormatCode('#,##0.00');
+
+            $sheet->getStyle('D' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $sheet->setCellValue('D' . $linha, (string) convert_date($movimentacao['data_lancamento'], 'd/m/Y H:i:s'));
+
+            $sheet->getStyle('E' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $sheet->setCellValue('E' . $linha, (string) $movimentacao['tipo_lancamento']);
+        }
+
+        $writer = new Xlsx($spreadsheet);
+        $writer->save($pasta . '/relatorio_movimentacao.xlsx');
+        echo json_encode([
+            'status' => true,
+            'resposta' => $pasta . '/relatorio_movimentacao.xlsx'
+        ]);
+    }
+    exit;
+});
+
+/** 
+ * ! Rota index, onde contém a tabela de pesquisa de movimentações
+ */
 router_add('index', function () {
     require_once 'includes/head.php';
 
     $data_inicio = $data->format('Y-m-01');
     $ultimo_dia = $data->format('Y-m-t');
-?>
+    ?>
     <script>
         const DATA_INICIAL = "<?php echo $data_inicio; ?>";
         const DATA_FINAL = "<?php echo $ultimo_dia; ?>";
         const EMPRESA = "<?php echo $codigo_empresa; ?>";
+        const LOGIN_USUARIO = "<?php echo $login_usuario; ?>";
 
+        /** 
+         * Função responsável por abrir o formulário para o cadastro de novas movimentações.
+         * @param {string} codigo_movimentacao - Código da movimentação que será alterada no caso de uma alteração
+        */
         function cadastro_movimentacao(codigo_movimentacao) {
             window.location.href = sistema.url('/movimentacao.php', {
                 'rota': 'cadastro_movimentacao',
@@ -94,6 +144,9 @@ router_add('index', function () {
             });
         }
 
+        /** 
+         * Função responsável por pesquisar as movimentações
+        */
         function pesquisar_movimentacao() {
             let conta = document.querySelector('#conta').value;
             let tipo_lancamento = document.querySelector('#tipo_lancamento').value;
@@ -107,7 +160,7 @@ router_add('index', function () {
                 'data_inicio': data_inicio,
                 'data_final': data_final,
                 'empresa': EMPRESA
-            }, function(retorno) {
+            }, function (retorno) {
                 let movimentacoes = retorno.dados;
                 let tamanho_retorno = movimentacoes.length;
                 let tabela = document.querySelector('#tabela_movimentacoes tbody');
@@ -120,19 +173,25 @@ router_add('index', function () {
                     linha.appendChild(sistema.gerar_td(['text-center'], 'NENHUMA MOVIMENTAÇÃO ENCONTRADA COM OS FILTROS PASSADOS!', 'inner', true, '10'));
                     tabela.appendChild(linha);
                 } else {
-                    sistema.each(movimentacoes, function(index, movimentacao) {
+                    sistema.each(movimentacoes, function (index, movimentacao) {
 
                         let linha = document.createElement('tr');
 
-                        linha.appendChild(sistema.gerar_td(['text-center'], movimentacao.nome_conta, 'inner'));
-                        linha.appendChild(sistema.gerar_td(['text-center'], movimentacao.descricao, 'inner'));
-                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.number_format(movimentacao.valor_lancamento), 'inner'));
+                        linha.appendChild(sistema.gerar_td(['text-start'], movimentacao.nome_conta, 'inner'));
+                        linha.appendChild(sistema.gerar_td(['text-start'], movimentacao.descricao, 'inner'));
+
+                        if (movimentacao.tipo_lancamento == 'CREDITO' || movimentacao.tipo_lancamento == 'TRANSFERENCIA_CREDITO') {
+                            linha.appendChild(sistema.gerar_td(['text-center', 'text-success', 'fw-bold'], sistema.number_format(movimentacao.valor_lancamento), 'inner'));
+                        } else {
+                            linha.appendChild(sistema.gerar_td(['text-center', 'text-danger', 'fw-bold'], sistema.number_format(movimentacao.valor_lancamento), 'inner'));
+                        }
+
                         linha.appendChild(sistema.gerar_td(['text-center'], sistema.retornar_data(movimentacao.data_lancamento, 'BRASIL', true), 'inner'));
 
                         if (movimentacao.tipo_lancamento == 'CREDITO' || movimentacao.tipo_lancamento == 'TRANSFERENCIA_CREDITO') {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_lancamento_' + movimentacao._id.$oid, 'CREDITO', ['btn', 'btn-success'], function visualizar() {}), 'append'));
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_lancamento_' + movimentacao._id.$oid, 'CREDITO', ['btn', 'btn-success'], function visualizar() { }), 'append'));
                         } else {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_lancamento_' + movimentacao._id.$oid, 'DEBITO', ['btn', 'btn-danger'], function visualizar() {}), 'append'));
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_lancamento_' + movimentacao._id.$oid, 'DEBITO', ['btn', 'btn-danger'], function visualizar() { }), 'append'));
                         }
 
                         linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_deletar_movimentacao_' + movimentacao._id.$oid, 'EXCLUIR', ['btn', 'btn-danger'], function deletar_movimentacao_botao() {
@@ -144,6 +203,10 @@ router_add('index', function () {
             });
         }
 
+        /** 
+         * Função responsável por deletar uma movimentação no banco de dados, caso o usuário selecione a opção confirmando a exclusão.
+         * @param {string} codigo_movimentacao - Código da movimentação que será excluída.
+        */
         function deletar_movimentacao(codigo_movimentacao) {
             Swal.fire({
                 title: "Confirmar Exclusão!",
@@ -158,27 +221,51 @@ router_add('index', function () {
                     sistema.request.post('/movimentacao.php', {
                         'rota': 'deletar_movimentacao',
                         'codigo_movimentacao': codigo_movimentacao
-                    }, function(retorno) {
+                    }, function (retorno) {
                         validar_retorno(retorno, '/movimentacao.php');
                     });
                 }
             });
         }
 
+        /** 
+         * Função responsável por pesquisar as contas que estão cadastradas no banco de dados e retornar,
+         * adicionando ao campo select
+        */
         function pesquisa_contas_select() {
             let codigo_empresa = "<?php echo $_SESSION['codigo_empresa']; ?>";
             sistema.request.post('/contas.php', {
                 'rota': 'pesquisar_contas',
                 'empresa': codigo_empresa,
                 'status': 'ATIVO'
-            }, function(retorno) {
+            }, function (retorno) {
                 let select = document.querySelector('#conta');
                 let conta = retorno.dados;
 
-                sistema.each(conta, function(index, contas) {
-                    let option = sistema.gerar_option(contas._id.$oid, contas.nome_conta+' | '+contas.saldo_conta);
+                sistema.each(conta, function (index, contas) {
+                    let option = sistema.gerar_option(contas._id.$oid, contas.nome_conta + ' | ' + contas.saldo_conta);
                     select.appendChild(option);
                 });
+            });
+        }
+
+        /** 
+         * Função responsável por gerar um relatório do excell com as movimentações.
+        */
+        function gerar_excell() {
+            let conta = document.querySelector('#conta').value;
+            let tipo_lancamento = document.querySelector('#tipo_lancamento').value;
+            let data_inicio = document.querySelector('#data_inicio').value;
+            let data_final = document.querySelector('#data_final').value;
+
+            let dados = { 'rota': 'gerar_excell', 'empresa': EMPRESA, 'conta': conta, 'data_inicio': data_inicio, 'data_final': data_final, 'tipo_lancamento': tipo_lancamento, 'login_usuario': LOGIN_USUARIO };
+
+            sistema.request.post('/movimentacao.php', dados, function (retorno) {
+                if (retorno.status == false) {
+                    this.Swal.fire('ATENÇÃO', 'Nenhum movimentação encontrada, com os filtros passsados!', 'warning');
+                } else {
+                    sistema.download('', retorno.resposta);
+                }
             });
         }
     </script>
@@ -190,7 +277,8 @@ router_add('index', function () {
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap gap-2">
                     <div class="dropdown">
-                        <button class="btn btn-primary d-flex align-items-center justify-content-center" onclick="cadastro_movimentacao('');">
+                        <button class="btn btn-primary d-flex align-items-center justify-content-center"
+                            onclick="cadastro_movimentacao('');">
                             Cadastrar Movimentação
                         </button>
                     </div>
@@ -232,8 +320,13 @@ router_add('index', function () {
                             </div>
                             <br />
                             <div class="row">
-                                <div class="col-3 push-9">
-                                    <button class="btn btn-secondary w-100" onclick="pesquisar_movimentacao();">Pesquisar</button>
+                                <div class="col-3 push-6">
+                                    <button class="btn btn-light w-100 text-uppercase" onclick="gerar_excell();">Gerar
+                                        Excell</button>
+                                </div>
+                                <div class="col-3">
+                                    <button class="btn btn-secondary w-100 text-uppercase"
+                                        onclick="pesquisar_movimentacao();">Pesquisar</button>
                                 </div>
                             </div>
                             <br />
@@ -253,7 +346,8 @@ router_add('index', function () {
                                             </thead>
                                             <tbody>
                                                 <tr>
-                                                    <td colspan="10" class="text-center">UTILIZE O FILTRO PARA FACILITAR A PESQUISA!</td>
+                                                    <td colspan="10" class="text-center">UTILIZE O FILTRO PARA FACILITAR A
+                                                        PESQUISA!</td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -266,18 +360,21 @@ router_add('index', function () {
             </div>
         </div>
         <script>
-            window.onload = function() {
+            window.onload = function () {
                 document.querySelector('#data_inicio').value = DATA_INICIAL;
                 document.querySelector('#data_final').value = DATA_FINAL;
                 pesquisar_movimentacao();
                 pesquisa_contas_select();
             }
         </script>
-    <?php
-    require_once 'includes/footer.php';
-    exit;
+        <?php
+        require_once 'includes/footer.php';
+        exit;
 });
 
+/** 
+ * ! Rota de cadastro de movimentações.
+ */
 router_add('cadastro_movimentacao', function () {
     require_once 'includes/head.php';
     $hoje = $data->format('Y-m-d');
@@ -291,17 +388,17 @@ router_add('cadastro_movimentacao', function () {
                     'rota': 'pesquisar_contas',
                     'status': 'ATIVO',
                     'empresa': EMPRESA
-                }, function(retorno) {
+                }, function (retorno) {
                     let contas = retorno.dados;
                     let select = document.querySelector('#conta');
                     let select_destino = document.querySelector('#conta_destino');
 
-                    sistema.each(contas, function(index, conta) {
-                        let option = sistema.gerar_option(conta._id.$oid, conta.nome_conta+' | '+conta.saldo_conta);
+                    sistema.each(contas, function (index, conta) {
+                        let option = sistema.gerar_option(conta._id.$oid, conta.nome_conta + ' | ' + conta.saldo_conta);
                         select.appendChild(option);
                     });
-                    sistema.each(contas, function(index, conta) {
-                        let option = sistema.gerar_option(conta._id.$oid, conta.nome_conta+' | '+conta.saldo_conta);
+                    sistema.each(contas, function (index, conta) {
+                        let option = sistema.gerar_option(conta._id.$oid, conta.nome_conta + ' | ' + conta.saldo_conta);
                         select_destino.appendChild(option);
                     });
                 });
@@ -352,7 +449,7 @@ router_add('cadastro_movimentacao', function () {
                             'valor_lancamento': valor_lancamento,
                             'empresa': EMPRESA,
                             'conta_destino': conta_destino
-                        }, function(retorno) {
+                        }, function (retorno) {
                             validar_retorno(retorno, '/movimentacao.php');
                         });
                     } else {
@@ -364,7 +461,7 @@ router_add('cadastro_movimentacao', function () {
                             'tipo_lancamento': tipo_lancamento,
                             'valor_lancamento': valor_lancamento,
                             'empresa': EMPRESA
-                        }, function(retorno) {
+                        }, function (retorno) {
                             validar_retorno(retorno, '/movimentacao.php');
                         });
                     }
@@ -441,13 +538,13 @@ router_add('cadastro_movimentacao', function () {
                 </div>
             </div>
             <script>
-                window.onload = function() {
+                window.onload = function () {
                     document.querySelector('#data_lancamento').value = HOJE;
                     pesquisar_contas();
                 }
             </script>
-        <?php
-        require_once 'includes/footer.php';
-        exit;
-    });
-        ?>
+            <?php
+            require_once 'includes/footer.php';
+            exit;
+});
+?>

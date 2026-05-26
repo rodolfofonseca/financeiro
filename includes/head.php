@@ -3,13 +3,34 @@ session_start();
 date_default_timezone_set('America/Sao_Paulo');
 $data = new DateTime();
 
+$meses = [
+    1 => 'Janeiro',
+    2 => 'Fevereiro',
+    3 => 'Março',
+    4 => 'Abril',
+    5 => 'Maio',
+    6 => 'Junho',
+    7 => 'Julho',
+    8 => 'Agosto',
+    9 => 'Setembro',
+    10 => 'Outubro',
+    11 => 'Novembro',
+    12 => 'Dezembro'
+];
+
 define('DATA_HOJE', $data->format('Y-m-d'));
 define('DATA_INICIO', $data->format('Y-m-01'));
 define('DATA_FINAL', $data->format('Y-m-t'));
+define('HORA', intval($data->format('H'), 10));
+define('MES_NOME', $meses[date('n')]);
+define('MES_NOME_ANTERIOR', $meses[date('n') - 1]);
+define('MES_NOME_PROXIMO_MES', $meses[date('n') + 1]);
 
-if ($_SESSION['codigo_usuario'] == '') {
-	header("Location: index.php");
-	exit;
+if(array_key_exists('codigo_usuario', $_SESSION) == true){
+	if ($_SESSION['codigo_usuario'] == '') {
+		header("Location: index.php");
+		exit;
+	}
 }
 
 $login_usuario = (string) $_SESSION['login_usuario'];
@@ -76,7 +97,7 @@ $anexa_documentos = (bool) $_SESSION['anexa_documentos'];
 								</span>
 							</div>
 							<div class="notification_item me-2">
-								<a href="#" class="btn btn-menubar position-relative" id="notification_popup" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+								<a href="#" class="btn btn-menubar position-relative" id="notification_popup" data-bs-toggle="dropdown" data-bs-auto-close="true">
 									<img src="imagens/icones/sino.png">
 									<span class="position-absolute badge bg-success border border-white"></span>
 								</a>
@@ -92,7 +113,7 @@ $anexa_documentos = (bool) $_SESSION['anexa_documentos'];
 														<img src="imagens/icones/engrenagem.png">
 													</a>
 													<div class="dropdown-menu dropdown-menu-end">
-														<a href="javascript:void(0);" class="dropdown-item"><i class="ti ti-bell-check me-1"></i>Marcar todas como lidas</a
+														<a href="javascript:void(0);" class="dropdown-item"><i class="ti ti-bell-check me-1"></i>Marcar todas como lidas</a>
 														<a href="javascript:void(0);" class="dropdown-item"><i class="ti ti-trash me-1"></i>Deletar todas</a>
 													</div>
 												</div>
@@ -131,12 +152,12 @@ $anexa_documentos = (bool) $_SESSION['anexa_documentos'];
 								</div>
 							</div>
 							<div class="dropdown profile-dropdown">
-								<a href="javascript:void(0);" class="dropdown-toggle d-flex align-items-center" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+								<a href="javascript:void(0);" class="dropdown-toggle d-flex align-items-center" data-bs-toggle="dropdown"data-bs-auto-close="true">
 									<span class="avatar online">
 										<img src="imagens/avatar/<?php echo $codigo_usuario; ?>.jpg" alt="Img" class="img-fluid rounded-circle">
 									</span>
 								</a>
-								<div class="dropdown-menu p-2">
+								<div class="dropdown-menu dropdown-menu-end p-2">
 									<div class="d-flex align-items-center bg-light rounded-1 p-2 mb-2">
 										<span class="avatar avatar-lg me-2">
 											<img src="imagens/avatar/<?php echo $codigo_usuario; ?>.jpg" alt="img" class="rounded-circle">
@@ -154,7 +175,7 @@ $anexa_documentos = (bool) $_SESSION['anexa_documentos'];
 										echo "<a class='dropdown-item d-flex align-items-center' href='sistema.php'>";
 										echo "<i class='isax isax-document-text me-2'></i>Configurações Sistema";
 										echo "</a>";
-										echo "<a class='dropdown-item d-flex align-items-center' href='error-404.php>'";
+										echo "<a class='dropdown-item d-flex align-items-center' href='error-404.php'>";
 										echo "Relatórios";
 										echo "</a>";
 									}

@@ -22,8 +22,8 @@ router_add('pesquisar_produtos', function () {
     $empresa = (string) (isset($_REQUEST['empresa']) ? (string) $_REQUEST['empresa'] : '');
     $nome_produto = (string) (isset($_REQUEST['nome_produto']) ? (string) strtoupper($_REQUEST['nome_produto']) : '');
     $fornecedor = (string) (isset($_REQUEST['fornecedor']) ? (string) $_REQUEST['fornecedor'] : '');
-    $status_produto = (bool) (isset($_REQUEST['status_produto']) ? (bool) boolval($_REQUEST['status_produto']) : false);
-    $tipo_produto = (bool) (isset($_REQUEST['tipo_produto']) ? (bool) $_REQUEST['tipo_produto'] : false);
+    $status_produto = (bool) (isset($_REQUEST['status_produto']) ? (bool) filter_var($_REQUEST['status_produto'], FILTER_VALIDATE_BOOLEAN) : false);
+    $tipo_produto = (bool) (isset($_REQUEST['tipo_produto']) ? (bool) filter_var($_REQUEST['tipo_produto'], FILTER_VALIDATE_BOOLEAN) : false);
     $unidade_medida = (string) (isset($_REQUEST['unidade_medida']) ? (string) $_REQUEST['unidade_medida'] : '');
     $data_cadastro = (string) (isset($_REQUEST['data_cadastro']) ? (string) $_REQUEST['data_cadastro'] : '');
     $codigo_barras = (string) (isset($_REQUEST['codigo_barras']) ? (string) $_REQUEST['codigo_barras'] : '');
@@ -76,7 +76,7 @@ router_add('pesquisar_produtos', function () {
 
     ob_clean();
 
-    echo json_encode(['dados' => (array) $produtos_final], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['dados' => (array) $produtos_final, 'filtro' => (array) $filtro], JSON_UNESCAPED_UNICODE);
     exit;
 });
 
@@ -102,7 +102,7 @@ router_add('pesquisar_produto', function () {
 router_add('index', function () {
     include_once 'includes/head.php';
     $data_hoje = $data->format('Y-m-d');
-?>
+    ?>
     <script>
         const DATA_HOJE = "<?php echo $data_hoje; ?>";
         const CODIGO_EMPRESA = "<?php echo $codigo_empresa; ?>";
@@ -126,11 +126,11 @@ router_add('index', function () {
                 'rota': 'pesquisar_clientes',
                 'empresa': CODIGO_EMPRESA,
                 'tipo_usuario': 'FORNECEDOR'
-            }, function(retorno) {
+            }, function (retorno) {
                 let fornecedores = retorno.dados;
                 let select_fornecedores = document.querySelector('#fornecedor');
 
-                sistema.each(fornecedores, function(index, fornecedor) {
+                sistema.each(fornecedores, function (index, fornecedor) {
                     select_fornecedores.appendChild(sistema.gerar_option(fornecedor._id.$oid, fornecedor.nome_usuario));
                 });
             });
@@ -146,8 +146,7 @@ router_add('index', function () {
             let tipo_produto = document.querySelector('#tipo_produto').value;
             let unidade_medida = document.querySelector('#unidade_medida').value;
             let data_cadastro = document.querySelector('#data_cadastro').value;
-
-            sistema.request.post('/produtos.php', {
+            let dados = {
                 'rota': 'pesquisar_produtos',
                 'empresa': CODIGO_EMPRESA,
                 'nome_produto': nome_produto,
@@ -156,19 +155,28 @@ router_add('index', function () {
                 'tipo_produto': tipo_produto,
                 'unidade_medida': unidade_medida,
                 'data_cadastro': data_cadastro
-            }, function(retorno) {
+            };
+
+            console.log(dados);
+
+
+            sistema.request.post('/produtos.php', dados, function (retorno) {
                 let produtos = retorno.dados;
+                let filtro = retorno.filtro;
                 let tamanho_retorno = produtos.length;
                 let tabela = document.querySelector('#tabela_produtos tbody');
 
                 tabela = sistema.remover_linha_tabela(tabela);
+
+                console.log(produtos);
+                console.log(filtro);
 
                 if (tamanho_retorno == 0) {
                     let linha = document.createElement('tr');
                     linha.appendChild(sistema.gerar_td(['text-center'], 'UTILIZE OS FILTROS PARA FACILITAR SUA PESQUISA!', 'inner', true, 10));
                     tabela.appendChild(linha);
                 } else {
-                    sistema.each(produtos, function(index, produto) {
+                    sistema.each(produtos, function (index, produto) {
                         let linha = document.createElement('tr');
 
                         let div = sistema.gerar_div(['d-flex']);
@@ -203,11 +211,11 @@ router_add('index', function () {
                         linha.appendChild(sistema.gerar_td(['text-center'], produto.valor_custo));
                         linha.appendChild(sistema.gerar_td(['text-center'], (produto.status ? 'ATIVO' : 'INATIVO')));
 
-                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_cadastrar_imagem_' + produto._id.$oid, 'CADASTRAR IMAGEM', ['btn', 'btn-secondary'], function() {
+                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_cadastrar_imagem_' + produto._id.$oid, 'CADASTRAR IMAGEM', ['btn', 'btn-secondary'], function () {
                             cadastrar_imagem(produto._id.$oid);
                         }), 'append'));
 
-                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_editar_produto_' + produto._id.$oid, 'EDITAR', ['btn', 'btn-primary'], function() {
+                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_editar_produto_' + produto._id.$oid, 'EDITAR', ['btn', 'btn-primary'], function () {
                             cadastro_produtos(produto._id.$oid);
                         }), 'append'));
 
@@ -236,7 +244,8 @@ router_add('index', function () {
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap gap-2">
                     <div class="dropdown">
-                        <button class="btn btn-primary d-flex align-items-center justify-content-center" onclick="cadastro_produtos('');">Cadastro Produtos</button>
+                        <button class="btn btn-primary d-flex align-items-center justify-content-center"
+                            onclick="cadastro_produtos('');">Cadastro Produtos</button>
                     </div>
                 </div>
             </div>
@@ -250,7 +259,8 @@ router_add('index', function () {
                             <div class="row">
                                 <div class="col-3 text-center">
                                     <label class="text">Nome do produto</label>
-                                    <input type="text" class="form-control text-uppercase" placeholder="Nome do Produto" id="nome_produto">
+                                    <input type="text" class="form-control text-uppercase" placeholder="Nome do Produto"
+                                        id="nome_produto">
                                 </div>
                                 <div class="col-3 text-center">
                                     <label class="text">Fornecedor</label>
@@ -311,7 +321,8 @@ router_add('index', function () {
                                             </thead>
                                             <tbody>
                                                 <tr>
-                                                    <td colspan="10" class="text-center" onclick="pesquisar_produtos();">UTILIZE OS FILTROS PARA FACILITAR SUA PESQUISA!</td>
+                                                    <td colspan="10" class="text-center" onclick="pesquisar_produtos();">
+                                                        UTILIZE OS FILTROS PARA FACILITAR SUA PESQUISA!</td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -329,8 +340,8 @@ router_add('index', function () {
                 pesquisar_produtos();
             }
         </script>
-    <?php
-    include_once 'includes/footer.php';
+        <?php
+        include_once 'includes/footer.php';
 });
 
 /** 
@@ -342,7 +353,8 @@ router_add('cadastro_produtos', function () {
 
     $codigo_produto = (string) (isset($_REQUEST['codigo_produto']) ? $_REQUEST['codigo_produto'] : '');
     ?>
-        <script src="https://cdn.tiny.cloud/1/n23bhx6xyo7d1ycpo3rb8u5iwxz1wf5371z3f1yalxz91bop/tinymce/8/tinymce.min.js" referrerpolicy="origin" crossorigin="anonymous"></script>
+        <script src="https://cdn.tiny.cloud/1/n23bhx6xyo7d1ycpo3rb8u5iwxz1wf5371z3f1yalxz91bop/tinymce/8/tinymce.min.js"
+            referrerpolicy="origin" crossorigin="anonymous"></script>
         <script>
             const CODIGO_EMPRESA = "<?php echo $codigo_empresa; ?>";
             const DATA_HOJE = "<?php echo $data_hoje; ?>";
@@ -380,7 +392,7 @@ router_add('cadastro_produtos', function () {
                     'unidade_medida': unidade_medida,
                     'status_produto': status_produto,
                     'tipo_produto': tipo_produto
-                }, function(retorno) {
+                }, function (retorno) {
                     validar_retorno(retorno, '/produtos.php');
                 });
             }
@@ -418,11 +430,11 @@ router_add('cadastro_produtos', function () {
                     'rota': 'pesquisar_clientes',
                     'empresa': CODIGO_EMPRESA,
                     'tipo_usuario': 'FORNECEDOR'
-                }, function(retorno) {
+                }, function (retorno) {
                     let fornecedores = retorno.dados;
                     let select_fornecedores = document.querySelector('#fornecedor');
 
-                    sistema.each(fornecedores, function(index, fornecedor) {
+                    sistema.each(fornecedores, function (index, fornecedor) {
                         select_fornecedores.appendChild(sistema.gerar_option(fornecedor._id.$oid, fornecedor.nome_usuario));
                     });
                 });
@@ -432,8 +444,13 @@ router_add('cadastro_produtos', function () {
                 sistema.request.post('/produtos.php', {
                     'rota': 'pesquisar_produto',
                     'codigo_produto': CODIGO_PRODUTO
-                }, function(retorno) {
+                }, function (retorno) {
                     let produto = retorno.dados;
+                    let tipo = 1;
+
+                    if(produto.tipo_produto == false){
+                        tipo = 0;
+                    }
 
                     document.querySelector('#nome_produto').value = produto.nome_produto;
                     document.querySelector('#fornecedor').value = produto.fornecedor.$oid;
@@ -441,7 +458,7 @@ router_add('cadastro_produtos', function () {
                     document.querySelector('#valor_custo').value = produto.valor_custo;
                     document.querySelector('#quantidade_alerta').value = produto.quantidade_alerta;
                     document.querySelector('#status_produto').value = produto.status;
-                    document.querySelector('#tipo_produto').value = produto.tipo_produto;
+                    document.querySelector('#tipo_produto').value = tipo;
                     document.querySelector('#unidade_medida').value = produto.unidade_medida;
                     document.querySelector('#data_cadastro').value = sistema.retornar_data(produto.data_cadastro, 'AMERICANO');
                     tinymce.get('editor').setContent(produto.descricao);
@@ -461,7 +478,8 @@ router_add('cadastro_produtos', function () {
                                 <div class="row">
                                     <div class="col-4 text-center">
                                         <label class="text">Nome do produto</label>
-                                        <input type="text" class="form-control text-uppercase" placeholder="Nome do Produto" id="nome_produto">
+                                        <input type="text" class="form-control text-uppercase" placeholder="Nome do Produto"
+                                            id="nome_produto">
                                     </div>
                                     <div class="col-3 text-center">
                                         <label class="text">Fornecedor</label>
@@ -471,15 +489,18 @@ router_add('cadastro_produtos', function () {
                                     </div>
                                     <div class="col-1 text-center">
                                         <label class="text">Valor de Venda</label>
-                                        <input type="text" class="form-control" placeholder="Valor de Venda" id="valor_venda" sistema-mask="moeda">
+                                        <input type="text" class="form-control" placeholder="Valor de Venda"
+                                            id="valor_venda" sistema-mask="moeda">
                                     </div>
                                     <div class="col-1 text-center">
                                         <label class="text">Valor de Custo</label>
-                                        <input type="text" class="form-control" placeholder="Valor de Custo" id="valor_custo" sistema-mask="moeda">
+                                        <input type="text" class="form-control" placeholder="Valor de Custo"
+                                            id="valor_custo" sistema-mask="moeda">
                                     </div>
                                     <div class="col-1 text-center">
                                         <label class="text">Quantidade Alerta</label>
-                                        <input type="text" class="form-control" placeholder="Quantidade Alerta" id="quantidade_alerta" sistema-mask="codigo">
+                                        <input type="text" class="form-control" placeholder="Quantidade Alerta"
+                                            id="quantidade_alerta" sistema-mask="codigo">
                                     </div>
                                     <div class="col-1 text-center">
                                         <label class="text">Status</label>
@@ -514,7 +535,8 @@ router_add('cadastro_produtos', function () {
                                             <label class="text">Código de Barras</label>
                                             <div class="position-relative">
                                                 <input type="text" class="form-control" id="codigo_barras">
-                                                <button type="button" class="btn btn-sm btn-dark position-absolute end-0 top-0 bottom-0 mx-2 my-1 d-inline-flex align-items-center">Gerar</button>
+                                                <button type="button"
+                                                    class="btn btn-sm btn-dark position-absolute end-0 top-0 bottom-0 mx-2 my-1 d-inline-flex align-items-center">Gerar</button>
                                             </div>
                                         </div>
                                     </div>
@@ -529,7 +551,8 @@ router_add('cadastro_produtos', function () {
                                     </div>
                                     <div class="col-3 text-center">
                                         <label class="text">Data Cadastro</label>
-                                        <input type="date" class="form-control" id="data_cadastro" value="<?php echo $data_hoje; ?>">
+                                        <input type="date" class="form-control" id="data_cadastro"
+                                            value="<?php echo $data_hoje; ?>">
                                     </div>
                                 </div>
                                 <?php
@@ -541,39 +564,25 @@ router_add('cadastro_produtos', function () {
                 </div>
             </div>
             <script>
+
                 tinymce.init({
-                    selector: 'textarea',
+                    selector: '#editor',
                     plugins: [
-                        'anchor', 'autolink', 'charmap', 'codesample', 'emoticons', 'link', 'lists', 'media', 'searchreplace', 'table', 'visualblocks', 'wordcount',
-                        'checklist', 'mediaembed', 'casechange', 'formatpainter', 'pageembed', 'a11ychecker', 'tinymcespellchecker', 'permanentpen', 'powerpaste', 'advtable', 'advcode', 'advtemplate', 'tinymceai', 'uploadcare', 'mentions', 'tinycomments', 'tableofcontents', 'footnotes', 'mergetags', 'autocorrect', 'typography', 'inlinecss', 'markdown', 'importword', 'exportword', 'exportpdf'
+                        'advlist', 'autolink', 'link', 'image', 'lists', 'charmap', 'preview', 'anchor', 'pagebreak',
+                        'searchreplace', 'wordcount', 'visualblocks', 'visualchars', 'code', 'fullscreen', 'insertdatetime',
+                        'media', 'table', 'emoticons', 'help'
                     ],
-                    toolbar: 'undo redo | tinymceai-chat tinymceai-quickactions tinymceai-review | blocks fontfamily fontsize | bold italic underline strikethrough | link media table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography uploadcare | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
-                    tinycomments_mode: 'embedded',
-                    tinycomments_author: 'Author name',
-                    mergetags_list: [{
-                            value: 'First.Name',
-                            title: 'First Name'
-                        },
-                        {
-                            value: 'Email',
-                            title: 'Email'
-                        },
-                    ],
-                    tinymceai_token_provider: async () => {
-                        await fetch(`https://demo.api.tiny.cloud/1/n23bhx6xyo7d1ycpo3rb8u5iwxz1wf5371z3f1yalxz91bop/auth/random`, {
-                            method: "POST",
-                            credentials: "include"
-                        });
-                        return {
-                            token: await fetch(`https://demo.api.tiny.cloud/1/n23bhx6xyo7d1ycpo3rb8u5iwxz1wf5371z3f1yalxz91bop/jwt/tinymceai`, {
-                                credentials: "include"
-                            }).then(r => r.text())
-                        };
+                    toolbar: 'undo redo | styles | bold italic | alignleft aligncenter alignright alignjustify | ' +
+                        'bullist numlist outdent indent | link image | print preview media fullscreen | ' +
+                        'forecolor backcolor emoticons | help',
+                    menu: {
+                        favs: { title: 'My Favorites', items: 'code visualaid | searchreplace | emoticons' }
                     },
-                    uploadcare_public_key: '1d88b802b60238878731',
+                    menubar: 'favs file edit view insert format tools table help',
+                    content_css: 'css/content.css'
                 });
 
-                window.onload = function() {
+                window.onload = function () {
                     pesquisar_fornecedores();
 
                     if (CODIGO_PRODUTO != '') {
@@ -581,18 +590,18 @@ router_add('cadastro_produtos', function () {
                     }
                 }
             </script>
-        <?php
-        include_once 'includes/footer.php';
-    });
+            <?php
+            include_once 'includes/footer.php';
+});
 
-    /** 
-     * Rota responsável por exibir a página de cadastro de imagens do produto. Ela inclui o arquivo de cabeçalho, define a data atual e renderiza o conteúdo HTML da página, que inclui um formulário para cadastro ou edição de imagens do produto. A página também contém scripts JavaScript para lidar com as interações do usuário, como salvar os dados da imagem, limpar o formulário e redirecionar para a página de listagem de produtos.
-     */
-    router_add('cadastrar_imagem_produto', function () {
-        include_once 'includes/head.php';
-        ?>
+/** 
+ * Rota responsável por exibir a página de cadastro de imagens do produto. Ela inclui o arquivo de cabeçalho, define a data atual e renderiza o conteúdo HTML da página, que inclui um formulário para cadastro ou edição de imagens do produto. A página também contém scripts JavaScript para lidar com as interações do usuário, como salvar os dados da imagem, limpar o formulário e redirecionar para a página de listagem de produtos.
+ */
+router_add('cadastrar_imagem_produto', function () {
+    include_once 'includes/head.php';
+    ?>
 
-        <?php
-        include_once 'includes/footer.php';
-    });
-        ?>
+            <?php
+            include_once 'includes/footer.php';
+});
+?>

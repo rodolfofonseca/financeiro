@@ -3,6 +3,8 @@ require_once 'classes/bancoDeDados.php';
 require_once 'modelos/Usuario.php';
 require_once 'modelos/Empresa.php';
 require_once 'modelos/Sistema.php';
+require_once 'modelos/Movimentacao.php';
+require_once 'modelos/ContasPagarReceber.php';
 
 
 router_add('salvar_dados_usuario', function () {
@@ -47,6 +49,8 @@ router_add('login_usuario', function () {
     if (empty($usuario) == false) {
         session_start();
 
+        $versao_sistema = 'alta 0.0';
+
         $_SESSION['codigo_usuario'] = $usuario['_id'];
         $_SESSION['codigo_empresa'] = $usuario['empresa'];
         $_SESSION['nome_usuario'] = $usuario['nome_usuario'];
@@ -86,7 +90,9 @@ router_add('login_usuario', function () {
 
         if (array_key_exists('versao_sistema', $retorno_sistema) == true) {
             $_SESSION['versao_sistema'] = (string) $retorno_sistema['versao_sistema'];
+            $versao_sistema = (string) $retorno_sistema['versao_sistema'];
         }
+
         if (array_key_exists('cloudinary', $retorno_sistema) == true) {
             $_SESSION['cloudinary'] = (bool) $retorno_sistema['cloudinary'];
         }
@@ -95,7 +101,17 @@ router_add('login_usuario', function () {
             $_SESSION['google_agenda'] = (bool) $retorno_sistema['google_agenda'];
         }
 
-        header('location:dashboard.php');
+        $objeto_movimentacao = new Movimentacao();
+        $retorno_movimentacao = (bool) $objeto_movimentacao->deletar_antigo((array) ['empresa' => (string) $_SESSION['codigo_empresa']]);
+
+        $objeto_contas_pagar_receber = new ContasPagarReceber();
+        $retorno_contas_pagar_receber = (bool) $objeto_contas_pagar_receber->deletar_contas_pagar_receber_antigas((array) ['empresa' => (string) $_SESSION['codigo_empresa']]);
+        
+        if($versao_sistema == 'alfa 0.4'){
+            header('location:dashboard.php');
+        }else{
+            header('location:index.php');
+        }
     } else {
         // header('location:dashboard.php');
         header('location:index.php');

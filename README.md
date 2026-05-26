@@ -56,8 +56,16 @@ Os uploads ficam em `anexos/`. O Docker Compose usa um volume nomeado para `/var
 # financeiro
 Sistema de controle financeiro para pessoas físicas e jurídicas
 
+## ATUALIZAÇÃO 0.4 LANÇAMENTO 26/05/2026
+Desenvolviemnto de novos realtórios na dashboard
+Correção da função de marcar as contas como vencidas quando chega o horário
+Adição de filtro para pesquisa e extratos
+Correção da função de baixar o extrato para gerar contas automáticas
+Adição de relatório em excell nas movimentações, cadastros e contas
+Adição na dashboard e nas contas de contas vencidas
+
 ## ATUALIZAÇÃO 0.3 LANÇAMENTO 01/05/2026
- Correção do módulo de alterar salário do colaborador, para não trocar mais a senha, quando altera o salário
+Correção do módulo de alterar salário do colaborador, para não trocar mais a senha, quando altera o salário
 Colocado icone de sino no sistema de notificações.
 Desenvolvido sistema para o usuário realizar a troca da senha caso tenha esquecido, através do email... Caso o email exista cadastrado dentro do sistema é realizada a troca da senha.
 Realizado a troca das mensagens para quando o sistema não encontra um cep

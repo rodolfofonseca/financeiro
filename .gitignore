@@ -1,4 +1,5 @@
 configuracao.ini
+configuracao.env
 configuracao_usuario.ini
 .env
 teste.php
