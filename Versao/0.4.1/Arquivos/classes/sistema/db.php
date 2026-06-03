@@ -162,45 +162,84 @@ class DB
    */
   function connect($table)
   {
-    if ($this->client == null) {
-
-      $dns = getenv('MONGODB_URI');
-      if ($dns === false || trim($dns) === '') {
-        $dns = self::$settings['dns'];
+      if ($this->client == null) {
+  
+          // Caminho do arquivo configuracao.env
+          $envFile = dirname(__DIR__) . '/configuracao.env';
+  
+          // Carrega manualmente o arquivo se existir
+          $env = [];
+  
+          if (file_exists($envFile)) {
+              $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+  
+              foreach ($lines as $line) {
+  
+                  // Ignora comentários
+                  if (strpos(trim($line), '#') === 0) {
+                      continue;
+                  }
+  
+                  // Divide chave=valor
+                  if (strpos($line, '=') !== false) {
+                      list($key, $value) = explode('=', $line, 2);
+  
+                      $env[trim($key)] = trim($value);
+                  }
+              }
+          }
+  
+          // Primeiro tenta getenv()
+          $dns = getenv('MONGODB_URI');
+  
+          // Se não existir pega do arquivo configuracao.env
+          if ($dns === false || trim($dns) === '') {
+              $dns = $env['MONGODB_URI'] ?? '';
+          }
+  
+          $dbName = getenv('MONGODB_DBNAME');
+  
+          if ($dbName === false || trim($dbName) === '') {
+              $dbName = $env['MONGODB_DBNAME'] ?? '';
+          }
+  
+          $username = getenv('MONGODB_USERNAME');
+  
+          if ($username === false || trim($username) === '') {
+              $username = $env['MONGODB_USERNAME'] ?? null;
+          }
+  
+          $password = getenv('MONGODB_PASSWORD');
+  
+          if ($password === false || trim($password) === '') {
+              $password = $env['MONGODB_PASSWORD'] ?? null;
+          }
+  
+          $authentication = [];
+  
+          if (!empty($username)) {
+              $authentication['username'] = $username;
+          }
+  
+          if (!empty($password)) {
+              $authentication['password'] = $password;
+          }
+  
+          $this->db = $dbName;
+  
+          $this->client = new MongoDB\Client(
+              $dns,
+              $authentication,
+              self::$settings['options'] ?? []
+          );
       }
-
-      $dbName = getenv('MONGODB_DBNAME');
-      if ($dbName === false || trim($dbName) === '') {
-        $dbName = self::$settings['dbname'];
-      }
-
-      $authentication = self::$settings['authentication'] ?? [];
-
-      $username = getenv('MONGODB_USERNAME');
-      if ($username !== false && trim($username) !== '') {
-        $authentication['username'] = $username;
-      }
-
-      $password = getenv('MONGODB_PASSWORD');
-      if ($password !== false && trim($password) !== '') {
-        $authentication['password'] = $password;
-      }
-
-      $this->db = $dbName;
-
-      $this->client = new MongoDB\Client(
-        $dns,
-        $authentication,
-        self::$settings['options'] ?? []
+  
+      $this->connection = $this->client->selectCollection(
+          $this->db,
+          $table
       );
-    }
-
-    $this->connection = $this->client->selectCollection(
-      $this->db,
-      $table
-    );
-
-    return $this;
+  
+      return $this;
   }
 
   function insert($columns)

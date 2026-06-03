@@ -97,7 +97,6 @@ class CustoMedio implements InterfaceModelo{
         }else{
             $valor_custo_temp = (double) $this->valor_custo_parametro;
             $quantidade_itens_custo++;
-            file_put_contents('json.json', json_encode(['quantidade' => $quantidade_itens_custo, 'retorno_pesquisa' => $retorno_pesquisa, 'valor_custo_temp' => $valor_custo_temp, 'roteamento' => 'ENTROU_ELSE', 'quantidade_itens_custo' => $quantidade_itens_custo, 'valor_custo_parametro' => $this->valor_custo_parametro], JSON_UNESCAPED_UNICODE));
         }
 
         if($quantidade_itens_custo == 0 || $quantidade_itens_custo == 1){
