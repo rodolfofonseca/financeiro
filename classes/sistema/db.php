@@ -111,40 +111,24 @@ class DB {
     return [$column => 1];
   }
 
-  static function tables() {
-    $i = self::use('empresa');
-    $collections = [];
-    $validacao = [];
+  /**
+   * Função responsável por fazer a conexão com o banco de dados
+   * @param mixed $table
+   * @return static
+   */
+  function connect($table)
+  {
+    if ($this->client == null) {
 
-    foreach ($i->client->{$i->db}->listCollections() as $collection) {
-      $name = $collection['name'];
-      if (isset($collection['options']['validator']['$jsonSchema']['properties']) == true) {
-        $validacao = $collection['options']['validator']['$jsonSchema']['properties'];
-      } elseif (isset($collection['options']['validator']) === true) {
-        $validacao = $collection['options']['validator'];
+      $dns = getenv('MONGODB_URI');
+      if ($dns === false || trim($dns) === '') {
+        $dns = self::$settings['dns'];
       }
 
-      if (empty($validacao) === false) {
-        foreach ($validacao as $k => $v) {
-          if (array_key_exists('$type', $v) == true) {
-            $v = $v['$type'];
-  
-          } else if (array_key_exists('bsonType', $v) == true) {
-            $v = $v['bsonType'];
-  
-          } else if (array_key_exists('type', $v) == true) {
-            $v = $v['type'];
-  
-          } else if (array_key_exists(1, $v) == true) {
-            $v = $v[1];
-          }
-          $collections[$name][$k] = $v;
-        }
+      $dbName = getenv('MONGODB_DBNAME');
+      if ($dbName === false || trim($dbName) === '') {
+        $dbName = self::$settings['dbname'];
       }
-    }
-
-    return $collections;
-  }
 
   function connect($table)
   {
