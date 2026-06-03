@@ -1,5 +1,6 @@
 <?php
-class DB {
+class DB
+{
   public static $instance = null;
   public $client = null;
   public $connection = null;
@@ -8,15 +9,18 @@ class DB {
   public $table = null;
   public static $settings = [
     'dns' => 'mongodb://127.0.0.1/',
-    'authentication'=> [],
-    'options' => [ 'typeMap' => [
-      'array' => 'array',
-      'document' => 'array',
-      'root' => 'array'
-    ]]
+    'authentication' => [],
+    'options' => [
+      'typeMap' => [
+        'array' => 'array',
+        'document' => 'array',
+        'root' => 'array'
+      ]
+    ]
   ];
 
-  static function use($table, $DB=null) {
+  static function use($table, $DB = null)
+  {
     static $instance = null;
 
     if (null === $instance) {
@@ -28,7 +32,8 @@ class DB {
     return $instance;
   }
 
-  static function is_filter($condition, $comparison) {
+  static function is_filter($condition, $comparison)
+  {
     if (is_array($condition) == true) {
       return false;
     }
@@ -36,7 +41,8 @@ class DB {
     return array_key_exists($condition, $comparison);
   }
 
-  static function filter($conditions=[]) {
+  static function filter($conditions = [])
+  {
     $query = [];
     $comparison = [
       '>' => '$gt',
@@ -44,7 +50,7 @@ class DB {
       '<' => '$lt',
       '<=' => '$lte',
       '=' => '$regex',
-	  '==' => '$regex',
+      '==' => '$regex',
       '===' => '$eq',
       '!=' => '$not',
       '!==' => '$not',
@@ -93,7 +99,8 @@ class DB {
     return $query;
   }
 
-  static function order($order=[]) {
+  static function order($order = [])
+  {
     $result = [];
 
     foreach ($order as $field => $value) {
@@ -107,11 +114,13 @@ class DB {
     return $result;
   }
 
-  static function normalize_column($column) {
+  static function normalize_column($column)
+  {
     return [$column => 1];
   }
 
-  static function tables() {
+  static function tables()
+  {
     $i = self::use('empresa');
     $collections = [];
     $validacao = [];
@@ -128,13 +137,13 @@ class DB {
         foreach ($validacao as $k => $v) {
           if (array_key_exists('$type', $v) == true) {
             $v = $v['$type'];
-  
+
           } else if (array_key_exists('bsonType', $v) == true) {
             $v = $v['bsonType'];
-  
+
           } else if (array_key_exists('type', $v) == true) {
             $v = $v['type'];
-  
+
           } else if (array_key_exists(1, $v) == true) {
             $v = $v[1];
           }
@@ -146,142 +155,109 @@ class DB {
     return $collections;
   }
 
+  /**
+   * Função responsável por fazer a conexão com o banco de dados
+   * @param mixed $table
+   * @return static
+   */
   function connect($table)
   {
-      // if ($this->client == null) {
-  
-      //     $envFile = dirname(__DIR__) . '/configuracao.env';
-      //     $env = [];
-  
-      //     if (file_exists($envFile)) {
-      //         $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-  
-      //         foreach ($lines as $line) {
-  
-      //             if (strpos(trim($line), '#') === 0) {
-      //                 continue;
-      //             }
-  
-      //             if (strpos($line, '=') !== false) {
-      //                 list($key, $value) = explode('=', $line, 2);
-  
-      //                 $env[trim($key)] = trim($value);
-      //             }
-      //         }
-      //     }
-  
-      //     $dns = getenv('MONGODB_URI');
-  
-      //     if ($dns === false || trim($dns) === '') {
-      //         $dns = $env['MONGODB_URI'] ?? '';
-      //     }
-  
-      //     $dbName = getenv('MONGODB_DBNAME');
-  
-      //     if ($dbName === false || trim($dbName) === '') {
-      //         $dbName = $env['MONGODB_DBNAME'] ?? '';
-      //     }
-  
-      //     $username = getenv('MONGODB_USERNAME');
-  
-      //     if ($username === false || trim($username) === '') {
-      //         $username = $env['MONGODB_USERNAME'] ?? null;
-      //     }
-  
-      //     $password = getenv('MONGODB_PASSWORD');
-  
-      //     if ($password === false || trim($password) === '') {
-      //         $password = $env['MONGODB_PASSWORD'] ?? null;
-      //     }
-  
-      //     $authentication = [];
-  
-      //     if (!empty($username)) {
-      //         $authentication['username'] = $username;
-      //     }
-  
-      //     if (!empty($password)) {
-      //         $authentication['password'] = $password;
-      //     }
-  
-      //     $this->db = $dbName;
-  
-      //     $this->client = new MongoDB\Client(
-      //         $dns,
-      //         $authentication,
-      //         self::$settings['options'] ?? []
-      //     );
-      // }
-  
-      // $this->connection = $this->client->selectCollection(
-      //     $this->db,
-      //     $table
-      // );
-  
-      // return $this;
       if ($this->client == null) {
-
-    // $arquivo_configuracao = dirname(__DIR__, 2) . '/configuracao.env';
-    $arquivo_configuracao = dirname(__DIR__, 2) . '/configuracao.env';
-
-    $dns = self::$settings['dns'];
-    $authentication = self::$settings['authentication'];
-
-    if (file_exists($arquivo_configuracao)) {
-
-      $configuracao = parse_ini_file(
-        $arquivo_configuracao,
-        false,
-        INI_SCANNER_RAW
-      );
-
-      if (isset($configuracao['MONGODB_DBNAME'])) {
-        $this->db = (string) $configuracao['MONGODB_DBNAME'];
-      }
-
-      if (isset($configuracao['MONGODB_URI'])) {
-        $dns = (string) $configuracao['MONGODB_URI'];
-      }
-
-      if (isset($configuracao['DB_USERNAME'])) {
-        $authentication['username'] = (string) $configuracao['DB_USERNAME'];
-      }
-
-      if (isset($configuracao['DB_PASSWORD'])) {
-        $authentication['password'] = (string) $configuracao['DB_PASSWORD'];
-      }
-    }
-
-    $this->client = new MongoDB\Client(
-      $dns,
-      $authentication,
-      self::$settings['options']
-    );
-  }
-
-  $this->connection = $this->client->selectCollection(
-    $this->db,
-    $table
-  );
-
-  return $this;
-  }
-
-  function insert($columns) {
-    foreach ($columns as $key => $value) :
   
+          // Caminho do arquivo configuracao.env
+          $envFile = dirname(__DIR__) . '/configuracao.env';
+  
+          // Carrega manualmente o arquivo se existir
+          $env = [];
+  
+          if (file_exists($envFile)) {
+              $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+  
+              foreach ($lines as $line) {
+  
+                  // Ignora comentários
+                  if (strpos(trim($line), '#') === 0) {
+                      continue;
+                  }
+  
+                  // Divide chave=valor
+                  if (strpos($line, '=') !== false) {
+                      list($key, $value) = explode('=', $line, 2);
+  
+                      $env[trim($key)] = trim($value);
+                  }
+              }
+          }
+  
+          // Primeiro tenta getenv()
+          $dns = getenv('MONGODB_URI');
+  
+          // Se não existir pega do arquivo configuracao.env
+          if ($dns === false || trim($dns) === '') {
+              $dns = $env['MONGODB_URI'] ?? '';
+          }
+  
+          $dbName = getenv('MONGODB_DBNAME');
+  
+          if ($dbName === false || trim($dbName) === '') {
+              $dbName = $env['MONGODB_DBNAME'] ?? '';
+          }
+  
+          $username = getenv('MONGODB_USERNAME');
+  
+          if ($username === false || trim($username) === '') {
+              $username = $env['MONGODB_USERNAME'] ?? null;
+          }
+  
+          $password = getenv('MONGODB_PASSWORD');
+  
+          if ($password === false || trim($password) === '') {
+              $password = $env['MONGODB_PASSWORD'] ?? null;
+          }
+  
+          $authentication = [];
+  
+          if (!empty($username)) {
+              $authentication['username'] = $username;
+          }
+  
+          if (!empty($password)) {
+              $authentication['password'] = $password;
+          }
+  
+          $this->db = $dbName;
+  
+          $this->client = new MongoDB\Client(
+              $dns,
+              $authentication,
+              self::$settings['options'] ?? []
+          );
+      }
+  
+      $this->connection = $this->client->selectCollection(
+          $this->db,
+          $table
+      );
+  
+      return $this;
+  }
+
+  function insert($columns)
+  {
+    foreach ($columns as $key => $value):
+
       if (is_bool($value) || is_int($value) || is_float($value)) {
         $columns[$key] = $value;
-  
+
       } else if (is_object($value)) {
         $columns[$key] = $value;
-  
+
       } else if (is_string($value)) {
         $columns[$key] = str_replace(['"', "'"], "", $value);
       }
-  
+
     endforeach;
-  
+
     try {
       return $this
         ->connection
@@ -292,19 +268,20 @@ class DB {
     }
   }
 
-  function update($filters, $columns=[]) {
-    foreach ($columns as $key => $value) :
-  
+  function update($filters, $columns = [])
+  {
+    foreach ($columns as $key => $value):
+
       if (is_bool($value) || is_int($value) || is_float($value)) {
         $columns[$key] = $value;
-  
+
       } else if (is_object($value)) {
         $columns[$key] = $value;
-  
+
       } else if (is_string($value)) {
         $columns[$key] = str_replace(['"', "'"], "", $value);
       }
-  
+
     endforeach;
 
     try {
@@ -317,7 +294,8 @@ class DB {
     }
   }
 
-  function delete($filters=[]) {
+  function delete($filters = [])
+  {
     try {
       return (bool) $this
         ->connection
@@ -328,7 +306,8 @@ class DB {
     }
   }
 
-  function first($filters=[], $field=null) {
+  function first($filters = [], $field = null)
+  {
     if ($field == null) {
       $row = array_keys($this->one(self::filter($filters)));
       if (empty($row) == false) {
@@ -346,13 +325,15 @@ class DB {
       ->findOne(self::filter($filters), ['sort' => [$field => 1]]);
   }
 
-  function last($filters=[], $field='_id') {
+  function last($filters = [], $field = '_id')
+  {
     return $this
       ->connection
       ->findOne(self::filter($filters), ['sort' => [$field => -1]]);
   }
 
-  function one($filters=[], $order=[]) {
+  function one($filters = [], $order = [])
+  {
     $filtros = self::filter($filters);
     // $options = [
     //   'projection' => ['_id' => 1],
@@ -360,8 +341,8 @@ class DB {
     // ];
     $options = ['sort' => $this->order($order)];
     $result = $this->connection->findOne($filtros, $options);
-    
-    if($result && isset($result['_id'])){
+
+    if ($result && isset($result['_id'])) {
       $result['_id'] = (string) $result['_id'];
     }
 
@@ -375,12 +356,13 @@ class DB {
    * @param int limit a quantidade que registros que deseja que seja retornada
    * @return array com os registros
    */
-  function all($filters=[], $order=[], $limit = 0) {
+  function all($filters = [], $order = [], $limit = 0)
+  {
     $filtros = self::filter($filters);
 
-    if($limit == 0){
+    if ($limit == 0) {
       $options = ['sort' => $this->order($order)];
-    }else{
+    } else {
       $options = ['sort' => $this->order($order), 'limit' => $limit];
     }
 
@@ -393,7 +375,8 @@ class DB {
     return $this->connection->find($filtros, $options)->toArray();
   }
 
-  function columns($columns, $filters=[], $order=[]) {
+  function columns($columns, $filters = [], $order = [])
+  {
     $filtros = self::filter($filters);
     $options = [
       'projection' => array_merge(array_fill_keys($columns, 1), ['_id' => 0]),
@@ -403,13 +386,15 @@ class DB {
     return $this->connection->find($filtros, $options)->toArray();
   }
 
-  function check($filters=[]) {
+  function check($filters = [])
+  {
     return (bool) $this
       ->connection
       ->findOne(self::filter($filters), ['projection' => ['_id' => 1]]);
   }
 
-  function next($field, $min=1) {
+  function next($field, $min = 1)
+  {
     $rs = $this
       ->connection
       ->findOne([], ['sort' => [$field => -1]]);
