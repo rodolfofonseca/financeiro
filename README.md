@@ -4,14 +4,17 @@ Este projeto usa **variáveis de ambiente** para configuração.
 
 ## Desenvolvimento local
 
-1) Crie um arquivo `.env` na raiz do repositório (você pode começar a partir do `.env.example`).
+1) Crie um arquivo dentro de classe chamado de configuracao.php com os seguintes dados
 
-Exemplo:
+<?php
+define('HOST', 'host_name');
+define('BANCO', 'nome_do_banco_de_dados');
+define('USUARIO', 'usuario');
+define('SENHA', 'senha');
+define('PORTA', porta);
+?>
 
-```env
-MONGODB_URI=mongodb://127.0.0.1:27017
-MONGODB_DBNAME=controleFinanceiro
-```
+troque os dados pelos seus
 
 2) Execute os scripts de atualização na pasta `Versao/` quando necessário.
 
@@ -19,7 +22,7 @@ MONGODB_DBNAME=controleFinanceiro
 
 Este repositório inclui uma configuração Docker que executa:
 - PHP + Apache (servindo a raiz deste repositório)
-- MongoDB (em um container)
+- posgres
 
 ### Início rápido
 
@@ -32,22 +35,6 @@ docker compose up --build
 2) Abra:
 - `http://localhost:8080/`
 
-### Configuração do banco de dados
-
-O app lê as variáveis de ambiente do arquivo `.env` (na raiz do projeto). No Docker, o `docker compose` injeta essas variáveis via `env_file`.
-
-Config padrão (Docker):
-
-```env
-MONGODB_URI=mongodb://mongo:27017
-MONGODB_DBNAME=controleFinanceiro
-
-# Opcional (apenas se o seu Mongo exigir autenticação)
-# MONGODB_USERNAME=
-# MONGODB_PASSWORD=
-```
-
-Se você quiser usar o MongoDB Atlas/Mongo remoto, atualize o arquivo `.env` com a sua string de conexão.
 
 ### Persistência de uploads
 
@@ -55,6 +42,9 @@ Os uploads ficam em `anexos/`. O Docker Compose usa um volume nomeado para `/var
 
 # financeiro
 Sistema de controle financeiro para pessoas físicas e jurídicas
+
+## ATUALIZAÇÃO 0.6 LANÇAMENTO 20/06/2026
+Troca do banco de dados para o postgres
 
 ## ATUALIZAÇÃO 0.5 LANÇAMENTO 03/06/2026
 Correção de alguns bugs de banco de dados
