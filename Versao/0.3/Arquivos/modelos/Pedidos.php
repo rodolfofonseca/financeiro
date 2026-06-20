@@ -119,11 +119,11 @@ class Pedidos implements InterfaceModelo
                     }
 
                     $retorno_itens_pedido = (bool) $objeto_itens_pedido->salvar_dados($itens);
-                    
+
                     if ($this->tipo_pedido == true) {
                         $itens['item_pedido'] = $objeto_itens_pedido->get_codigo_item_pedido();
                         $itens['valor_custo_parametro'] = $itens['valor_total_produto'];
-                        
+
                         $objeto_custo_medio = new CustoMedio();
                         $retorno_custo_medio = (bool) $objeto_custo_medio->salvar_dados($itens);
                     }

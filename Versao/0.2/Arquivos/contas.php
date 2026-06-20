@@ -106,7 +106,7 @@ router_add('relatorio_download', function () {
 
         $retorno_lancamentos = (array) $objeto_movimentacao->pesquisar_todos((array) $filtro);
     }
-?>
+    ?>
     <style>
         .valor-credito {
             color: #198754;
@@ -184,7 +184,7 @@ router_add('relatorio_download', function () {
             </tbody>
         </table>
     </div>
-<?php
+    <?php
 
     require_once 'includes/footer_sem.php';
     exit;
@@ -192,7 +192,7 @@ router_add('relatorio_download', function () {
 
 router_add('index', function () {
     require_once 'includes/head.php';
-?>
+    ?>
     <script>
         const CODIGO_EMPRESA = "<?php echo $_SESSION['codigo_empresa']; ?>";
 
@@ -213,7 +213,7 @@ router_add('index', function () {
                 'nome_conta': nome_conta,
                 'descricao': descricao,
                 'status': status
-            }, function(retorno) {
+            }, function (retorno) {
                 let contas = retorno.dados;
                 let tamanho_retorno = contas.length;
                 let tabela = document.querySelector('#tabela_contas tbody');
@@ -226,7 +226,7 @@ router_add('index', function () {
                     linha.appendChild(sistema.gerar_td(['text-center'], 'NENHUMA CONTA ENCONTRADA COM OS FILTROS PASSADOS', 'inner', true, 10));
                     tabela.appendChild(linha);
                 } else {
-                    sistema.each(contas, function(index, conta) {
+                    sistema.each(contas, function (index, conta) {
                         let linha = document.createElement('tr');
 
                         linha.appendChild(sistema.gerar_td(['text-center'], conta.nome_conta, 'inner'));
@@ -234,9 +234,9 @@ router_add('index', function () {
                         linha.appendChild(sistema.gerar_td(['text-center'], sistema.number_format(conta.saldo_conta), 'inner'));
 
                         if (conta.status == 'ATIVO') {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_' + conta._id.$oid, 'ATIVO', ['btn', 'btn-outline-success'], function visualizar() {}), 'append'));
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_' + conta._id.$oid, 'ATIVO', ['btn', 'btn-outline-success'], function visualizar() { }), 'append'));
                         } else {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_' + conta._id.$oid, 'INATIVO', ['btn', 'btn-outline-danger'], function visualizar() {}), 'append'));
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_' + conta._id.$oid, 'INATIVO', ['btn', 'btn-outline-danger'], function visualizar() { }), 'append'));
                         }
 
                         linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_downlaods_' + conta._id.$oid, 'DOWNLOAD', ['btn', 'btn-primary'], () => {
@@ -301,7 +301,8 @@ router_add('index', function () {
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap gap-2">
                     <div class="dropdown">
-                        <button class="btn btn-primary d-flex align-items-center justify-content-center" onclick="cadastro_contas('');">
+                        <button class="btn btn-primary d-flex align-items-center justify-content-center"
+                            onclick="cadastro_contas('');">
                             Cadastrar Conta
                         </button>
                     </div>
@@ -319,7 +320,8 @@ router_add('index', function () {
                             <div class="row">
                                 <div class="col-6 text-center">
                                     <label class="text">Nome da Conta</label>
-                                    <input type="text" class="form-control text-uppercase" placeholder="Nome Conta" id="nome_conta">
+                                    <input type="text" class="form-control text-uppercase" placeholder="Nome Conta"
+                                        id="nome_conta">
                                 </div>
                                 <div class="col-6 text-center">
                                     <label class="text">Status</label>
@@ -333,7 +335,8 @@ router_add('index', function () {
                             <br />
                             <div class="row">
                                 <div class="col-12">
-                                    <textarea class="form-control text-uppercase" id="descricao" placeholder="Descrição da conta"></textarea>
+                                    <textarea class="form-control text-uppercase" id="descricao"
+                                        placeholder="Descrição da conta"></textarea>
                                 </div>
                             </div>
                             <br />
@@ -360,7 +363,8 @@ router_add('index', function () {
                                             </thead>
                                             <tbody>
                                                 <tr>
-                                                    <td colspan="10" class="text-center">UTILIZE O FILTRO PARA FACILITAR A PESQUISA!</td>
+                                                    <td colspan="10" class="text-center">UTILIZE O FILTRO PARA FACILITAR A
+                                                        PESQUISA!</td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -373,12 +377,12 @@ router_add('index', function () {
             </div>
         </div>
         <script>
-            window.onload = function() {
+            window.onload = function () {
                 pesquisar_contas();
             }
         </script>
-    <?php
-    require_once 'includes/footer.php';
+        <?php
+        require_once 'includes/footer.php';
 });
 
 router_add('cadastro_contas', function () {
@@ -422,7 +426,7 @@ router_add('cadastro_contas', function () {
                         'nome_conta': nome_conta,
                         'descricao': descricao,
                         'saldo_conta': saldo_conta
-                    }, function(retorno) {
+                    }, function (retorno) {
                         validar_retorno(retorno, '/contas.php');
                     });
                 }
@@ -456,11 +460,13 @@ router_add('cadastro_contas', function () {
                                 <div class="row">
                                     <div class="col-4">
                                         <label class="text">Nome da Conta</label>
-                                        <input type="text" class="form-control text-uppercase" id="nome_conta" placeholder="Nome da conta">
+                                        <input type="text" class="form-control text-uppercase" id="nome_conta"
+                                            placeholder="Nome da conta">
                                     </div>
                                     <div class="col-4">
                                         <label class="text">Saldo Conta</label>
-                                        <input type="text" class="form-control" id="saldo_conta" sistema-mask="moeda" placeholder="Saldo da Conta">
+                                        <input type="text" class="form-control" id="saldo_conta" sistema-mask="moeda"
+                                            placeholder="Saldo da Conta">
                                     </div>
                                     <div class="col-4">
                                         <label class="text">Status</label>
@@ -475,7 +481,8 @@ router_add('cadastro_contas', function () {
                                 <div class="row">
                                     <div class="col-12">
                                         <label class="text">Descrição</label>
-                                        <textarea class="form-control text-uppercase" id="descricao" placeholder="Informa a descrição"></textarea>
+                                        <textarea class="form-control text-uppercase" id="descricao"
+                                            placeholder="Informa a descrição"></textarea>
                                     </div>
                                 </div>
                                 <?php require_once 'includes/botao_cadastro.php'; ?>
@@ -485,12 +492,12 @@ router_add('cadastro_contas', function () {
                 </div>
             </div>
             <script>
-                window.onload = function() {
+                window.onload = function () {
                     if (CODIGO_CONTA != '') {
                         sistema.request.post('/contas.php', {
                             'rota': 'pesquisa_conta',
                             'codigo_conta': CODIGO_CONTA
-                        }, function(retorno) {
+                        }, function (retorno) {
                             let conta = retorno.dados;
 
                             document.querySelector('#nome_conta').value = conta.nome_conta;
@@ -501,7 +508,7 @@ router_add('cadastro_contas', function () {
                     }
                 }
             </script>
-        <?php
-        require_once 'includes/footer.php';
-    });
-        ?>
+            <?php
+            require_once 'includes/footer.php';
+});
+?>

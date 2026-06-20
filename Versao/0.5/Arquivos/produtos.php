@@ -249,17 +249,17 @@ router_add('index', function () {
                         linha.appendChild(sistema.gerar_td(['text-start', 'fw-bold'], produto.nome_produto, 'inner'));
                         linha.appendChild(sistema.gerar_td(['text-start', 'fw-bold'], produto.fornecedor.nome_usuario, 'inner'));
 
-                        if(saldo_atual == 0){
+                        if (saldo_atual == 0) {
                             linha.appendChild(sistema.gerar_td(['text-end', 'fw-bold', 'text-danger'], saldo_atual));
-                        }else{
+                        } else {
                             linha.appendChild(sistema.gerar_td(['text-end', 'fw-bold'], saldo_atual));
                         }
 
-                        if(produto.valor_venda < produto.valor_custo){
+                        if (produto.valor_venda < produto.valor_custo) {
                             linha.appendChild(sistema.gerar_td(['text-end', 'fw-bold', 'text-danger'], sistema.number_format(produto.valor_venda, 2, ',', '.')));
-                        }else if(produto.valor_venda == produto.valor_custo){
+                        } else if (produto.valor_venda == produto.valor_custo) {
                             linha.appendChild(sistema.gerar_td(['text-end', 'fw-bold', 'text-warning'], sistema.number_format(produto.valor_venda, 2, ',', '.')));
-                        }else{
+                        } else {
                             linha.appendChild(sistema.gerar_td(['text-end', 'fw-bold', 'text-success'], sistema.number_format(produto.valor_venda, 2, ',', '.')));
                         }
 
@@ -538,7 +538,7 @@ router_add('cadastro_produtos', function () {
                 unidade_medida = objeto_unidade_medida.value;
                 quantidade_alerta = objeto_quantidade_alerta.value;
 
-                let dados = { 'rota': 'salvar_dados_produto', 'codigo_produto': CODIGO_PRODUTO, 'empresa': CODIGO_EMPRESA, 'fornecedor': fornecedor, 'sku_produto': sku_produto, 'nome_produto': nome_produto, 'descricao': descricao, 'codigo_barras': codigo_barras, 'quantidade_alerta': quantidade_alerta, 'data_cadastro': data_cadastro, 'valor_venda': valor_venda, 'valor_custo':valor_custo, 'unidade_medida': unidade_medida, 'status_produto': status_produto, 'tipo_produto': tipo_produto };
+                let dados = { 'rota': 'salvar_dados_produto', 'codigo_produto': CODIGO_PRODUTO, 'empresa': CODIGO_EMPRESA, 'fornecedor': fornecedor, 'sku_produto': sku_produto, 'nome_produto': nome_produto, 'descricao': descricao, 'codigo_barras': codigo_barras, 'quantidade_alerta': quantidade_alerta, 'data_cadastro': data_cadastro, 'valor_venda': valor_venda, 'valor_custo': valor_custo, 'unidade_medida': unidade_medida, 'status_produto': status_produto, 'tipo_produto': tipo_produto };
 
                 sistema.request.post('/produtos.php', dados, function (retorno) {
                     validar_retorno(retorno, '/produtos.php');
@@ -605,7 +605,7 @@ router_add('cadastro_produtos', function () {
                         document.querySelector('#sku_produto').value = produto.sku_produto;
                     }
 
-                    if(produto.status == false){
+                    if (produto.status == false) {
                         status = 0;
                     }
 

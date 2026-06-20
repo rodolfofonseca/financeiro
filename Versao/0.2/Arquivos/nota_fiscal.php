@@ -86,7 +86,7 @@ router_add('index', function () {
     include_once 'includes/head.php';
     $retorno = (string) (isset($_REQUEST['retorno']) ? (string) $_REQUEST['retorno'] : 'false');
     $cadastro_nota = (string) (isset($_REQUEST['cadastro_nota']) ? (string) $_REQUEST['cadastro_nota'] : 'false');
-?>
+    ?>
     <script>
         const CODIGO_EMPRESA = "<?php echo $codigo_empresa; ?>";
         const RETORNO = "<?php echo $retorno; ?>";
@@ -104,11 +104,11 @@ router_add('index', function () {
                 'rota': 'pesquisar_clientes',
                 'empresa': CODIGO_EMPRESA,
                 'tipo_usuario': 'CLIENTE_FORNECEDOR'
-            }, function(retorno) {
+            }, function (retorno) {
                 let select = document.querySelector("#cliente_fornecedor");
                 let cliente_fornecedor = retorno.dados;
 
-                sistema.each(cliente_fornecedor, function(index, cliente) {
+                sistema.each(cliente_fornecedor, function (index, cliente) {
                     select.appendChild(sistema.gerar_option(cliente._id.$oid, cliente.nome_usuario));
                 });
             });
@@ -129,7 +129,7 @@ router_add('index', function () {
                 'data_nota_final': data_nota_inicial,
                 'valor_nota': valor_nota,
                 'chave_nota': chave_nota
-            }, function(retorno) {
+            }, function (retorno) {
                 let notas_fiscais = retorno.dados;
                 let tabela = document.querySelector('#tabela_notas_fiscais tbody');
                 let tamanho_retorno = notas_fiscais.length;
@@ -141,15 +141,15 @@ router_add('index', function () {
                     linha.appendChild(sistema.gerar_td(['text-center'], 'NENHUMA NOTA ENCONTRADA, COM OS FILTROS PASSADOS!', 'inner', true, 15));
                     tabela_contas.appendChild(linha);
                 } else {
-                    sistema.each(notas_fiscais, function(index, nota) {
+                    sistema.each(notas_fiscais, function (index, nota) {
                         let linha = document.createElement('tr');
 
                         linha.appendChild(sistema.gerar_td(['text-center'], nota.cliente_fornecedor.nome_usuario, 'inner'));
                         linha.appendChild(sistema.gerar_td(['text-center'], sistema.retornar_data(nota.data_nota), 'inner'));
                         linha.appendChild(sistema.gerar_td(['text-center'], sistema.number_format(nota.valor_nota), 'inner'));
-                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_visualizar_tipo_servico_' + nota._id.$oid, nota.tipo_nota, ['btn', 'btn-secondary'], () => {}), 'append'));
+                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_visualizar_tipo_servico_' + nota._id.$oid, nota.tipo_nota, ['btn', 'btn-secondary'], () => { }), 'append'));
 
-                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_baixar_nota_' + nota._id.$oid, 'BAIXAR', ['btn', 'btn-info'], function() {
+                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_baixar_nota_' + nota._id.$oid, 'BAIXAR', ['btn', 'btn-info'], function () {
                             window.open(sistema.url('/anexos/notas_fiscais/') + nota.chave_nota + '.pdf', '_blank');
                         }), 'append'));
                         linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_editar_nota_' + nota._id.$oid, 'EDITAR', ['btn', 'btn-primary'], function editar_conta() {
@@ -170,7 +170,8 @@ router_add('index', function () {
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap gap-2">
                     <div class="dropdown">
-                        <button class="btn btn-primary d-flex align-items-center justify-content-center" onclick="cadastrar_notas('');">
+                        <button class="btn btn-primary d-flex align-items-center justify-content-center"
+                            onclick="cadastrar_notas('');">
                             Cadastrar Nota
                         </button>
                     </div>
@@ -230,7 +231,8 @@ router_add('index', function () {
                                             </thead>
                                             <tbody>
                                                 <tr>
-                                                    <td colspan="6" class="text-center">UTILIZE O FILTRO PARA FACILITAR A PESQUISA!</td>
+                                                    <td colspan="6" class="text-center">UTILIZE O FILTRO PARA FACILITAR A
+                                                        PESQUISA!</td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -258,9 +260,9 @@ router_add('index', function () {
                 pesquisar_nota();
             }
         </script>
-    <?php
-    include_once 'includes/footer.php';
-    exit;
+        <?php
+        include_once 'includes/footer.php';
+        exit;
 });
 
 router_add('cadastro_nota', function () {
@@ -285,11 +287,11 @@ router_add('cadastro_nota', function () {
                     'rota': 'pesquisar_clientes',
                     'empresa': CODIGO_EMPRESA,
                     'tipo_usuario': 'CLIENTE_FORNECEDOR'
-                }, function(retorno) {
+                }, function (retorno) {
                     let select = document.querySelector("#cliente_fornecedor");
                     let cliente_fornecedor = retorno.dados;
 
-                    sistema.each(cliente_fornecedor, function(index, cliente) {
+                    sistema.each(cliente_fornecedor, function (index, cliente) {
                         select.appendChild(sistema.gerar_option(cliente._id.$oid, cliente.nome_usuario));
                     });
                 });
@@ -299,7 +301,7 @@ router_add('cadastro_nota', function () {
                 sistema.request.post('/nota_fiscal.php', {
                     'rota': 'pesquisar_nota',
                     'codigo_nota_fiscal': CODIGO_NOTA_FISCAL
-                }, function(retorno) {
+                }, function (retorno) {
                     let nota = retorno.dados;
 
                     document.querySelector('#codigo_nota_fiscal').valor_nota = CODIGO_NOTA_FISCAL;
@@ -337,7 +339,8 @@ router_add('cadastro_nota', function () {
                             <div class="card-body">
                                 <form method="POST" accept="nota_fiscal.php" enctype="multipart/form-data">
                                     <input type="hidden" name="rota" value="salvar_dados_nota">
-                                    <input type="hidden" name="codigo_nota_fiscal" value="<?php echo $codigo_nota_fiscal; ?>" id="codigo_nota_fiscal">
+                                    <input type="hidden" name="codigo_nota_fiscal"
+                                        value="<?php echo $codigo_nota_fiscal; ?>" id="codigo_nota_fiscal">
                                     <input type="hidden" name="empresa" value="<?php echo $codigo_empresa; ?>">
                                     <div class="row">
                                         <div class="col-3 text-center">
@@ -348,11 +351,14 @@ router_add('cadastro_nota', function () {
                                         </div>
                                         <div class="col-2 text-center">
                                             <label class="text">Data Nota</label>
-                                            <input type="date" name="data_nota" value="<?php echo $data->format('Y-m-d'); ?>" class="form-control" id="data_nota">
+                                            <input type="date" name="data_nota"
+                                                value="<?php echo $data->format('Y-m-d'); ?>" class="form-control"
+                                                id="data_nota">
                                         </div>
                                         <div class="col-1 text-center">
                                             <label class="text">Valor Nota</label>
-                                            <input type="text" name="valor_nota" class="form-control" sistema-mask="moeda" id="valor_nota">
+                                            <input type="text" name="valor_nota" class="form-control" sistema-mask="moeda"
+                                                id="valor_nota">
                                         </div>
                                         <div class="col-6 text-center">
                                             <label class="text">Chave Nota</label>
@@ -380,13 +386,15 @@ router_add('cadastro_nota', function () {
                                     <br />
                                     <div class="row">
                                         <div class="col-4">
-                                            <input type="submit" class="btn btn-success btn-lg w-100" value="Salvar Dados" />
+                                            <input type="submit" class="btn btn-success btn-lg w-100"
+                                                value="Salvar Dados" />
                                         </div>
                                         <div class="col-4">
                                             <input type="reset" class="btn btn-info btn-lg w-100" value="Limpar Campos" />
                                         </div>
                                         <div class="col-4">
-                                            <button class="btn btn-danger btn-lg w-100" onclick="retornar(event, true);">Voltar</button>
+                                            <button class="btn btn-danger btn-lg w-100"
+                                                onclick="retornar(event, true);">Voltar</button>
                                         </div>
                                     </div>
                                 </form>
@@ -404,8 +412,8 @@ router_add('cadastro_nota', function () {
                     }
                 }
             </script>
-        <?php
-        include_once 'includes/footer.php';
-        exit;
-    });
-        ?>
+            <?php
+            include_once 'includes/footer.php';
+            exit;
+});
+?>

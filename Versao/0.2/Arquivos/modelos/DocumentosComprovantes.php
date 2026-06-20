@@ -39,7 +39,9 @@ class DocumentosComprovantes implements InterfaceModelo
         $this->data_cadastro = (isset($dados['data_cadastro']) ? model_date($dados['data_cadastro']) : model_date());
     }
 
-    public function salvar_dados($dados) {}
+    public function salvar_dados($dados)
+    {
+    }
 
     public function pesquisar($filtro)
     {
@@ -54,7 +56,7 @@ class DocumentosComprovantes implements InterfaceModelo
     public function salvar_dados_arquivos($dados, $file)
     {
         $this->colocar_dados($dados);
-        
+
         $this->arquivo = $file;
         $extensao = pathinfo($this->arquivo["arquivo"]["name"], PATHINFO_EXTENSION);
         $nome_arquivo = (string) '';
@@ -71,16 +73,16 @@ class DocumentosComprovantes implements InterfaceModelo
 
         if ($retorno_banco == true) {
             $objeto_conta_pagar_receber = new ContasPagarReceber();
-                $nome_arquivo = (string) 'anexos/comprovantes/contas_pagar_receber_boletos/' . $this->codigo_local . "." . $extensao;
-                $retorno = (bool) $objeto_conta_pagar_receber->alterar_anexo_boleto($this->codigo_local);
+            $nome_arquivo = (string) 'anexos/comprovantes/contas_pagar_receber_boletos/' . $this->codigo_local . "." . $extensao;
+            $retorno = (bool) $objeto_conta_pagar_receber->alterar_anexo_boleto($this->codigo_local);
 
-            if($retorno == true){
+            if ($retorno == true) {
                 if (move_uploaded_file($this->arquivo['arquivo']['tmp_name'], $nome_arquivo)) {
                     return (bool) true;
                 } else {
                     return (bool) false;
                 }
-            }else{
+            } else {
                 return (bool) false;
             }
         } else {

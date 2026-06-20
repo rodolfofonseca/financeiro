@@ -1,211 +1,595 @@
 <?php
-require_once 'Sistema/db.php';
-include_once 'Mongo/Mongo.php';
 
-function router_add($rota, $pagina)
-{
-  $rota_atual = $_REQUEST['rota'] ?? 'index';
-  if ($rota_atual == $rota) {
-    call_user_func($pagina);
-    exit;
-  }
-}
-
-function model_insert($table, $data, $return = true)
-{
-  $result = DB::use($table)->insert($data);
-
-  if ($result === false) {
-    if ($return == true) {
-      return (bool) false;
-    } else {
-      return (string) '';
-    }
-  }
-
-  if ($return == true) {
-    return (bool) true;
-  } else {
-    return (string) $result;
-  }
-}
-
-function model_update($table, $condition, $data)
-{
-  return DB::use($table)->update($condition, $data);
-}
-
-function model_delete($table, $condition)
-{
-  return DB::use($table)->delete($condition);
-}
-
-function model_all($table, $condition = [], $order = [], $limit = 0)
-{
-  return DB::use($table)->all($condition, $order, $limit);
-}
-
-function model_one($table, $condition = [], $order = [])
-{
-  return DB::use($table)->one($condition, $order);
-}
-
-function model_check($table, $condition = [])
-{
-  return (bool) DB::use($table)->one($condition);
-}
-
-function http_request($url, $data = [])
-{
-  $curl = curl_init();
-
-  curl_setopt_array($curl, [
-    CURLOPT_URL => $url,
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_POST => true,
-    CURLOPT_POSTFIELDS => $data
-  ]);
-
-  $retorno = curl_exec($curl);
-
-  if (curl_errno($curl)) {
-    $retorno = curl_error($curl);
-  }
-
-  curl_close($curl);
-
-  return $retorno;
-}
-
-function model_date($date = null, $time = null, $inverter = false)
-{
-  date_default_timezone_set('America/Sao_Paulo');
-
-  if (is_object($date)) {// caso chegue uma data que já está como objeto
-    return $date;
-  }
-
-  if ($inverter == true) {
-    $explode = explode("/", $date);
-    $date = $explode[2] . '-' . $explode[1] . '-' . $explode[0];
-  }
-
-  if ($date == ('' || null)) {
-    // $date = (string) date('d/m/Y');
-    $date = (string) date('Y-m-d');
-  }
-
-  if ($time == ('' || null)) {
-    $time = (string) date('H:i:s');
-  }
-
-  $date_format = date_create_from_format('Y-m-dH:i:s', $date . $time, new DateTimeZone('UTC'));
-  $timestamp = date_timestamp_get($date_format);
-  return new MongoDB\BSON\UTCDateTime($timestamp * 1000);
-}
-
-function convert_date($date_time, $format = 'Y-m-d')
-{
-  // if ($date_time == ('' || null)){
-  //   $date_time = new MongoDB\BSON\UTCDateTime;
-  // }
-  // return (string) $date_time->toDateTime()->format($format);
-
-  if (empty($date_time)) {
-    $date_time = new MongoDB\BSON\UTCDateTime();
-  }
-
-  if (!$date_time instanceof MongoDB\BSON\UTCDateTime) {
-    $date_time = new MongoDB\BSON\UTCDateTime(
-      strtotime($date_time) * 1000
-    );
-  }
-
-  return $date_time->toDateTime()->format($format);
-}
-
-function model_id($string_id)
-{
-  return new MongoDB\BSON\ObjectId($string_id);
-}
-
-function model_validator($model)
-{
-  $validator = (array) [];
-
-  foreach ($model as $field => $value) {
-    $field_type = (string) gettype($model[$field]);
-
-    if ($field_type == 'integer') {
-      $validator[$field] = (array) ['$type' => 'int'];
-    } else if ($value === 'date') {
-      $validator[$field] = (array) ['$type' => 'date'];
-    } else if ($value === 'objectId') {
-      $validator[$field] = (array) ['$type' => 'objectId'];
-    } else if ($value === 'bool') {
-      $validator[$field] = (array) ['$type' => 'bool'];
-    } else {
-      $validator[$field] = (array) ['$type' => $field_type];
-    }
-  }
-
-  return $validator;
-}
-
-function model_parse($model, $data = [])
-{
-  foreach ($data as $field => $value) {
-    if (array_key_exists($field, $model) == true) {
-      if ($model[$field] === 'date') {
-        $data[$field] = model_date($value);
-        // }else if($model[$field] === 'objectId'){
-        // $data[$field] = model_id($value);
-      } else {
-
-        $field_type = (string) gettype($model[$field]);
-
-        if ($field_type == 'int' || $field_type == 'integer') {
-          $data[$field] = (int) $value;
-
-        } else if ($field_type == 'double') {
-          $data[$field] = (float) $value;
-        } else if ($field_type == 'string') {
-          $data[$field] = (string) $value;
-        }
-      }
-    }
-  }
-
-  foreach ($model as $field => $value) {
-    if ($value === (string) 'date') {
-      $model[$field] = model_date();
-    }
-
-    // if($value === (string) 'objectId'){
-    //   $model[$field] = model_id($value);
-    // }
-  }
-
-  return array_merge($model, $data);
-}
-
-spl_autoload_register(function ($classe) {
-  $arquivo = (string) str_replace('\\', '/', __DIR__ . DIRECTORY_SEPARATOR . $classe . '.php');
-  if (is_readable($arquivo) === true) {
-    include_once $arquivo;
-  }
-});
+require_once 'postgres.php';
 
 /**
- * Insere um registro com índice sequencial automático
- *
- * @param string $table
- * @param string $field_sequence
- * @param array $data
- * @return array|bool|string
+ * Valida identificadores SQL (tabelas e colunas)
  */
-function model_insert_sequence($table, $field_sequence, $data)
+function sql_identifier(string $identifier): string
 {
-  return (array) DB::insert_sequence($table, $field_sequence, $data);
+    if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $identifier)) {
+        throw new InvalidArgumentException(
+            "Identificador SQL inválido: {$identifier}"
+        );
+    }
+
+    return $identifier;
 }
-?>
+
+/**
+ * Operadores permitidos
+ */
+function sql_operator(string $operator): string
+{
+    $operators = [
+        '==' => '=',
+        '===' => '=',
+        '=' => '=',
+        '!=' => '<>',
+        '<>' => '<>',
+        '>' => '>',
+        '<' => '<',
+        '>=' => '>=',
+        '<=' => '<=',
+        'LIKE' => 'LIKE'
+    ];
+
+    if (!isset($operators[$operator])) {
+        throw new InvalidArgumentException(
+            "Operador inválido: {$operator}"
+        );
+    }
+
+    return $operators[$operator];
+}
+
+/**
+ * Monta WHERE
+ */
+function sql_build_where(array $filtro = []): array
+{
+    $where = [];
+    $params = [];
+
+    if (empty($filtro['where'])) {
+        return [
+            'sql' => '',
+            'params' => []
+        ];
+    }
+
+    foreach ($filtro['where'] as $i => $condicao) {
+
+        [$campo, $operador, $valor] = $condicao;
+
+        $campo = sql_identifier($campo);
+        $operador = sql_operator($operador);
+
+        $param = "where_{$i}";
+
+        $where[] = "{$campo} {$operador} :{$param}";
+        $params[$param] = $valor;
+    }
+
+    return [
+        'sql' => ' WHERE ' . implode(' AND ', $where),
+        'params' => $params
+    ];
+}
+
+/**
+ * Executa query preparada
+ */
+function sql_execute(string $sql, array $params = [])
+{
+    $pdo = conectarPostgres();
+
+    $stmt = $pdo->prepare($sql);
+
+    foreach ($params as $param => $valor) {
+
+        if (is_bool($valor)) {
+
+            $stmt->bindValue(":{$param}", $valor, PDO::PARAM_BOOL);
+
+        } elseif (is_int($valor)) {
+
+            $stmt->bindValue(":{$param}", $valor, PDO::PARAM_INT);
+
+        } elseif (is_float($valor)) {
+
+            $stmt->bindValue(":{$param}", (string) arredondar($valor), PDO::PARAM_STR);
+
+        } elseif (is_null($valor)) {
+
+            $stmt->bindValue(":{$param}", null, PDO::PARAM_NULL);
+
+        } else {
+
+            $stmt->bindValue(":{$param}", $valor, PDO::PARAM_STR);
+
+        }
+    }
+
+    $stmt->execute();
+
+    return [
+        'pdo' => $pdo,
+        'stmt' => $stmt
+    ];
+}
+
+/**
+ * INSERT
+ */
+function model_insert(
+    string $tabela,
+    array $dados,
+    bool $return_type = true
+) {
+    try {
+
+        $tabela = sql_identifier($tabela);
+
+        $colunas = [];
+        $placeholders = [];
+
+        foreach ($dados as $campo => $valor) {
+            $colunas[] = sql_identifier($campo);
+            $placeholders[] = ':' . $campo;
+        }
+
+        $sql = sprintf(
+            'INSERT INTO %s (%s) VALUES (%s);',
+            $tabela,
+            implode(', ', $colunas),
+            implode(', ', $placeholders)
+        );
+
+        // file_put_contents('json.json', json_encode(['sql' => $sql, 'dados' => $dados]));
+
+        $exec = sql_execute($sql, $dados);
+
+        $status = true;
+
+        if ($return_type) {
+            return $status;
+        }
+
+        return [
+            'status' => $status
+        ];
+
+    } catch (Throwable $e) {
+
+        if ($return_type) {
+            return false;
+        }
+
+        return [
+            'status' => false,
+            'erro' => $e->getMessage()
+        ];
+    }
+}
+
+/**
+ * UPDATE
+ */
+function model_update(
+    string $tabela,
+    array $filtro,
+    array $dados,
+    bool $return_type = true
+) {
+    try {
+
+        $tabela = sql_identifier($tabela);
+
+        $set = [];
+        $params = [];
+
+        foreach ($dados as $campo => $valor) {
+
+            $campo = sql_identifier($campo);
+
+            $set[] = "{$campo} = :set_{$campo}";
+            $params["set_{$campo}"] = $valor;
+        }
+
+        $where = sql_build_where($filtro);
+
+        $sql = sprintf(
+            'UPDATE %s SET %s%s',
+            $tabela,
+            implode(', ', $set),
+            $where['sql']
+        );
+
+        $params = array_merge(
+            $params,
+            $where['params']
+        );
+        // file_put_contents('json.json', json_encode(['sql' => $sql, 'dados' => $dados, 'filtro' => $filtro]));
+
+        $exec = sql_execute($sql, $params);
+
+        $status = true;
+        $linhas = $exec['stmt']->rowCount();
+
+        if ($return_type) {
+            return $status;
+        }
+
+        return [
+            'status' => $status,
+            'linhas_afetadas' => $linhas
+        ];
+
+    } catch (Throwable $e) {
+
+        if ($return_type) {
+            return false;
+        }
+
+        return [
+            'status' => false,
+            'erro' => $e->getMessage()
+        ];
+    }
+}
+
+/**
+ * Retorna um registro
+ */
+function model_one(
+    string $tabela,
+    array $filtro = []
+): ?array {
+    try {
+
+        $tabela = sql_identifier($tabela);
+
+        $where = sql_build_where($filtro);
+
+        $sql = "SELECT * FROM {$tabela}{$where['sql']} LIMIT 1";
+
+        // file_put_contents('json.json', json_encode(['sql' => $sql, 'filtro' => $filtro]));
+
+        $exec = sql_execute(
+            $sql,
+            $where['params']
+        );
+
+        $dados = $exec['stmt']->fetch(PDO::FETCH_ASSOC);
+
+        return $dados ?: null;
+
+    } catch (Throwable $e) {
+
+        return null;
+    }
+}
+
+/**
+ * Retorna vários registros
+ */
+function model_all(
+    string $tabela,
+    array $filtro = [],
+    array $ordenacao = [],
+    ?int $limite = null
+): array {
+    try {
+
+        $tabela = sql_identifier($tabela);
+
+        $where = sql_build_where($filtro);
+
+        $sql = "SELECT * FROM {$tabela}{$where['sql']}";
+
+        if (!empty($ordenacao)) {
+
+            $orders = [];
+
+            foreach ($ordenacao as $ordem) {
+
+                $campo = sql_identifier($ordem[0]);
+
+                $direcao = strtoupper(
+                    $ordem[1] ?? 'ASC'
+                );
+
+                $direcao = $direcao === 'DESC'
+                    ? 'DESC'
+                    : 'ASC';
+
+                $orders[] = "{$campo} {$direcao}";
+            }
+
+            $sql .= ' ORDER BY ' . implode(', ', $orders);
+        }
+
+        if ($limite !== null && $limite > 0) {
+            $sql .= ' LIMIT ' . (int) $limite;
+        }
+        // file_put_contents('json.json', json_encode(['sql' => $sql, 'dados' => $filtro]));
+        $exec = sql_execute(
+            $sql,
+            $where['params']
+        );
+
+        return $exec['stmt']->fetchAll(
+            PDO::FETCH_ASSOC
+        );
+
+    } catch (Throwable $e) {
+
+        return [];
+    }
+}
+
+/**
+ * Verifica existência
+ */
+function model_check(
+    string $tabela,
+    array $filtro = []
+): bool {
+    try {
+
+        $tabela = sql_identifier($tabela);
+
+        $where = sql_build_where($filtro);
+
+        $sql = "SELECT EXISTS (
+                    SELECT 1
+                    FROM {$tabela}
+                    {$where['sql']}
+                )";
+
+        $exec = sql_execute(
+            $sql,
+            $where['params']
+        );
+
+        return (bool) $exec['stmt']->fetchColumn();
+
+    } catch (Throwable $e) {
+
+        return false;
+    }
+}
+
+/**
+ * Data atual no padrão PostgreSQL
+ */
+function model_date(
+    string $data = '',
+    string $hora = ''
+): string {
+    date_default_timezone_set('America/Sao_Paulo');
+
+    $now = new DateTime();
+
+    $data = $data ?: $now->format('Y-m-d');
+    $hora = $hora ?: $now->format('H:i:s');
+
+    return "{$data} {$hora}";
+}
+
+function model_delete(
+    string $tabela,
+    array $filtro,
+    bool $return_type = true
+) {
+    try {
+
+        $tabela = sql_identifier($tabela);
+
+        $where = sql_build_where($filtro);
+
+        if (empty($where['sql'])) {
+            throw new InvalidArgumentException(
+                'DELETE sem cláusula WHERE não é permitido.'
+            );
+        }
+
+        $sql = "DELETE FROM {$tabela}{$where['sql']}";
+
+        // file_put_contents('json.json', json_encode(['sql' => $sql, 'param' => $filtro]));
+
+        $exec = sql_execute(
+            $sql,
+            $where['params']
+        );
+
+        $linhas_afetadas = $exec['stmt']->rowCount();
+
+        if ($return_type) {
+            return true;
+        }
+
+        return [
+            'status' => true,
+            'linhas_afetadas' => $linhas_afetadas
+        ];
+
+    } catch (Throwable $e) {
+
+        if ($return_type) {
+            return false;
+        }
+
+        return [
+            'status' => false,
+            'erro' => $e->getMessage()
+        ];
+    }
+}
+
+/**
+ * Função responsável por realizar o count, retornando a quantidade de itens que encontrou de acordo com o filtro passado
+ * @param string $tabela
+ * @param array $filtro
+ * @param string $campo
+ * @throws Exception
+ * @return int
+ */
+function model_count(string $tabela, array $filtro = [], string $campo = '*'): int
+{
+    try {
+
+        if (!preg_match('/^[a-zA-Z0-9_]+$/', $tabela)) {
+            throw new Exception('Nome da tabela inválido.');
+        }
+
+
+        if ($campo !== '*' && !preg_match('/^[a-zA-Z0-9_]+$/', $campo)) {
+            throw new Exception('Nome do campo inválido.');
+        }
+
+        $where_sql = [];
+        $params = [];
+
+        if (!empty($filtro['where'])) {
+
+            foreach ($filtro['where'] as $i => $condicao) {
+
+                [$campo_where, $operador, $valor] = $condicao;
+
+                if (!preg_match('/^[a-zA-Z0-9_]+$/', $campo_where)) {
+                    throw new Exception("Campo '{$campo_where}' inválido.");
+                }
+
+                $param = "w{$i}";
+
+                switch (strtolower($operador)) {
+
+                    case '=':
+                    case '==':
+                        $where_sql[] = "{$campo_where} = :{$param}";
+                        $params[$param] = $valor;
+                        break;
+
+                    case '!=':
+                    case '<>':
+                        $where_sql[] = "{$campo_where} <> :{$param}";
+                        $params[$param] = $valor;
+                        break;
+
+                    case '>':
+                    case '>=':
+                    case '<':
+                    case '<=':
+                        $where_sql[] = "{$campo_where} {$operador} :{$param}";
+                        $params[$param] = $valor;
+                        break;
+
+                    case 'like':
+                        $where_sql[] = "{$campo_where} ILIKE :{$param}";
+                        $params[$param] = $valor;
+                        break;
+
+                    case 'in':
+
+                        if (!is_array($valor) || empty($valor)) {
+                            throw new Exception("Operador IN requer um array.");
+                        }
+
+                        $placeholders = [];
+
+                        foreach ($valor as $k => $v) {
+                            $in_param = "{$param}_{$k}";
+                            $placeholders[] = ":{$in_param}";
+                            $params[$in_param] = $v;
+                        }
+
+                        $where_sql[] = "{$campo_where} IN (" . implode(',', $placeholders) . ")";
+                        break;
+
+                    case 'is null':
+                        $where_sql[] = "{$campo_where} IS NULL";
+                        break;
+
+                    case 'is not null':
+                        $where_sql[] = "{$campo_where} IS NOT NULL";
+                        break;
+
+                    default:
+                        throw new Exception("Operador '{$operador}' não suportado.");
+                }
+            }
+        }
+
+        $sql = "SELECT COUNT({$campo}) AS total
+                FROM {$tabela}";
+
+        if (!empty($where_sql)) {
+            $sql .= ' WHERE ' . implode(' AND ', $where_sql);
+        }
+
+        $pdo = conectarPostgres();
+
+        $stmt = $pdo->prepare($sql);
+
+        foreach ($params as $param => $valor) {
+            $stmt->bindValue(":{$param}", $valor);
+        }
+
+        $stmt->execute();
+
+        return (int) $stmt->fetchColumn();
+
+    } catch (Throwable $e) {
+
+        error_log($e->getMessage());
+
+        return 0;
+    }
+}
+
+/**
+ * Função responsável por pesquisar a query direto
+ * @param string $sql
+ * @param array $params
+ * @return array
+ */
+function model_query(string $sql, array $params = []): array
+{
+    try {
+
+        $pdo = conectarPostgres();
+
+        $stmt = $pdo->prepare($sql);
+
+        foreach ($params as $param => $valor) {
+
+            if (is_bool($valor)) {
+                $stmt->bindValue(":{$param}", $valor, PDO::PARAM_BOOL);
+
+            } elseif (is_int($valor)) {
+                $stmt->bindValue(":{$param}", $valor, PDO::PARAM_INT);
+
+            } elseif (is_float($valor)) {
+                $stmt->bindValue(":{$param}", (string)$valor, PDO::PARAM_STR);
+
+            } elseif (is_null($valor)) {
+                $stmt->bindValue(":{$param}", null, PDO::PARAM_NULL);
+
+            } else {
+                $stmt->bindValue(":{$param}", $valor, PDO::PARAM_STR);
+            }
+        }
+
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    } catch (Throwable $e) {
+
+        error_log($e->getMessage());
+
+        return [];
+    }
+}

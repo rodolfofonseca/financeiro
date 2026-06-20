@@ -4,6 +4,7 @@ require_once 'modelos/Extratos.php';
 require_once 'modelos/ExtratoItens.php';
 require_once 'modelos/Usuario.php';
 require_once 'modelos/Empresa.php';
+require_once 'modelos/ItensExtratos.php';
 
 /** 
  * Rota responsável por salvar o extrato no banco de daados
@@ -29,8 +30,8 @@ router_add('salvar_item_extrato', function () {
 router_add('pesquisar_todos_extratos', function () {
     $objeto_extrato = new Extratos();
 
-    $empresa = (string) (isset($_REQUEST['empresa']) ? (string) $_REQUEST['empresa'] : '');
-    $funcionario = (string) (isset($_REQUEST['funcionario']) ? (string) $_REQUEST['funcionario'] : '');
+    $empresa = (int) (isset($_REQUEST['empresa']) ? (int) $_REQUEST['empresa'] : 0);
+    $funcionario = (int) (isset($_REQUEST['funcionario']) ? (int) $_REQUEST['funcionario'] : 0);
     $data_extrato = (string) (isset($_REQUEST['data_extrato']) ? (string) $_REQUEST['data_extrato'] : '');
     $data_pagamento = (string) (isset($_REQUEST['data_pagamento']) ? (string) $_REQUEST['data_pagamento'] : '');
     $status_extrato = (string) (isset($_REQUEST['status_extrato']) ? (string) $_REQUEST['status_extrato'] : 'TODOS');
@@ -38,11 +39,11 @@ router_add('pesquisar_todos_extratos', function () {
     $filtro_montado = (array) [];
 
     if ($empresa != '') {
-        array_push($filtro_montado, (array) ['empresa', '===', model_id($empresa)]);
+        array_push($filtro_montado, (array) ['codigo_empresa', '=', $empresa]);
     }
 
-    if ($funcionario != '') {
-        array_push($filtro_montado, (array) ['usuario', '===', model_id($funcionario)]);
+    if ($funcionario != 0) {
+        array_push($filtro_montado, (array) ['codigo_usuario', '=', $funcionario]);
     }
 
     if ($data_extrato != '') {
@@ -55,17 +56,17 @@ router_add('pesquisar_todos_extratos', function () {
         array_push($filtro_montado, (array) ['data_pagamento', '<=', model_date($data_extrato, '23:59:59')]);
     }
 
-    if($status_extrato != 'TODOS'){
-        array_push($filtro_montado, (array) ['status', '===', (string) $status_extrato]);
+    if ($status_extrato != 'TODOS') {
+        array_push($filtro_montado, (array) ['status', '=', (bool) $status_extrato]);
     }
 
-    $retorno_extrato = (array) $objeto_extrato->pesquisar_todos((array) ['filtro' => (array) ['and' => (array) $filtro_montado], 'ordenacao' => (array) ['data_extrato' => (bool) false], 'limite' => (int) 100]);
+    $retorno_extrato = (array) $objeto_extrato->pesquisar_todos((array) ['filtro' => (array) ['where' => (array) $filtro_montado], 'ordenacao' => (array) [['data_extrato', 'DESC']], 'limite' => (int) 100]);
     $retorno = (array) [];
 
     if (empty($retorno_extrato) == false) {
         $objeto_usuario = new Usuario();
         foreach ($retorno_extrato as $extrato) {
-            $usuario = (array) $objeto_usuario->pesquisar((array) ['filtro' => (array) ['_id', '===', $extrato['usuario']]]);
+            $usuario = (array) $objeto_usuario->pesquisar((array) ['filtro' => (array) [['codigo_usuario', '=', $extrato['codigo_usuario']]]]);
 
             if (empty($usuario) == false) {
                 $extrato['nome_usuario'] = (string) $usuario['nome_usuario'];
@@ -86,18 +87,18 @@ router_add('pesquisar_dados_extrato_completo', function () {
     $objeto_item_extrato = new ExtratoItens();
     $objeto_extrato_item = new ItensExtratos();
 
-    $codigo_extrato = (string) (isset($_REQUEST['codigo_extrato']) ? (string) $_REQUEST['codigo_extrato'] : '');
+    $codigo_extrato = (int) (isset($_REQUEST['codigo_extrato']) ? (int) intval($_REQUEST['codigo_extrato'], 10) : 0);
 
     $retorno_extrato = (array) [];
     $retorno_extato_itens = (array) [];
 
-    if ($codigo_extrato != '') {
-        $retorno_extrato = (array) $objeto_extrato->pesquisar((array) ['filtro' => (array) ['_id', '===', model_id($codigo_extrato)]]);
-        $retorno_extato_itens_mexendo = (array) $objeto_item_extrato->pesquisar_todos((array) ['filtro' => (array) ['extrato', '===', model_id($codigo_extrato)], 'ordenacao' => (array) ['valor_lancamento_extrato' => (bool) false], 'limite' => (int) 0]);
+    if ($codigo_extrato != 0) {
+        $retorno_extrato = (array) $objeto_extrato->pesquisar((array) ['filtro' => (array) ['where' => [['codigo_extrato', '=', $codigo_extrato]]]]);
+        $retorno_extato_itens_mexendo = (array) $objeto_item_extrato->pesquisar_todos((array) ['filtro' => (array) ['where' => [['codigo_extrato', '=', $codigo_extrato]]], 'ordenacao' => (array) [['data_lancamento_extrato', 'DESC']], 'limite' => (int) 0]);
 
         if (empty($retorno_extato_itens_mexendo) == false) {
             foreach ($retorno_extato_itens_mexendo as $item_extrato_menxendo) {
-                $retorno_item_extrato = (array) $objeto_extrato_item->pesquisar((array) ['filtro' => (array) ['_id', '===', $item_extrato_menxendo['item_extrato']]]);
+                $retorno_item_extrato = (array) $objeto_extrato_item->pesquisar((array) ['filtro' => (array) ['where' => [['codigo_item_extrato', '=', $item_extrato_menxendo['codigo_item_extrato']]]]]);
 
                 $item_extrato_menxendo['item_extrato'] = (array) $retorno_item_extrato;
                 array_push($retorno_extato_itens, $item_extrato_menxendo);
@@ -124,18 +125,19 @@ router_add('baixar_extrato', function () {
  */
 router_add('imprimir_extrato', function () {
     require_once 'includes/head_sem_menu.php';
-    $codigo_extrato = (string) (isset($_REQUEST['codigo_extrato']) ? (string) $_REQUEST['codigo_extrato'] : '');
-    $codigo_empresa = (string) (isset($_REQUEST['codigo_empresa']) ? (string) $_REQUEST['codigo_empresa'] : '');
+    $codigo_extrato = (int) (isset($_REQUEST['codigo_extrato']) ? (int) intval($_REQUEST['codigo_extrato'], 10) : 0);
+    $codigo_empresa = (int) (isset($_REQUEST['codigo_empresa']) ? (int) intval($_REQUEST['codigo_empresa'], 10) : 0);
 
     $objeto_extrato = new Extratos();
     $objeto_empresa = new Empresa();
     $objeto_usuario = new Usuario();
     $objeto_extrato_itens = new ExtratoItens();
+    $objeto_itens_extrato = new ItensExtratos();
 
-    $retorno_extrato = (array) $objeto_extrato->pesquisar((array) ['filtro' => (array) ['_id', '===', model_id($codigo_extrato)]]);
-    $retorno_empresa = (array) $objeto_empresa->pesquisar((array) ['filtro' => (array) ['_id', '===', model_id($codigo_empresa)]]);
-    $retorno_usuario = (array) $objeto_usuario->pesquisar((array) ['filtro' => (array) ['_id', '===', $retorno_extrato['usuario']]]);
-    $retorno_extrato_itens = (array) $objeto_extrato_itens->pesquisar_todos((array) ['filtro' => (array) ['extrato', '===', model_id($retorno_extrato['_id'])], 'ordenacao' => [], 'limite' => (int) 0]);
+    $retorno_extrato = (array) $objeto_extrato->pesquisar((array) ['filtro' => (array) ['where' => [['codigo_extrato', '=', $codigo_extrato]]]]);
+    $retorno_empresa = (array) $objeto_empresa->pesquisar((array) ['filtro' => (array) ['where' => [['codigo_empresa', '=', $codigo_empresa]]]]);
+    $retorno_usuario = (array) $objeto_usuario->pesquisar((array) ['filtro' => (array) ['where' => [['codigo_usuario', '=', $retorno_extrato['codigo_usuario']]]]]);
+    $retorno_extrato_itens = (array) $objeto_extrato_itens->pesquisar_todos((array) ['filtro' => (array) ['where' => [['codigo_extrato', '=', $retorno_extrato['codigo_extrato']]]]]);
 
     $total_proventos = (float) 0;
     $total_descontos = (float) 0;
@@ -164,19 +166,19 @@ router_add('imprimir_extrato', function () {
                 <td>Empresa</td>
                 <td><?php echo $retorno_empresa['nome_empresa']; ?></td>
                 <td>Mês</td>
-                <td><?php echo convert_date($retorno_extrato['data_extrato'], 'd/m/Y'); ?></td>
+                <td><?php echo $retorno_extrato['data_extrato']; ?></td>
             </tr>
             <tr>
                 <td>Funcionário</td>
                 <td><?php echo $retorno_usuario['nome_usuario']; ?></td>
                 <td>Matrícula</td>
-                <td><?php echo $retorno_usuario['_id']; ?></td>
+                <td><?php echo $retorno_usuario['codigo_usuario']; ?></td>
             </tr>
             <tr>
                 <td>Cargo</td>
                 <td><?php echo (isset($retorno_usuario['cargo']) ? (string) $retorno_usuario['cargo'] : ''); ?> </td>
                 <td>Admissão</td>
-                <td><?php echo convert_date($retorno_usuario['data_cadastro'], 'd/m/Y'); ?></td>
+                <td><?php echo $retorno_usuario['data_cadastro']; ?></td>
             </tr>
         </table>
 
@@ -185,6 +187,7 @@ router_add('imprimir_extrato', function () {
         <table class="table table-striped table-bordered">
             <thead>
                 <tr>
+                    <th>#</th>
                     <th>Descrição</th>
                     <th>Data</th>
                     <th class="text-end">Valor</th>
@@ -193,12 +196,14 @@ router_add('imprimir_extrato', function () {
             <tbody>
                 <?php
                 foreach ($retorno_extrato_itens as $extrato_item) {
-                    if ($extrato_item['tipo_item_extrato'] == 'CREDITO') {
+                    if ($extrato_item['tipo_item_extrato'] == true) {
                         echo '<tr>';
-                        echo '<td>' . $extrato_item['nome_item_extrato'] . '</td>';
+                        echo '<td>'.$extrato_item['codigo_extrato_item'].'</td>';
+                        $item_extrato = (array) $objeto_itens_extrato->pesquisar(['filtro' => ['where' => [['codigo_item_extrato', '=', $extrato_item['codigo_item_extrato']]]]]);
+                        echo '<td>' . $item_extrato['nome_item_extrato'] . '</td>';
 
                         if (array_key_exists('data_lancamento_extrato', $extrato_item) == true) {
-                            echo '<td>' . convert_date($extrato_item['data_lancamento_extrato'], 'd/m/Y') . '</td>';
+                            echo '<td>' . $extrato_item['data_lancamento_extrato'] . '</td>';
                         } else {
                             echo '<td>' . $data->format('d/m/Y') . '</td>';
                         }
@@ -217,6 +222,7 @@ router_add('imprimir_extrato', function () {
         <table class="table table-striped table-bordered">
             <thead>
                 <tr>
+                    <th>#</th>
                     <th>Descrição</th>
                     <th>Data</th>
                     <th class="text-end">Valor</th>
@@ -225,12 +231,15 @@ router_add('imprimir_extrato', function () {
             <tbody>
                 <?php
                 foreach ($retorno_extrato_itens as $extrato_item) {
-                    if ($extrato_item['tipo_item_extrato'] == 'DEBITO') {
+                    if ($extrato_item['tipo_item_extrato'] == false) {
                         echo '<tr>';
-                        echo '<td>' . $extrato_item['nome_item_extrato'] . '</td>';
+                        echo '<td>'.$extrato_item['codigo_extrato_item'].'</td>';
+                        
+                        $item_extrato = (array) $objeto_itens_extrato->pesquisar(['filtro' => ['where' => [['codigo_item_extrato', '=', $extrato_item['codigo_item_extrato']]]]]);
+                        echo '<td>' . $item_extrato['nome_item_extrato'] . '</td>';
 
                         if (array_key_exists('data_lancamento_extrato', $extrato_item) == true) {
-                            echo '<td>' . convert_date($extrato_item['data_lancamento_extrato'], 'd/m/Y') . '</td>';
+                            echo '<td>' . $extrato_item['data_lancamento_extrato'] . '</td>';
                         } else {
                             echo '<td>' . $data->format('d/m/Y') . '</td>';
                         }
@@ -331,6 +340,7 @@ router_add('index', function () {
 
                     let linha = document.createElement('tr');
 
+                    linha.appendChild(sistema.gerar_td(['text-center', 'fw-bold'], extrato.codigo_extrato, 'inner'));
                     linha.appendChild(sistema.gerar_td(['text-center', 'fw-bold'], extrato.nome_usuario, 'inner'));
                     linha.appendChild(sistema.gerar_td(['text-center', 'fw-bold'], sistema.retornar_data(extrato.data_extrato), 'inner'));
 
@@ -350,35 +360,35 @@ router_add('index', function () {
                         linha.appendChild(sistema.gerar_td(['text-center', 'fw-bold'], sistema.number_format(extrato.valor_liquido), 'inner'));
                     }
 
-                    if (extrato.status == 'AGUARDANDO' || extrato.status == '') {
-                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('bota_extrato_' + extrato._id.$oid, 'AGUARDANDO', ['btn', 'btn-outline-secondary'], function status_extrato() { }), 'append'));
-                    } else if (extrato.status == 'PAGO') {
-                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('bota_extrato_' + extrato._id.$oid, 'PAGO', ['btn', 'btn-outline-success'], function status_extrato() { }), 'append'));
+                    if (extrato.status == 'PAGO') {
+                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('bota_extrato_' + extrato.codigo_extrato, 'PAGO', ['btn', 'btn-outline-success'], function status_extrato() { }), 'append'));
                     } else if (extrato.status == 'CANCELADO') {
-                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('bota_extrato_' + extrato._id.$oid, 'CANCELADO', ['btn', 'btn-outline-warning'], function status_extrato() { }), 'append'));
+                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('bota_extrato_' + extrato.codigo_extrato, 'CANCELADO', ['btn', 'btn-outline-warning'], function status_extrato() { }), 'append'));
                     } else if (extrato.status == 'VENCIDA') {
-                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('bota_extrato_' + extrato._id.$oid, 'VENCIDA', ['btn', 'btn-outline-danger'], function status_extrato() { }), 'append'));
+                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('bota_extrato_' + extrato.codigo_extrato, 'VENCIDA', ['btn', 'btn-outline-danger'], function status_extrato() { }), 'append'));
+                    } else {
+                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('bota_extrato_' + extrato.codigo_extrato, 'AGUARDANDO', ['btn', 'btn-outline-secondary'], function status_extrato() { }), 'append'));
                     }
 
-                    if (extrato.status == 'AGUARDANDO' || extrato.status == 'VENCIDA' || extrato.status == '') {
-                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('Botao_imprimir_extrato_' + extrato._id.$oid, 'IMPRIMIR', ['btn', 'btn-success'], function model_impressao() {
-                            abrir_modal_impressao(extrato._id.$oid);
+                    if (extrato.status == 'AGUARDANDO' || extrato.status == 'VENCIDA' || extrato.status == '' || extrato.status == null) {
+                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('Botao_imprimir_extrato_' + extrato.codigo_extrato, 'IMPRIMIR', ['btn', 'btn-success'], function model_impressao() {
+                            abrir_modal_impressao(extrato.codigo_extrato);
                         }), 'append'));
-                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('Botao_baixar_extrato_' + extrato._id.$oid, 'BAIXAR', ['btn', 'btn-primary'], function model_cadastro() {
-                            baixar_extrato(extrato._id.$oid);
+                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('Botao_baixar_extrato_' + extrato.codigo_extrato, 'BAIXAR', ['btn', 'btn-primary'], function model_cadastro() {
+                            baixar_extrato(extrato.codigo_extrato);
                         }), 'append'));
 
-                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('Botao_editar_extrato_' + extrato._id.$oid, 'EDITAR', ['btn', 'btn-secondary'], function model_cadastro() {
-                            cadastro_extrato(extrato._id.$oid);
+                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('Botao_editar_extrato_' + extrato.codigo_extrato, 'EDITAR', ['btn', 'btn-secondary'], function model_cadastro() {
+                            cadastro_extrato(extrato.codigo_extrato);
                         }), 'append'));
                     } else {
-                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('Botao_imprimir_extrato_' + extrato._id.$oid, 'IMPRIMIR', ['btn', 'btn-success'], function model_impressao() {
-                            abrir_modal_impressao(extrato._id.$oid)
+                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('Botao_imprimir_extrato_' + extrato.codigo_extrato, 'IMPRIMIR', ['btn', 'btn-success'], function model_impressao() {
+                            abrir_modal_impressao(extrato.codigo_extrato)
                         }), 'append'));
-                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('Botao_baixar_extrato_' + extrato._id.$oid, 'BAIXAR', ['btn', 'btn-primary', 'disabled'], function model_cadastro() {
+                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('Botao_baixar_extrato_' + extrato.codigo_extrato, 'BAIXAR', ['btn', 'btn-primary', 'disabled'], function model_cadastro() {
                         }), 'append'));
 
-                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('Botao_editar_extrato_' + extrato._id.$oid, 'EDITAR', ['btn', 'btn-secondary', 'disabled'], function model_cadastro() {
+                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('Botao_editar_extrato_' + extrato.codigo_extrato, 'EDITAR', ['btn', 'btn-secondary', 'disabled'], function model_cadastro() {
                         }), 'append'));
 
                     }
@@ -435,7 +445,7 @@ router_add('index', function () {
                 let funcionarios = document.querySelector('#funcionario');
 
                 sistema.each(retorno.dados, function (index, funcionario) {
-                    funcionarios.appendChild(sistema.gerar_option(funcionario._id.$oid, funcionario.nome_usuario));
+                    funcionarios.appendChild(sistema.gerar_option(funcionario.codigo_usuario, funcionario.nome_usuario));
                 });
             });
         }
@@ -466,7 +476,7 @@ router_add('index', function () {
                                 <div class="col-3 text-center">
                                     <label class="text">Funcionário</label>
                                     <select class="form-control select2" id="funcionario">
-                                        <option value="">Selecione um funcionário</option>
+                                        <option value="0">Selecione um funcionário</option>
                                     </select>
                                 </div>
                                 <div class="col-3 text-center">
@@ -501,6 +511,7 @@ router_add('index', function () {
                                         <table class="table table-nowrap text-nowrap table-hover" id="tabela_extratos">
                                             <thead>
                                                 <tr class="text-center">
+                                                    <th scope="col">#</th>
                                                     <th scope="col">Funcionário</th>
                                                     <th scope="col">Data Extrato</th>
                                                     <th scope="col">Data Pagamento</th>
@@ -545,7 +556,7 @@ router_add('index', function () {
  */
 router_add('cadastro_extrato', function () {
     require_once 'includes/head.php';
-    $codigo_extrato = (string) (isset($_REQUEST['codigo_extrato']) ? (string) $_REQUEST['codigo_extrato'] : '');
+    $codigo_extrato = (string) (isset($_REQUEST['codigo_extrato']) ? (string) $_REQUEST['codigo_extrato'] : 0);
     ?>
         <script>
             const CODIGO_EXTRATO = "<?php echo $codigo_extrato; ?>";
@@ -563,7 +574,7 @@ router_add('cadastro_extrato', function () {
                     let usuarios = retorno.dados;
 
                     sistema.each(usuarios, function (index, usuario) {
-                        select.appendChild(sistema.gerar_option(usuario._id.$oid, usuario.nome_usuario));
+                        select.appendChild(sistema.gerar_option(usuario.codigo_usuario, usuario.nome_usuario));
                     });
                 });
             }
@@ -589,7 +600,7 @@ router_add('cadastro_extrato', function () {
                     let item_extratos = retorno.dados;
 
                     sistema.each(item_extratos, function (index, item_extrato) {
-                        select.appendChild(sistema.gerar_option(item_extrato._id.$oid, item_extrato.nome_item_extrato));
+                        select.appendChild(sistema.gerar_option(item_extrato.codigo_item_extrato, item_extrato.nome_item_extrato));
                     });
                 });
             }
@@ -618,8 +629,7 @@ router_add('cadastro_extrato', function () {
                     alerta_campo_vazio('USUÁRIO');
                 }
 
-                if (validacao == true) {
-                    sistema.request.post('/extrato.php', {
+                let dados = {
                         'rota': 'salvar_dados',
                         'codigo_extrato': codigo_extrato,
                         'empresa': EMPRESA,
@@ -631,8 +641,11 @@ router_add('cadastro_extrato', function () {
                         'data_extrato': data_extrato,
                         'data_pagamento': data_pagamento,
                         'status_extrato': status_extratro
-                    }, function (retorno) {
-                        document.querySelector('#codigo_extrato').value = retorno.dados._id;
+                    };
+
+                if (validacao == true) {
+                    sistema.request.post('/extrato.php', dados, function (retorno) {
+                        document.querySelector('#codigo_extrato').value = retorno.dados.codigo_extrato;
                         this.Swal.fire({
                             title: "SUCESSO NA OPERAÇÃO!",
                             text: "Operação realizada com sucesso!",
@@ -647,21 +660,24 @@ router_add('cadastro_extrato', function () {
                 let valor_lancamento_extrato = document.querySelector("#valor_lancamento_extrato").value;
                 let codigo_extrato = document.querySelector('#codigo_extrato').value;
 
-                sistema.request.post('/extrato.php', {
+                let dados = {
                     'rota': 'salvar_item_extrato',
                     'extrato': codigo_extrato,
                     'item_extrato': item_extrato,
                     'valor_lancamento_extrato': valor_lancamento_extrato
-                }, function (retorno) {
+                };
+
+                sistema.request.post('/extrato.php', dados, function (retorno) {
                     let item_extrato = retorno.dados.item_extrato;
                     let extrato_item = retorno.dados.extrato_item;
                     let tabela = document.querySelector('#tabela_extratos_item tbody');
 
                     let linha = document.createElement('tr');
 
+                    linha.appendChild(sistema.gerar_td(['text-center'], 0, 'inner'));
                     linha.appendChild(sistema.gerar_td(['text-center'], item_extrato.nome_item_extrato, 'inner'));
 
-                    if (item_extrato.tipo_item_extrato == 'CREDITO') {
+                    if (item_extrato.tipo_item_extrato == true) {
                         linha.appendChild(sistema.gerar_td(['text-center'], sistema.number_format(extrato_item.valor_lancamento_extrato), 'inner'));
                         linha.appendChild(sistema.gerar_td(['text-center'], '', 'inner'));
 
@@ -697,6 +713,7 @@ router_add('cadastro_extrato', function () {
             }
 
             function pesquisar_dados_extrato() {
+
                 sistema.request.post('/extrato.php', {
                     'rota': 'pesquisar_dados_extrato_completo',
                     'codigo_extrato': CODIGO_EXTRATO
@@ -706,7 +723,7 @@ router_add('cadastro_extrato', function () {
 
                     document.querySelector('#codigo_extrato').value = CODIGO_EXTRATO;
 
-                    document.querySelector('#usuario').value = extrato.usuario.$oid;
+                    document.querySelector('#usuario').value = extrato.codigo_usuario;
                     document.querySelector('#valor_bruto').value = sistema.number_format(extrato.valor_bruto);
                     document.querySelector('#valor_desconto').value = sistema.number_format(extrato.valor_desconto);
                     document.querySelector('#valor_entrada').value = sistema.number_format(extrato.valor_entrada);
@@ -721,9 +738,10 @@ router_add('cadastro_extrato', function () {
                         let linha = document.createElement('tr');
                         let item_extrato = item.item_extrato;
 
+                        linha.appendChild(sistema.gerar_td(['text-center'], item.codigo_extrato_item, 'inner'));
                         linha.appendChild(sistema.gerar_td(['text-center'], item_extrato.nome_item_extrato, 'inner'));
 
-                        if (item_extrato.tipo_item_extrato == 'DEBITO') {
+                        if (item_extrato.tipo_item_extrato == true) {
                             linha.appendChild(sistema.gerar_td(['text-center'], '', 'inner'));
                             linha.appendChild(sistema.gerar_td(['text-center'], sistema.number_format(item.valor_lancamento_extrato), 'inner'));
                         } else {
@@ -830,6 +848,7 @@ router_add('cadastro_extrato', function () {
                                                 id="tabela_extratos_item">
                                                 <thead>
                                                     <tr class="text-center">
+                                                        <th scope="col">#</th>
                                                         <th scope="col">ITEM</th>
                                                         <th scope="col">ENTRADA</th>
                                                         <th scope="col">SAIDA</th>

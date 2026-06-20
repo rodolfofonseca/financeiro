@@ -61,7 +61,7 @@ router_add('index', function () {
  */
 router_add('entrada', function () {
     include_once 'includes/head.php';
-?>
+    ?>
     <script>
         const EMPRESA = "<?php echo $codigo_empresa; ?>";
 
@@ -73,11 +73,11 @@ router_add('entrada', function () {
                 'rota': 'pesquisar_clientes',
                 'empresa': EMPRESA,
                 'tipo_usuario': 'FORNECEDOR'
-            }, function(retorno) {
+            }, function (retorno) {
                 let select_fornecedores = document.querySelector('#fornecedor');
                 let fornecedores = retorno.dados;
 
-                sistema.each(fornecedores, function(fornecedor) {
+                sistema.each(fornecedores, function (fornecedor) {
                     select_fornecedores.appendChild(sistema.gerar_option(fornecedor._id.$oid, fornecedor.nome_usuario));
                 });
 
@@ -102,7 +102,7 @@ router_add('entrada', function () {
                 'data_movimentacao': data_movimentacao,
                 'tipo': tipo,
                 'empresa': EMPRESA
-            }, function(retorno) {
+            }, function (retorno) {
                 let pedidos = retorno.dados;
                 let tamanho_retorno = pedidos.length;
                 let tabela = document.querySelector('#tabela_pedidos tbody');
@@ -114,7 +114,7 @@ router_add('entrada', function () {
                     linha.appendChild(sistema.gerar_td(['text-center'], 'UTILIZE OS FILTROS PARA FACILITAR SUA PESQUISA!', 'inner', true, 10));
                     tabela.appendChild(linha);
                 } else {
-                    sistema.each(pedidos, function(index, pedido) {
+                    sistema.each(pedidos, function (index, pedido) {
                         let linha = document.createElement('tr');
 
                         linha.appendChild(sistema.gerar_td(['text-center'], 'TROUXE PEDIDOS DE ENTRADA!', 'inner', true, 10));
@@ -144,7 +144,8 @@ router_add('entrada', function () {
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap gap-2">
                     <div class="dropdown">
-                        <button class="btn btn-primary d-flex align-items-center justify-content-center" onclick="cadastro_pedidos_entrada('');">Cadastrar Pedidos</button>
+                        <button class="btn btn-primary d-flex align-items-center justify-content-center"
+                            onclick="cadastro_pedidos_entrada('');">Cadastrar Pedidos</button>
                     </div>
                 </div>
             </div>
@@ -206,7 +207,8 @@ router_add('entrada', function () {
                                             </thead>
                                             <tbody>
                                                 <tr>
-                                                    <td colspan="10" class="text-center" onclick="pesquisar_produtos();">UTILIZE OS FILTROS PARA FACILITAR SUA PESQUISA!</td>
+                                                    <td colspan="10" class="text-center" onclick="pesquisar_produtos();">
+                                                        UTILIZE OS FILTROS PARA FACILITAR SUA PESQUISA!</td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -224,8 +226,8 @@ router_add('entrada', function () {
                 pesquisar_pedidos();
             }
         </script>
-    <?php
-    include_once 'includes/footer.php';
+        <?php
+        include_once 'includes/footer.php';
 });
 
 /** 
@@ -255,12 +257,12 @@ router_add('cadastro_pedidos_entrada', function () {
                     'rota': 'pesquisar_clientes',
                     'empresa': EMPRESA,
                     'tipo_usuario': 'FORNECEDOR'
-                }, function(retorno) {
+                }, function (retorno) {
                     let select_fornecedores = document.querySelector('#fornecedor');
                     let select_fornecedores_tabela = document.querySelector('#fornecedor_tabela');
                     let fornecedores = retorno.dados;
 
-                    sistema.each(fornecedores, function(fornecedor) {
+                    sistema.each(fornecedores, function (fornecedor) {
                         select_fornecedores.appendChild(sistema.gerar_option(fornecedor._id.$oid, fornecedor.nome_usuario));
                         select_fornecedores_tabela.appendChild(sistema.gerar_option(fornecedor._id.$oid, fornecedor.nome_usuario));
 
@@ -287,7 +289,7 @@ router_add('cadastro_pedidos_entrada', function () {
                     'status_produto': status_produto
                 };
 
-                sistema.request.post('/produtos.php', dados, function(retorno) {
+                sistema.request.post('/produtos.php', dados, function (retorno) {
                     let produtos = retorno.dados;
                     let tabela = document.querySelector('#tabela_produtos_pedido tbody');
 
@@ -298,13 +300,13 @@ router_add('cadastro_pedidos_entrada', function () {
                         linha.appendChild(sistema.gerar_td(['text-center'], 'NENHUM PRODUTO ENCONTRADO!', 'inner', true, 10));
                         tabela.appendChild(linha);
                     } else {
-                        sistema.each(produtos, function(index, produto) {
+                        sistema.each(produtos, function (index, produto) {
                             let linha = document.createElement('tr');
 
                             linha.appendChild(sistema.gerar_td(['text-center'], produto.nome_produto));
                             linha.appendChild(sistema.gerar_td(['text-center'], '1000'));
                             linha.appendChild(sistema.gerar_td(['text-center'], sistema.number_format(produto.valor_venda)));
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_adicionar_item_pedido_' + produto._id.$oid, 'ADICIONAR', ['btn', 'btn-success'], function() {
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_adicionar_item_pedido_' + produto._id.$oid, 'ADICIONAR', ['btn', 'btn-success'], function () {
                                 colocar_dados_produto_pedido(produto._id.$oid, produto.nome_produto, produto.valor_venda);
                             }), 'append'));
 
@@ -338,7 +340,7 @@ router_add('cadastro_pedidos_entrada', function () {
                 linha.appendChild(sistema.gerar_td(['text-center', 'disabled'], sistema.gerar_input('valor_desconto_produto_item_' + QUANTIDADE_ITEM_PEDIDO, sistema.number_format(0), ['form-control', 'text-center'], 'text', '', true), 'append'));
                 linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_input('valor_frete_produto_item_' + QUANTIDADE_ITEM_PEDIDO, '0', ['form-control', 'text-center'], 'text', '', true), 'append'));
                 linha.appendChild(sistema.gerar_td(['text-center', 'disabled'], sistema.gerar_input('valor_total_produto_item_' + QUANTIDADE_ITEM_PEDIDO, sistema.number_format(valor_venda), ['form-control', 'text-center'], 'text', '', false), 'append'));
-                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_excluir_item_pedido_' + QUANTIDADE_ITEM_PEDIDO, 'EXCLUIR', ['btn', 'btn-danger'], function() {
+                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_excluir_item_pedido_' + QUANTIDADE_ITEM_PEDIDO, 'EXCLUIR', ['btn', 'btn-danger'], function () {
                     document.querySelector('#' + id_linha).remove();
                 }), 'append'));
 
@@ -359,13 +361,13 @@ router_add('cadastro_pedidos_entrada', function () {
                 QUANTIDADE_PRODUTOS_PEDIDOS = 0;
                 VALOR_UNITARIO_PEDIDO = 0;
 
-                linhas.forEach(function(linhas, index) {
+                linhas.forEach(function (linhas, index) {
                     let i = index + 1;
 
                     if (executando == true) {
                         let elemento = document.querySelector('#id_produto_item_' + i);
 
-                        if (!elemento) {} else {
+                        if (!elemento) { } else {
 
                             let quantidade = document.querySelector('#quantidade_produto_item_' + i).value;
                             let valor_unitario = document.querySelector('#valor_unitario_produto_item_' + i).value;
@@ -433,12 +435,12 @@ router_add('cadastro_pedidos_entrada', function () {
                 let itens_pedido = [];
                 let executando = true;
 
-                linhas.forEach(function(linha, index) {
+                linhas.forEach(function (linha, index) {
                     let i = index + 1;
                     if (executando == true) {
                         let elemento = document.querySelector('#id_produto_item_' + i);
 
-                        if (!elemento) {} else {
+                        if (!elemento) { } else {
                             let id_produto = document.querySelector('#codigo_produto_item_' + i).value;
                             let quantidade = document.querySelector('#quantidade_produto_item_' + i).value;
                             let valor_unitario_produto = document.querySelector('#valor_unitario_produto_item_' + i).value;
@@ -466,7 +468,7 @@ router_add('cadastro_pedidos_entrada', function () {
 
                 let json = JSON.stringify(itens_pedido);
 
-                if(fornecedor != ''){
+                if (fornecedor != '') {
                     sistema.request.post('/pedidos.php', {
                         'rota': 'salvar_pedidos_entrada',
                         'empresa': EMPRESA,
@@ -482,10 +484,10 @@ router_add('cadastro_pedidos_entrada', function () {
                         'valor_frete': valor_frete,
                         'valor_liquido': valor_liquido,
                         'objeto_itens': json
-                    }, function(retorno) {
+                    }, function (retorno) {
                         validar_retorno(retorno, '/pedidos.php', 0, 'entrada');
                     });
-                }else{
+                } else {
                     alerta_campo_vazio('FORNECEDOR');
                 }
             }
@@ -553,18 +555,21 @@ router_add('cadastro_pedidos_entrada', function () {
                                     </div>
                                     <div class="col-2 text-center">
                                         <label class="text">Data Cadastro</label>
-                                        <input type="date" class="form-control" id="data_cadastro" value="<?php echo $hoje; ?>">
+                                        <input type="date" class="form-control" id="data_cadastro"
+                                            value="<?php echo $hoje; ?>">
                                     </div>
                                     <div class="col-2 text-center">
                                         <label class="text">Data Movimentação</label>
-                                        <input type="date" class="form-control" id="data_movimentacao" value="<?php echo $hoje; ?>">
+                                        <input type="date" class="form-control" id="data_movimentacao"
+                                            value="<?php echo $hoje; ?>">
                                     </div>
                                 </div>
                                 <br />
                                 <div class="row">
                                     <div class="col-12">
                                         <div class="table-responsive">
-                                            <table class="table table-nowrap text-nowrap table-hover" id="tabela_itens_pedido">
+                                            <table class="table table-nowrap text-nowrap table-hover"
+                                                id="tabela_itens_pedido">
                                                 <thead>
                                                     <tr class="text-center">
                                                         <th scope="col">#</th>
@@ -589,27 +594,33 @@ router_add('cadastro_pedidos_entrada', function () {
                                 <div class="row">
                                     <div class="col-2 text-center">
                                         <label class="text">Quantidade Itens</label>
-                                        <input type="text" class="form-control text-center" id="quantidade_total_itens" sistema-mask="codigo" disabled value="0">
+                                        <input type="text" class="form-control text-center" id="quantidade_total_itens"
+                                            sistema-mask="codigo" disabled value="0">
                                     </div>
                                     <div class="col-2 text-center">
                                         <label class="text">Valor Unitário</label>
-                                        <input type="text" class="form-control text-center" id="valor_unitario" sistema-mask="moeda" value="0">
+                                        <input type="text" class="form-control text-center" id="valor_unitario"
+                                            sistema-mask="moeda" value="0">
                                     </div>
                                     <div class="col-2 text-center">
                                         <label class="text">Valor Bruto</label>
-                                        <input type="text" class="form-control text-center" id="valor_bruto" sistema-mask="moeda" value="0">
+                                        <input type="text" class="form-control text-center" id="valor_bruto"
+                                            sistema-mask="moeda" value="0">
                                     </div>
                                     <div class="col-2 text-center">
                                         <label class="text">Valor Desconto</label>
-                                        <input type="text" class="form-control text-center" id="valor_desconto" sistema-mask="moeda" value="0">
+                                        <input type="text" class="form-control text-center" id="valor_desconto"
+                                            sistema-mask="moeda" value="0">
                                     </div>
                                     <div class="col-2 text-center">
                                         <label class="text">Valor Frete</label>
-                                        <input type="text" class="form-control text-center" id="valor_frete" sistema-mask="moeda" value="0">
+                                        <input type="text" class="form-control text-center" id="valor_frete"
+                                            sistema-mask="moeda" value="0">
                                     </div>
                                     <div class="col-2 text-center">
                                         <label class="text">Valor Líquido</label>
-                                        <input type="text" class="form-control text-center" id="valor_liquido" sistema-mask="moeda" value="0">
+                                        <input type="text" class="form-control text-center" id="valor_liquido"
+                                            sistema-mask="moeda" value="0">
                                     </div>
                                 </div>
                                 <br />
@@ -619,21 +630,27 @@ router_add('cadastro_pedidos_entrada', function () {
                                 <br />
                                 <div class="row">
                                     <div class="col-4 push-4">
-                                        <button class="btn btn-secondary w-100 btn-lg" onclick="atualizar_valores_pedido();">Atualizar Valores</button>
+                                        <button class="btn btn-secondary w-100 btn-lg"
+                                            onclick="atualizar_valores_pedido();">Atualizar Valores</button>
                                     </div>
                                     <div class="col-4">
-                                        <button class="btn btn-primary d-flex align-items-center justify-content-center w-100 btn-lg" data-bs-toggle="modal" data-bs-target="#modal_pedido_item">Pesquisar Produtos</button>
+                                        <button
+                                            class="btn btn-primary d-flex align-items-center justify-content-center w-100 btn-lg"
+                                            data-bs-toggle="modal" data-bs-target="#modal_pedido_item">Pesquisar
+                                            Produtos</button>
                                     </div>
                                 </div>
                                 <br />
                             </div>
                         </div>
-                        <div class="modal fade" id="modal_pedido_item" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+                        <div class="modal fade" id="modal_pedido_item" tabindex="-1" role="dialog"
+                            aria-labelledby="myLargeModalLabel" aria-hidden="true">
                             <div class="modal-dialog modal-lg modal-dialog-centered">
                                 <div class="modal-content">
                                     <div class="modal-header">
                                         <h4 class="modal-title" id="myLargeModalLabel">Adicionar Item Pedido</h4>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Close"></button>
                                     </div>
                                     <div class="modal-body">
                                         <div class="row">
@@ -662,14 +679,16 @@ router_add('cadastro_pedidos_entrada', function () {
                                         <br />
                                         <div class="row">
                                             <div class="col-4 push-8">
-                                                <button class="btn btn-secondary w-100" onclick="pesquisar_produtos();">Pesquisar</button>
+                                                <button class="btn btn-secondary w-100"
+                                                    onclick="pesquisar_produtos();">Pesquisar</button>
                                             </div>
                                         </div>
                                         <br />
                                         <div class="row">
                                             <div class="col-12">
                                                 <div class="table-responsive">
-                                                    <table class="table table-nowrap text-nowrap table-hover" id="tabela_produtos_pedido">
+                                                    <table class="table table-nowrap text-nowrap table-hover"
+                                                        id="tabela_produtos_pedido">
                                                         <thead>
                                                             <tr class="text-center">
                                                                 <th scope="col">PRODUTO</th>
@@ -687,7 +706,8 @@ router_add('cadastro_pedidos_entrada', function () {
                                         <br />
                                         <div class="row">
                                             <div class="col-4">
-                                                <button type="button" class="btn btn-danger w-100 btn-lg" data-bs-dismiss="modal" aria-label="Close">Fechar</button>
+                                                <button type="button" class="btn btn-danger w-100 btn-lg"
+                                                    data-bs-dismiss="modal" aria-label="Close">Fechar</button>
                                             </div>
                                         </div>
                                     </div>
@@ -703,13 +723,13 @@ router_add('cadastro_pedidos_entrada', function () {
                     document.querySelector('#btn_salvar_dados').disabled = true;
                 }
             </script>
-        <?php
-        include_once 'includes/footer.php';
-    });
+            <?php
+            include_once 'includes/footer.php';
+});
 
-    router_add('saida', function () {
-        include_once 'includes/head.php';
-        ?>
+router_add('saida', function () {
+    include_once 'includes/head.php';
+    ?>
             <div class="page-wrapper">
                 <div class="content">
                     <div class="d-flex d-block align-items-center justify-content-between flex-warp gap-3 mb-3">
@@ -718,12 +738,13 @@ router_add('cadastro_pedidos_entrada', function () {
                         </div>
                         <div class="d-flex my-xl-auto right-content align-items-center flex-wrap gap-2">
                             <div class="dropdown">
-                                <button class="btn btn-primary d-flex align-items-center justify-content-center" onclick="cadastro_pedidos_saida('');">Cadastrar Pedidos</button>
+                                <button class="btn btn-primary d-flex align-items-center justify-content-center"
+                                    onclick="cadastro_pedidos_saida('');">Cadastrar Pedidos</button>
                             </div>
                         </div>
                     </div>
                 </div>
-            <?php
-            include_once 'includes/footer.php';
-        });
-            ?>
+                <?php
+                include_once 'includes/footer.php';
+});
+?>

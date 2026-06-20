@@ -4,7 +4,7 @@ require_once 'modelos/Contas.php';
 
 router_add('index', function () {
     require_once 'includes/head.php';
-?>
+    ?>
     <script>
         const CODIGO_EMPRESA = "<?php echo $_SESSION['codigo_empresa']; ?>";
 
@@ -25,7 +25,7 @@ router_add('index', function () {
                 'nome_conta': nome_conta,
                 'descricao': descricao,
                 'status': status
-            }, function(retorno) {
+            }, function (retorno) {
                 let contas = retorno.dados;
                 let tamanho_retorno = contas.length;
                 let tabela = document.querySelector('#tabela_contas tbody');
@@ -38,7 +38,7 @@ router_add('index', function () {
                     linha.appendChild(sistema.gerar_td(['text-center'], 'NENHUMA CONTA ENCONTRADA COM OS FILTROS PASSADOS', 'inner', true, 5));
                     tabela.appendChild(linha);
                 } else {
-                    sistema.each(contas, function(index, conta) {
+                    sistema.each(contas, function (index, conta) {
                         let linha = document.createElement('tr');
                         let div = document.createElement('div');
 
@@ -47,16 +47,16 @@ router_add('index', function () {
                         linha.appendChild(sistema.gerar_td(['text-center'], sistema.number_format(conta.saldo_conta), 'inner'));
 
                         if (conta.status == 'ATIVO') {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_' + conta._id.$oid, 'ATIVO', ['btn', 'btn-success'], function visualizar() {}), 'append'));
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_' + conta._id.$oid, 'ATIVO', ['btn', 'btn-success'], function visualizar() { }), 'append'));
                         } else {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_' + conta._id.$oid, 'INATIVO', ['btn', 'btn-danger'], function visualizar() {}), 'append'));
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_' + conta._id.$oid, 'INATIVO', ['btn', 'btn-danger'], function visualizar() { }), 'append'));
                         }
 
                         div.classList.add('hstack');
                         div.classList.add('gap-2');
                         div.classList.add('fs-15');
 
-                        div.appendChild(sistema.gerar_botao('botao_download_' + conta._id.$oid, 'DOWNLOAD', ['btn', 'btn-primary'], function visualizar() {}, 'append'));
+                        div.appendChild(sistema.gerar_botao('botao_download_' + conta._id.$oid, 'DOWNLOAD', ['btn', 'btn-primary'], function visualizar() { }, 'append'));
                         div.appendChild(sistema.gerar_botao('botao_visualizar_' + conta._id.$oid, 'EDITAR', ['btn', 'btn-info'], function editar() {
                             cadastro_contas(conta._id.$oid);
                         }, 'append'));
@@ -77,7 +77,8 @@ router_add('index', function () {
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap gap-2">
                     <div class="dropdown">
-                        <button class="btn btn-primary d-flex align-items-center justify-content-center" onclick="cadastro_contas('');">
+                        <button class="btn btn-primary d-flex align-items-center justify-content-center"
+                            onclick="cadastro_contas('');">
                             Cadastrar Conta
                         </button>
                     </div>
@@ -109,7 +110,8 @@ router_add('index', function () {
                             <br />
                             <div class="row">
                                 <div class="col-12">
-                                    <textarea class="form-control" id="descricao" placeholder="Descrição da conta"></textarea>
+                                    <textarea class="form-control" id="descricao"
+                                        placeholder="Descrição da conta"></textarea>
                                 </div>
                             </div>
                             <br />
@@ -134,7 +136,8 @@ router_add('index', function () {
                                             </thead>
                                             <tbody>
                                                 <tr>
-                                                    <td colspan="5" class="text-center">UTILIZE O FILTRO PARA FACILITAR A PESQUISA!</td>
+                                                    <td colspan="5" class="text-center">UTILIZE O FILTRO PARA FACILITAR A
+                                                        PESQUISA!</td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -147,12 +150,12 @@ router_add('index', function () {
             </div>
         </div>
         <script>
-            window.onload = function() {
+            window.onload = function () {
                 pesquisar_contas();
             }
         </script>
-    <?php
-    require_once 'includes/footer.php';
+        <?php
+        require_once 'includes/footer.php';
 });
 
 router_add('cadastro_contas', function () {
@@ -196,7 +199,7 @@ router_add('cadastro_contas', function () {
                         'nome_conta': nome_conta,
                         'descricao': descricao,
                         'saldo_conta': saldo_conta
-                    }, function(retorno) {
+                    }, function (retorno) {
                         validar_retorno(retorno, '/contas.php');
                     });
                 }
@@ -234,7 +237,8 @@ router_add('cadastro_contas', function () {
                                     </div>
                                     <div class="col-4">
                                         <label class="text">Saldo Conta</label>
-                                        <input type="text" class="form-control" id="saldo_conta" sistema-mask="moeda" placeholder="Saldo da Conta">
+                                        <input type="text" class="form-control" id="saldo_conta" sistema-mask="moeda"
+                                            placeholder="Saldo da Conta">
                                     </div>
                                     <div class="col-4">
                                         <label class="text">Status</label>
@@ -249,7 +253,8 @@ router_add('cadastro_contas', function () {
                                 <div class="row">
                                     <div class="col-12">
                                         <label class="text">Descrição</label>
-                                        <textarea class="form-control" id="descricao" placeholder="Informa a descrição"></textarea>
+                                        <textarea class="form-control" id="descricao"
+                                            placeholder="Informa a descrição"></textarea>
                                     </div>
                                 </div>
                                 <?php require_once 'includes/botao_cadastro.php'; ?>
@@ -259,12 +264,12 @@ router_add('cadastro_contas', function () {
                 </div>
             </div>
             <script>
-                window.onload = function() {
+                window.onload = function () {
                     if (CODIGO_CONTA != '') {
                         sistema.request.post('/contas.php', {
                             'rota': 'pesquisa_conta',
                             'codigo_conta': CODIGO_CONTA
-                        }, function(retorno) {
+                        }, function (retorno) {
                             let conta = retorno.dados;
 
                             document.querySelector('#nome_conta').value = conta.nome_conta;
@@ -275,60 +280,60 @@ router_add('cadastro_contas', function () {
                     }
                 }
             </script>
-        <?php
-        require_once 'includes/footer.php';
-    });
+            <?php
+            require_once 'includes/footer.php';
+});
 
-    router_add('salvar_dados', function () {
-        $objeto_contas = new Contas();
+router_add('salvar_dados', function () {
+    $objeto_contas = new Contas();
 
-        echo json_encode((array) ['status' => (bool) $objeto_contas->salvar_dados($_REQUEST)], JSON_UNESCAPED_UNICODE);
-        exit;
-    });
+    echo json_encode((array) ['status' => (bool) $objeto_contas->salvar_dados($_REQUEST)], JSON_UNESCAPED_UNICODE);
+    exit;
+});
 
-    router_add('pesquisar_contas', function () {
-        $objeto_conta = new Contas();
-        $nome_conta = (string) (isset($_REQUEST['nome_conta']) ? (string) $_REQUEST['nome_conta'] : '');
-        $status = (string) (isset($_REQUEST['status']) ? (string) $_REQUEST['status'] : 'TODOS');
-        $descricao = (string) (isset($_REQUEST['descricao']) ? (string) $_REQUEST['descricao'] : '');
-        $empresa = (string) (isset($_REQUEST['empresa']) ? (string) $_REQUEST['empresa'] : '');
+router_add('pesquisar_contas', function () {
+    $objeto_conta = new Contas();
+    $nome_conta = (string) (isset($_REQUEST['nome_conta']) ? (string) $_REQUEST['nome_conta'] : '');
+    $status = (string) (isset($_REQUEST['status']) ? (string) $_REQUEST['status'] : 'TODOS');
+    $descricao = (string) (isset($_REQUEST['descricao']) ? (string) $_REQUEST['descricao'] : '');
+    $empresa = (string) (isset($_REQUEST['empresa']) ? (string) $_REQUEST['empresa'] : '');
 
-        $filtro = (array) ['filtro' => (array) [], 'ordenacao' => (array) ['nome_empresa' => (bool) true], 'limite' => (int) 0];
-        $filtro_montado = (array) [];
+    $filtro = (array) ['filtro' => (array) [], 'ordenacao' => (array) ['nome_empresa' => (bool) true], 'limite' => (int) 0];
+    $filtro_montado = (array) [];
 
-        if ($nome_conta != '') {
-            array_push($filtro_montado, (array) ['nome_conta', '=', (string) $nome_conta]);
-        }
+    if ($nome_conta != '') {
+        array_push($filtro_montado, (array) ['nome_conta', '=', (string) $nome_conta]);
+    }
 
-        if ($status != 'TODOS') {
-            array_push($filtro_montado, (array) ['status', '===', (string) $status]);
-        }
+    if ($status != 'TODOS') {
+        array_push($filtro_montado, (array) ['status', '===', (string) $status]);
+    }
 
-        if ($descricao != '') {
-            array_push($filtro_montado, (array) ['descricao', '=', (string) $descricao]);
-        }
+    if ($descricao != '') {
+        array_push($filtro_montado, (array) ['descricao', '=', (string) $descricao]);
+    }
 
-        if ($empresa != '') {
-            array_push($filtro_montado, (array) ['empresa', '===', model_id($empresa)]);
-        }
+    if ($empresa != '') {
+        array_push($filtro_montado, (array) ['empresa', '===', model_id($empresa)]);
+    }
 
-        if (empty($filtro_montado) == false) {
-            $filtro['filtro'] = (array) ['and' => $filtro_montado];
-        }
+    if (empty($filtro_montado) == false) {
+        $filtro['filtro'] = (array) ['and' => $filtro_montado];
+    }
 
-        echo json_encode(['dados' => (array) $objeto_conta->pesquisar_todos($filtro)], JSON_UNESCAPED_UNICODE);
-    });
+    echo json_encode(['dados' => (array) $objeto_conta->pesquisar_todos($filtro)], JSON_UNESCAPED_UNICODE);
+});
 
-    router_add('pesquisa_conta', function () {
-        $objeto_conta = new Contas();
-        $codigo_conta = (string) (isset($_REQUEST['codigo_conta']) ? (string) $_REQUEST['codigo_conta'] : '');
-        $retorno = (array) [];
+router_add('pesquisa_conta', function () {
+    $objeto_conta = new Contas();
+    $codigo_conta = (string) (isset($_REQUEST['codigo_conta']) ? (string) $_REQUEST['codigo_conta'] : '');
+    $retorno = (array) [];
 
-        if ($codigo_conta != '') {
-            $retorno = (array) $objeto_conta->pesquisar((array) ['filtro' => (array) ['_id', '===', model_id($codigo_conta)]]);
-        }
+    if ($codigo_conta != '') {
+        $retorno = (array) $objeto_conta->pesquisar((array) ['filtro' => (array) ['_id', '===', model_id($codigo_conta)]]);
+    }
 
-        echo json_encode((array) ['dados' => (array) $retorno], JSON_UNESCAPED_UNICODE);
-        exit;
-    });
-        ?>
+    echo json_encode((array) ['dados' => (array) $retorno], JSON_UNESCAPED_UNICODE);
+    exit;
+});
+?>

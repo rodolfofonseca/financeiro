@@ -147,11 +147,11 @@ router_add('pesquisar_clientes', function () {
  */
 router_add('pesquisar_cliente', function () {
     $objeto_usuario = new Usuario();
-    $codigo_cliente = (string) (isset($_REQUEST['codigo_cliente']) ? (string) $_REQUEST['codigo_cliente'] : '');
+    $codigo_cliente = (int) (isset($_REQUEST['codigo_cliente']) ? (int) $_REQUEST['codigo_cliente'] : 0);
     $filtro = (array) ['filtro' => (array) [], 'ordenacao' => (array) [], 'limite' => (int) 0];
 
     if ($codigo_cliente != '') {
-        $filtro['filtro'] = (array) ['_id', '===', model_id($codigo_cliente)];
+        $filtro['filtro'] = (array) ['where' => [['codigo_usuario', '===', $codigo_cliente]]];
     }
 
     echo json_encode((array) ['dados' => (array) $objeto_usuario->pesquisar($filtro)], JSON_UNESCAPED_UNICODE);
@@ -161,7 +161,7 @@ router_add('pesquisar_cliente', function () {
 /**
  * TODO Rota responsável por alterar o status do usuário, juntamente com as contas vinculadas a ele
  */
-router_add('alterar_status_usuario', function(){
+router_add('alterar_status_usuario', function () {
     $objeto_usuario = new Usuario();
 
     echo json_encode(['status' => (bool) $objeto_usuario->alterar_status_usuario($_REQUEST)], JSON_UNESCAPED_UNICODE);
@@ -231,9 +231,9 @@ router_add('index', function () {
                 'tipo_usuario': tipo_usuario,
                 'modulo_contabil': MODULO_CONTABIL,
                 'cpf_cnpj': cpf_cnpj,
-                'data_inicial':data_inicial,
-                'data_final':data_final,
-                'status_usuario_pesquisa':status_usuario
+                'data_inicial': data_inicial,
+                'data_final': data_final,
+                'status_usuario_pesquisa': status_usuario
             }, function (retorno) {
                 let clientes = retorno.dados;
                 let tamanho_retorno = clientes.length;
@@ -255,45 +255,47 @@ router_add('index', function () {
                         Swal.close();
                         return;
                     }
-
+                    
                     let cliente = clientes[index];
                     let linha = document.createElement('tr');
-                    linha.appendChild(sistema.gerar_td(['text-start', 'fw-bold'], sistema.cortar_string(cliente.nome_usuario, 30), 'inner', false, '', cliente.nome_usuario));
 
+                    linha.appendChild(sistema.gerar_td(['text-start', 'fw-bold'], sistema.cortar_string(cliente.codigo_usuario, 30), 'inner', false, '', cliente.codigo_usuario));
+                    linha.appendChild(sistema.gerar_td(['text-start', 'fw-bold'], sistema.cortar_string(cliente.nome_usuario, 30), 'inner', false, '', cliente.nome_usuario));
+                    
                     if (cliente.hasOwnProperty('cpf_cnpj') == true) {
-                        linha.appendChild(sistema.gerar_td(['text-start', 'fw-bold'], cliente.cpf_cnpj, 'inner'));
+                        linha.appendChild(sistema.gerar_td(['text-start', 'fw-bold'], cliente.cpf_cnpj ?? '', 'inner'));
                     } else {
                         linha.appendChild(sistema.gerar_td(['text-start'], '', 'inner'));
                     }
+                    
+                    linha.appendChild(sistema.gerar_td(['text-start', 'fw-bold'], cliente.celular ?? '', 'inner'));
+                    linha.appendChild(sistema.gerar_td(['text-start', 'fw-bold'], cliente.email_usuario ?? '', 'inner'));
 
-                    linha.appendChild(sistema.gerar_td(['text-start', 'fw-bold'], cliente.celular, 'inner'));
-                    linha.appendChild(sistema.gerar_td(['text-start', 'fw-bold'], cliente.email_usuario, 'inner'));
-
-                    if (cliente.tipo_usuario == 'CLIENTE') {
-                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_usuario_' + cliente._id.$oid, 'CLIENTE', ['btn', 'btn-outline-secondary'], () => { }), 'append'));
+                    if (cliente.tipo_usuario.trim() == 'CLIENTE') {
+                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_usuario_' + cliente.codigo_usuario ?? '', 'CLIENTE', ['btn', 'btn-outline-secondary'], () => { }), 'append'));
                     } else if (cliente.tipo_usuario == 'FORNECEDOR') {
-                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_usuario_' + cliente._id.$oid, 'FORNECEDOR', ['btn', 'btn-outline-primary'], () => { }), 'append'));
+                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_usuario_' + cliente.codigo_usuario ?? '', 'FORNECEDOR', ['btn', 'btn-outline-primary'], () => { }), 'append'));
                     } else {
-                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_usuario_' + cliente._id.$oid, 'FUNCIONÁRIO', ['btn', 'btn-outline-warning'], () => { }), 'append'));
+                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_usuario_' + cliente.codigo_usuario ?? '', 'FUNCIONÁRIO', ['btn', 'btn-outline-warning'], () => { }), 'append'));
                     }
 
                     if (cliente.hasOwnProperty('status_usuario') == true) {
                         if (cliente.status_usuario == true) {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_usuario_' + cliente._id.$oid, 'ATIVO', ['btn', 'btn-outline-success'], () => {alterar_status_usuario(cliente._id.$oid, cliente.status_usuario);}), 'append'));
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_usuario_' + cliente.codigo_usuario ?? '', 'ATIVO', ['btn', 'btn-outline-success'], () => { alterar_status_usuario(cliente.codigo_usuario, cliente.status_usuario ?? ''); }), 'append'));
                         } else if (cliente.status_usuario == false) {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_usuario_' + cliente._id.$oid, 'INATIVO', ['btn', 'btn-outline-danger'], () => {alterar_status_usuario(cliente._id.$oid, cliente.status_usuario); }), 'append'));
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_usuario_' + cliente.codigo_usuario ?? '', 'INATIVO', ['btn', 'btn-outline-danger'], () => { alterar_status_usuario(cliente.codigo_usuario, cliente.status_usuario ?? ''); }), 'append'));
                         } else {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_usuario_' + cliente._id.$oid, 'SEM STATUS', ['btn', 'btn-outline-secondary'], () => {alterar_status_usuario(cliente._id.$oid, false); }), 'append'));
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_usuario_' + cliente.codigo_usuario ?? '', 'SEM STATUS', ['btn', 'btn-outline-secondary'], () => { alterar_status_usuario(cliente.codigo_usuario ?? '', false); }), 'append'));
                         }
                     } else {
-                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_usuario_' + cliente._id.$oid, 'SEM STATUS', ['btn', 'btn-outline-secondary'], () => { alterar_status_usuario(cliente._id.$oid, false);}), 'append'));
+                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_usuario_' + cliente.codigo_usuario ?? '', 'SEM STATUS', ['btn', 'btn-outline-secondary'], () => { alterar_status_usuario(cliente.codigo_usuario ?? '', false); }), 'append'));
                     }
 
                     if (MODULO_CONTABIL == 'true' || MODULO_CONTABIL == true) {
                         if (cliente.modulo_contabil.local_conta_id_1 == 'ATIVO_CIRCULANTE_CLIENTE') {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_usuario_' + cliente._id.$oid, 'ATIVO CIRCULANTE CLIENTE', ['btn', 'btn-outline-dark'], () => { }), 'append'));
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_usuario_' + cliente.codigo_usuario ?? '', 'ATIVO CIRCULANTE CLIENTE', ['btn', 'btn-outline-dark'], () => { }), 'append'));
                         } else if (cliente.modulo_contabil.local_conta_id_1 == 'PASSIVO_CIRCULANTE_FORNECEDOR') {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_usuario_' + cliente._id.$oid, 'PASSIVO CIRCULANTE FORNECEDOR', ['btn', 'btn-outline-primary'], () => { }), 'append'));
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_usuario_' + cliente.codigo_usuario ?? '', 'PASSIVO CIRCULANTE FORNECEDOR', ['btn', 'btn-outline-primary'], () => { }), 'append'));
                         } else {
                             linha.appendChild(sistema.gerar_td(['text-center'], '', 'inner'));
                         }
@@ -301,34 +303,34 @@ router_add('index', function () {
                         linha.appendChild(sistema.gerar_td(['text-center'], cliente.modulo_contabil.conta_contabil_1, 'inner'));
 
                         if (cliente.modulo_contabil.local_conta_id_2 == 'ATIVO_NAO_CIRCULANTE_CLIENTE') {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_usuario_' + cliente._id.$oid, 'ATIVO NÃO CIRCULANTE CLIENTE', ['btn', 'btn-outline-dark'], () => { }), 'append'));
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_usuario_' + cliente.codigo_usuario ?? '', 'ATIVO NÃO CIRCULANTE CLIENTE', ['btn', 'btn-outline-dark'], () => { }), 'append'));
                         } else if (cliente.modulo_contabil.local_conta_id_2 == 'PASSIVO_NAO_CIRCULANTE_FORNECEDOR') {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_usuario_' + cliente._id.$oid, 'PASSIVO NÃO CIRCULANTE FORNECEDOR', ['btn', 'btn-outline-primary'], () => { }), 'append'));
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_usuario_' + cliente.codigo_usuario ?? '', 'PASSIVO NÃO CIRCULANTE FORNECEDOR', ['btn', 'btn-outline-primary'], () => { }), 'append'));
                         } else {
                             linha.appendChild(sistema.gerar_td(['text-center'], '', 'inner'));
                         }
 
-                        linha.appendChild(sistema.gerar_td(['text-center'], cliente.modulo_contabil.conta_contabil_2, 'inner'));
+                        linha.appendChild(sistema.gerar_td(['text-center'], cliente.modulo_contabil.conta_contabil_2 ?? '', 'inner'));
                     }
 
-                    linha.appendChild(sistema.gerar_td(['text-center', 'fw-bold'], sistema.retornar_data(cliente.data_cadastro), 'inner'));
+                    linha.appendChild(sistema.gerar_td(['text-center', 'fw-bold'], sistema.retornar_data(cliente.data_cadastro ?? ''), 'inner'));
 
-                    let data_atualizacao = diferenca_datas(cliente.ultimo_login, 60);
+                    let data_atualizacao = diferenca_datas(cliente.ultimo_login ?? '', 60);
 
                     if (data_atualizacao == false) {
-                        linha.appendChild(sistema.gerar_td(['text-center', 'text-warning', 'fw-bold'], sistema.retornar_data(cliente.ultimo_login), 'inner'));
+                        linha.appendChild(sistema.gerar_td(['text-center', 'text-warning', 'fw-bold'], sistema.retornar_data(cliente.ultimo_login ?? ''), 'inner'));
                     } else {
-                        let data_atualizacao_90 = diferenca_datas(cliente.ultimo_login, 90);
+                        let data_atualizacao_90 = diferenca_datas(cliente.ultimo_login ?? '', 90);
                         if (data_atualizacao_90 == false) {
-                            linha.appendChild(sistema.gerar_td(['text-center', 'text-danger', 'fw-bold'], sistema.retornar_data(cliente.ultimo_login), 'inner'));
+                            linha.appendChild(sistema.gerar_td(['text-center', 'text-danger', 'fw-bold'], sistema.retornar_data(cliente.ultimo_login ?? ''), 'inner'));
                         } else {
-                            linha.appendChild(sistema.gerar_td(['text-center', 'fw-bold', 'text-success'], sistema.retornar_data(cliente.ultimo_login), 'inner'));
+                            linha.appendChild(sistema.gerar_td(['text-center', 'fw-bold', 'text-success'], sistema.retornar_data(cliente.ultimo_login) ?? '', 'inner'));
                         }
                     }
 
 
-                    linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_editar_usuario_' + cliente._id.$oid, 'EDITAR', ['btn', 'btn-secondary'], function editar_cliente() {
-                        cadastro_cliente(cliente._id.$oid);
+                    linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_editar_usuario_' + cliente.codigo_usuario, 'EDITAR', ['btn', 'btn-secondary'], function editar_cliente() {
+                        cadastro_cliente(cliente.codigo_usuario ?? '');
                     }), 'append'));
 
                     tabela.appendChild(linha);
@@ -347,17 +349,17 @@ router_add('index', function () {
          * @param {*} codigo_usuario
          * @param {*} status_atual
          *  */
-        function alterar_status_usuario(codigo_usuario, status_atual){
+        function alterar_status_usuario(codigo_usuario, status_atual) {
             let status_usuario = true;
 
-            if(status_atual == true){
+            if (status_atual == true) {
                 status_usuario = false;
-            }else{
+            } else {
                 status_usuario = true;
             }
 
-            sistema.request.post('/clientes.php', {'rota':'alterar_status_usuario', 'codigo_usuario':codigo_usuario, 'empresa':CODIGO_EMPRESA, 'status_usuario':status_usuario}, function(retorno){
-                validar_retorno( retorno,'/clientes.php',);
+            sistema.request.post('/clientes.php', { 'rota': 'alterar_status_usuario', 'codigo_usuario': codigo_usuario, 'empresa': CODIGO_EMPRESA, 'status_usuario': status_usuario }, function (retorno) {
+                validar_retorno(retorno, '/clientes.php',);
             });
         }
     </script>
@@ -400,7 +402,8 @@ router_add('index', function () {
                                 </div>
                                 <div class="col-3 text-center">
                                     <label class="text">CPF/CNPJ</label>
-                                    <input type="text" class="form-control" id="cpf_cnpj" placeholder="CPF/CNPJ CLIENTE" sistema-mask="cpf-cnpj">
+                                    <input type="text" class="form-control" id="cpf_cnpj" placeholder="CPF/CNPJ CLIENTE"
+                                        sistema-mask="cpf-cnpj">
                                 </div>
                             </div>
                             <br />
@@ -450,6 +453,7 @@ router_add('index', function () {
                                         <table class="table table-nowrap text-nowrap table-hover" id="tabela_clientes">
                                             <thead>
                                                 <tr class="text-center text-uppercase">
+                                                    <th scope="col">#</th>
                                                     <th scope="col">Nome Cliente/Fornecedor</th>
                                                     <th scope="col">CPF/CNPJ</th>
                                                     <th scope="col">Telefone</th>
@@ -672,15 +676,15 @@ router_add('cadastro_clientes', function () {
                     document.querySelector('#numero').value = cliente.numero;
                     document.querySelector('#tipo_usuario').value = cliente.tipo_usuario;
 
-                    if (cliente.hasOwnProperty('status_usuario') == true){
-                        if(cliente.status_usuario == true){
+                    if (cliente.hasOwnProperty('status_usuario') == true) {
+                        if (cliente.status_usuario == true) {
                             document.querySelector('#status_usuario').value = 1;
-                        }else{
+                        } else {
                             document.querySelector('#status_usuario').value = 0;
                         }
                     }
 
-                    if(cliente.hasOwnProperty('cpf_cnpj') == true){
+                    if (cliente.hasOwnProperty('cpf_cnpj') == true) {
                         document.querySelector('#cpf_cnpj').value = cliente.cpf_cnpj;
                     }
 

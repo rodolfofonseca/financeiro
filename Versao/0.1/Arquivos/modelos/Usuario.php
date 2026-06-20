@@ -1,8 +1,9 @@
 <?php
-require_once 'Classes/bancoDeDados.php';
+require_once 'classes/bancoDeDados.php';
 require_once 'Interface.php';
 
-class Usuario implements InterfaceModelo{
+class Usuario implements InterfaceModelo
+{
     private $id_usuario;
     private $empresa;
     private $nome_usuario;
@@ -15,58 +16,61 @@ class Usuario implements InterfaceModelo{
     private $salario;
     private $opcao = ['const' => 8];
 
-    public function tabela(){
+    public function tabela()
+    {
         return (string) 'usuarios';
     }
 
-    public function colocar_dados($dados){
-        if(array_key_exists('codigo_usuario', $dados) == true){
-            if($dados['codigo_usuario'] != ''){
+    public function colocar_dados($dados)
+    {
+        if (array_key_exists('codigo_usuario', $dados) == true) {
+            if ($dados['codigo_usuario'] != '') {
                 $this->id_usuario = model_id($dados['codigo_usuario']);
             }
         }
 
-        if(array_key_exists('empresa', $dados) == true){
+        if (array_key_exists('empresa', $dados) == true) {
             $this->empresa = model_id($dados['empresa']);
         }
 
-        if(array_key_exists('nome_usuario', $dados) == true){
+        if (array_key_exists('nome_usuario', $dados) == true) {
             $this->nome_usuario = (string) strtoupper($dados['nome_usuario']);
         }
 
-        if(array_key_exists('email_usuario', $dados) == true){
+        if (array_key_exists('email_usuario', $dados) == true) {
             $this->email_usuario = (string) $dados['email_usuario'];
         }
 
-        if(array_key_exists('senha_usuario', $dados) == true){
+        if (array_key_exists('senha_usuario', $dados) == true) {
             $this->senha_usuario = (string) password_hash($dados['senha_usuario'], PASSWORD_DEFAULT, $this->opcao);
         }
 
-        if(array_key_exists('salario', $dados) == true){
+        if (array_key_exists('salario', $dados) == true) {
             $this->salario = (double) doubleval($dados['salario']);
         }
 
-        $this->login_usuario = (string) (isset($dados['login_usuario']) ? (string) $dados['login_usuario']:'Sem Login');
-        $this->tipo_usuario = (string) (isset($dados['tipo_usuario']) ? (string) $dados['tipo_usuario']:'Administrador');
+        $this->login_usuario = (string) (isset($dados['login_usuario']) ? (string) $dados['login_usuario'] : 'Sem Login');
+        $this->tipo_usuario = (string) (isset($dados['tipo_usuario']) ? (string) $dados['tipo_usuario'] : 'Administrador');
     }
 
-    public function salvar_dados($dados){
+    public function salvar_dados($dados)
+    {
         $this->colocar_dados($dados);
         $senha_vazia = (string) password_hash('', PASSWORD_DEFAULT, $this->opcao);
         $retorno_operacao = (bool) false;
 
         $retorno_checagem = (bool) model_check((string) $this->tabela(), (array) ['email_usuario', '===', (string) $this->email_usuario]);
 
-        if($retorno_checagem == true){
+        if ($retorno_checagem == true) {
             $retorno_pesquisa = (array) model_one((string) $this->tabela(), (array) ['email_usuario', '===', (string) $this->email_usuario]);
 
-            if(empty($retorno_pesquisa) == true){
+            if (empty($retorno_pesquisa) == true) {
                 return (bool) false;
             }
 
             $retorno_operacao = (bool) model_update((string) $this->tabela(), (array) ['_id', '===', $this->id_usuario], (array) ['nome_usuario' => (string) $this->nome_usuario, 'salario' => (double) $this->salario, 'login_usuario' => (string) $this->login_usuario, 'tipo_usuario' => (string) $this->tipo_usuario]);
-        }else{
-            $retorno_operacao = (bool) model_insert((string) $this->tabela(), (array) ['empresa'=> model_id($this->empresa), 'nome_usuario' => (string) $this->nome_usuario, 'email_usuario' => (string) $this->email_usuario, 'senha_usuario' => (string) $this->senha_usuario, 'data_cadastro' => model_date(), 'ultimo_login' => model_date(), 'salario' => (double) $this->salario, 'login_usuario' => (string) $this->login_usuario, 'tipo_usuario' => (string) $this->tipo_usuario]);
+        } else {
+            $retorno_operacao = (bool) model_insert((string) $this->tabela(), (array) ['empresa' => model_id($this->empresa), 'nome_usuario' => (string) $this->nome_usuario, 'email_usuario' => (string) $this->email_usuario, 'senha_usuario' => (string) $this->senha_usuario, 'data_cadastro' => model_date(), 'ultimo_login' => model_date(), 'salario' => (double) $this->salario, 'login_usuario' => (string) $this->login_usuario, 'tipo_usuario' => (string) $this->tipo_usuario]);
         }
 
         return (bool) $retorno_operacao;
@@ -77,29 +81,32 @@ class Usuario implements InterfaceModelo{
      * @param array $dados ['login_usuario' => 'xxxx', 'senha_usuario' => (string) 'xxxxxx' ];
      * @return array 
      */
-    public function login_sistema($dados){
+    public function login_sistema($dados)
+    {
         $this->colocar_dados($dados);
 
         $retorno_usuario = (array) model_one($this->tabela(), ['email_usuario', '===', (string) $this->email_usuario]);
 
-        if(empty($retorno_usuario) == false){
-            $retorno_senha =  (bool) password_verify($dados['senha_usuario'], $retorno_usuario['senha_usuario']);
+        if (empty($retorno_usuario) == false) {
+            $retorno_senha = (bool) password_verify($dados['senha_usuario'], $retorno_usuario['senha_usuario']);
 
-            if($retorno_senha == true){
+            if ($retorno_senha == true) {
                 return (array) $retorno_usuario;
-            }else{
+            } else {
                 return (array) [];
             }
-        }else{
+        } else {
             return (array) [];
         }
     }
 
-    public function pesquisar_todos($dados){
+    public function pesquisar_todos($dados)
+    {
         return (array) model_all($this->tabela(), $dados['filtro'], $dados['ordenacao'], $dados['limite']);
     }
 
-    public function pesquisar($dados){
+    public function pesquisar($dados)
+    {
         return (array) model_one($this->tabela(), $dados['filtro']);
     }
 
@@ -108,51 +115,55 @@ class Usuario implements InterfaceModelo{
      * @param (ObjectfId) id_usuario identificador do usuário do tipo _id
      * @param (string) login_usuario retorna o login do usuário
      */
-    public function retornar_usuario($id_usuario){
+    public function retornar_usuario($id_usuario)
+    {
         $retorno_usuario = (array) $this->pesquisar((array) ['filtro' => (array) ['_id', '===', $id_usuario]]);
 
-        if(empty($retorno_usuario) == false){
-            if(array_key_exists('email_usuario', $retorno_usuario) == true){
+        if (empty($retorno_usuario) == false) {
+            if (array_key_exists('email_usuario', $retorno_usuario) == true) {
                 return (string) $retorno_usuario['email_usuario'];
-            }else{
+            } else {
                 return (string) '';
             }
-        }else{
+        } else {
             return (string) '';
         }
     }
 
-    public function update_ultimo_login($dados){
+    public function update_ultimo_login($dados)
+    {
         $retorno = (bool) model_update((string) $this->tabela(), (array) ['_id', '===', $dados['codigo_usuario']], (array) ['ultimo_login' => model_date()]);
     }
 
-    public function salvar_imagem_avatar($dados, $file){
+    public function salvar_imagem_avatar($dados, $file)
+    {
         $codigo_usuario = (string) '';
         $extensao = (string) '';
-        
-        if(array_key_exists('codigo_usuario', $dados) == true){
+
+        if (array_key_exists('codigo_usuario', $dados) == true) {
             $codigo_usuario = (String) $_POST['codigo_usuario'];
         }
 
         $extensao = pathinfo($file["arquivo"]["name"], PATHINFO_EXTENSION);
 
-        $nome_arquivo = (string) 'imagens/avatar/'.$codigo_usuario.".".$extensao;
-        if(move_uploaded_file($file['arquivo']['tmp_name'], $nome_arquivo)){
+        $nome_arquivo = (string) 'imagens/avatar/' . $codigo_usuario . "." . $extensao;
+        if (move_uploaded_file($file['arquivo']['tmp_name'], $nome_arquivo)) {
             return (bool) true;
-        }else{
+        } else {
             return (bool) false;
         }
     }
 
-    public function alterar_com_pesquisa($dados){
+    public function alterar_com_pesquisa($dados)
+    {
         $this->colocar_dados($dados);
-        
+
         $retorno_pesquisa = (array) $this->pesquisar((array) ['filtro' => (array) ['_id', '===', $this->id_usuario]]);
 
-        if(empty($retorno_pesquisa) == false){
+        if (empty($retorno_pesquisa) == false) {
             $this->colocar_dados($retorno_pesquisa);
             return (bool) $this->salvar_dados($dados);
-        }else{
+        } else {
             return (bool) false;
         }
     }

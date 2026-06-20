@@ -101,7 +101,7 @@ router_add('login_usuario', function () {
             $_SESSION['google_agenda'] = (bool) $retorno_sistema['google_agenda'];
         }
 
-        if(array_key_exists('cnpj', $retorno_sistema) == true){
+        if (array_key_exists('cnpj', $retorno_sistema) == true) {
             $_SESSION['cnpj_empresa'] = (string) $retorno_sistema['cnpj'];
         }
 
@@ -110,10 +110,10 @@ router_add('login_usuario', function () {
 
         $objeto_contas_pagar_receber = new ContasPagarReceber();
         $retorno_contas_pagar_receber = (bool) $objeto_contas_pagar_receber->deletar_contas_pagar_receber_antigas((array) ['empresa' => (string) $_SESSION['codigo_empresa']]);
-        
-        if($versao_sistema == 'alfa 0.5'){
+
+        if ($versao_sistema == 'alfa 0.5') {
             header('location:dashboard.php');
-        }else{
+        } else {
             header('location:index.php');
         }
     } else {
@@ -133,7 +133,7 @@ router_add('trocar_senha_usuario', function () {
 router_add('index', function () {
     session_start();
     $_SESSION = array();
-?>
+    ?>
     <!DOCTYPE html>
     <html lang="pt-br">
 
@@ -171,7 +171,8 @@ router_add('index', function () {
                             <div class="d-flex justify-content-center align-items-center">
                                 <div class="d-flex flex-column justify-content-lg-center p-4 p-lg-0 pb-0 flex-fill">
                                     <div class=" mx-auto mb-5 text-center">
-                                        <img src="imagens/imagens_sistema/logo_empresa_preto_pequeno.jpg" class="img-fluid" alt="Logo">
+                                        <img src="imagens/imagens_sistema/logo_empresa_preto_pequeno.jpg" class="img-fluid"
+                                            alt="Logo">
                                     </div>
                                     <div class="card border-0 p-lg-3 shadow-lg">
                                         <div class="card-body">
@@ -184,20 +185,27 @@ router_add('index', function () {
                                                 <div class="mb-3">
                                                     <label class="form-label">Email</label>
                                                     <div class="input-group">
-                                                        <input type="text" class="form-control border-start-0 ps-0" placeholder="Informa o email" id="email_usuario" name="email_usuario">
+                                                        <input type="text" class="form-control border-start-0 ps-0"
+                                                            placeholder="Informa o email" id="email_usuario"
+                                                            name="email_usuario">
                                                     </div>
                                                 </div>
                                                 <div class="mb-3">
                                                     <label class="form-label">Password</label>
                                                     <div class="pass-group input-group">
-                                                        <input type="password" class="pass-inputs form-control border-start-0 ps-0" placeholder="****************" id="senha_usuario" name="senha_usuario">
+                                                        <input type="password"
+                                                            class="pass-inputs form-control border-start-0 ps-0"
+                                                            placeholder="****************" id="senha_usuario"
+                                                            name="senha_usuario">
                                                     </div>
                                                 </div>
                                                 <div class="d-flex align-items-center justify-content-between mb-3">
                                                     <div class="d-flex align-items-center">
                                                         <div class="form-check form-check-md mb-0">
-                                                            <input class="form-check-input" id="remember_me" type="checkbox">
-                                                            <label for="remember_me" class="form-check-label mt-0">Lembrar dados</label>
+                                                            <input class="form-check-input" id="remember_me"
+                                                                type="checkbox">
+                                                            <label for="remember_me" class="form-check-label mt-0">Lembrar
+                                                                dados</label>
                                                         </div>
                                                     </div>
                                                     <div class="text-end">
@@ -205,7 +213,9 @@ router_add('index', function () {
                                                     </div>
                                                 </div>
                                                 <div class="mb-1">
-                                                    <button type="submit" class="btn bg-primary-gradient text-white w-100">Acessar Sistema</button>
+                                                    <button type="submit"
+                                                        class="btn bg-primary-gradient text-white w-100">Acessar
+                                                        Sistema</button>
                                                 </div>
                                             </form>
                                             <div class="login-or">
@@ -213,7 +223,8 @@ router_add('index', function () {
                                             </div>
                                             <div class="text-center">
                                                 <h6 class="fw-normal fs-14 text-dark mb-0">Não possui conta?
-                                                    <a href="index.php?rota=cadastro_usuario" class="hover-a"> Cadastre-se</a>
+                                                    <a href="index.php?rota=cadastro_usuario" class="hover-a">
+                                                        Cadastre-se</a>
                                                 </h6>
                                             </div>
                                         </div>
@@ -235,12 +246,12 @@ router_add('index', function () {
     </body>
 
     </html>
-<?php
+    <?php
     session_destroy();
 });
 
 router_add('cadastro_usuario', function () {
-?>
+    ?>
     <!DOCTYPE html>
     <html lang="pt-br">
 
@@ -282,7 +293,7 @@ router_add('cadastro_usuario', function () {
                 'nome_fantasia': nome_fantasia,
                 'cnpj': cnpj,
                 'endereco': endereco
-            }, function(retorno) {
+            }, function (retorno) {
                 validar_retorno(retorno, '/index.php');
             });
         }
@@ -302,7 +313,8 @@ router_add('cadastro_usuario', function () {
                             <div class="d-flex justify-content-center align-items-center">
                                 <div class="d-flex flex-column justify-content-lg-center p-4 p-lg-0 pb-0 flex-fill">
                                     <div class=" mx-auto mb-5 text-center">
-                                        <img src="imagens/imagens_sistema/logo_empresa_preto_pequeno.jpg" class="img-fluid" alt="Logo">
+                                        <img src="imagens/imagens_sistema/logo_empresa_preto_pequeno.jpg" class="img-fluid"
+                                            alt="Logo">
                                     </div>
                                     <div class="card border-0 p-lg-3 shadow-lg rounded-2">
                                         <div class="card-body">
@@ -316,56 +328,70 @@ router_add('cadastro_usuario', function () {
                                                     <span class="input-group-text border-end-0">
                                                         <i class="isax isax-profile"></i>
                                                     </span>
-                                                    <input type="text" class="form-control border-start-0 ps-0" placeholder="Nome" id="nome_usuario">
+                                                    <input type="text" class="form-control border-start-0 ps-0"
+                                                        placeholder="Nome" id="nome_usuario">
                                                 </div>
                                             </div>
                                             <div class="mb-3">
                                                 <label class="form-label">Endereço Email</label>
                                                 <div class="input-group">
-                                                    <input type="text" class="form-control border-start-0 ps-0" placeholder="Endereço Email" id="email_usuario">
+                                                    <input type="text" class="form-control border-start-0 ps-0"
+                                                        placeholder="Endereço Email" id="email_usuario">
                                                 </div>
                                             </div>
                                             <div class="mb-3">
                                                 <label class="form-label">Senha</label>
                                                 <div class="pass-group input-group">
-                                                    <input type="password" class="pass-input form-control border-start-0 ps-0" placeholder="****************" id="senha_usuario">
+                                                    <input type="password"
+                                                        class="pass-input form-control border-start-0 ps-0"
+                                                        placeholder="****************" id="senha_usuario">
                                                 </div>
                                             </div>
                                             <div class="mb-3">
                                                 <label class="form-label">Nome Empresa</label>
                                                 <div class="pass-group input-group">
-                                                    <input type="text" class="form-control border-start-0 ps-0" placeholder="Nome Empresa" id="nome_empresa">
+                                                    <input type="text" class="form-control border-start-0 ps-0"
+                                                        placeholder="Nome Empresa" id="nome_empresa">
                                                 </div>
                                             </div>
                                             <div class="mb-3">
                                                 <label class="form-label">Nome Fantasia</label>
                                                 <div class="pass-group input-group">
-                                                    <input type="text" class="form-control border-start-0 ps-0" placeholder="Nome Fantasia" id="nome_fantasia">
+                                                    <input type="text" class="form-control border-start-0 ps-0"
+                                                        placeholder="Nome Fantasia" id="nome_fantasia">
                                                 </div>
                                             </div>
                                             <div class="mb-3">
                                                 <label class="form-label">Nome CNPJ</label>
                                                 <div class="pass-group input-group">
-                                                    <input type="text" class="form-control border-start-0 ps-0" placeholder="CNPJ" id="cnpj">
+                                                    <input type="text" class="form-control border-start-0 ps-0"
+                                                        placeholder="CNPJ" id="cnpj">
                                                 </div>
                                             </div>
                                             <div class="mb-3">
                                                 <label class="form-label">Endereço</label>
                                                 <div class="pass-group input-group">
-                                                    <input type="text" class="form-control border-start-0 ps-0" placeholder="Endereço" id="endereco">
+                                                    <input type="text" class="form-control border-start-0 ps-0"
+                                                        placeholder="Endereço" id="endereco">
                                                 </div>
                                             </div>
                                             <div class="d-flex align-items-center justify-content-between mb-3">
                                                 <div class="d-flex align-items-center">
                                                     <div class="form-check form-check-md mb-0">
-                                                        <input class="form-check-input" id="remember_me" type="checkbox" id="termos_uso">
-                                                        <label for="remember_me" class="form-check-label mt-0">Aceitar os termos</label>
-                                                        <div class="d-inline-flex"><a href="#" class="text-decoration-underline me-1">Termos de serviço</a> e <a href="#" class="text-decoration-underline ms-1"> política de privacidade</a></div>
+                                                        <input class="form-check-input" id="remember_me" type="checkbox"
+                                                            id="termos_uso">
+                                                        <label for="remember_me" class="form-check-label mt-0">Aceitar os
+                                                            termos</label>
+                                                        <div class="d-inline-flex"><a href="#"
+                                                                class="text-decoration-underline me-1">Termos de serviço</a>
+                                                            e <a href="#" class="text-decoration-underline ms-1"> política
+                                                                de privacidade</a></div>
                                                     </div>
                                                 </div>
                                             </div>
                                             <div class="mb-1">
-                                                <button class="btn bg-primary-gradient text-white w-100" onclick="cadastrar_usuario();">cadastrar</button>
+                                                <button class="btn bg-primary-gradient text-white w-100"
+                                                    onclick="cadastrar_usuario();">cadastrar</button>
                                             </div>
                                             <div class="login-or">
                                                 <span class="span-or">Ou</span>
@@ -394,11 +420,11 @@ router_add('cadastro_usuario', function () {
     </body>
 
     </html>
-<?php
+    <?php
 });
 
 router_add('esqueceu_senha', function () {
-?>
+    ?>
     <!DOCTYPE html>
     <html lang="pt-br">
 
@@ -430,7 +456,7 @@ router_add('esqueceu_senha', function () {
                 'rota': 'trocar_senha_usuario',
                 'email_usuario': email,
                 'senha_usuario': senha
-            }, function(retorno) {
+            }, function (retorno) {
                 validar_retorno(retorno, '/index.php');
             });
         }
@@ -450,7 +476,8 @@ router_add('esqueceu_senha', function () {
                             <div class="d-flex justify-content-center align-items-center">
                                 <div class="d-flex flex-column justify-content-lg-center p-4 p-lg-0 pb-0 flex-fill">
                                     <div class=" mx-auto mb-5 text-center">
-                                        <img src="imagens/imagens_sistema/logo_empresa_preto_pequeno.jpg" class="img-fluid" alt="Logo">
+                                        <img src="imagens/imagens_sistema/logo_empresa_preto_pequeno.jpg" class="img-fluid"
+                                            alt="Logo">
                                     </div>
                                     <div class="card border-0 p-lg-3 shadow-lg rounded-2">
                                         <div class="card-body">
@@ -462,17 +489,21 @@ router_add('esqueceu_senha', function () {
                                             <div class="mb-3">
                                                 <label class="form-label">Endereço Email</label>
                                                 <div class="input-group">
-                                                    <input type="text" class="form-control border-start-0 ps-0" placeholder="Endereço Email" id="email_usuario">
+                                                    <input type="text" class="form-control border-start-0 ps-0"
+                                                        placeholder="Endereço Email" id="email_usuario">
                                                 </div>
                                             </div>
                                             <div class="mb-3">
                                                 <label class="form-label">Senha</label>
                                                 <div class="pass-group input-group">
-                                                    <input type="password" class="pass-input form-control border-start-0 ps-0" placeholder="****************" id="senha_usuario">
+                                                    <input type="password"
+                                                        class="pass-input form-control border-start-0 ps-0"
+                                                        placeholder="****************" id="senha_usuario">
                                                 </div>
                                             </div>
                                             <div class="mb-1">
-                                                <button class="btn bg-primary-gradient text-white w-100" onclick="alterar_senha();">Alterar Senha</button>
+                                                <button class="btn bg-primary-gradient text-white w-100"
+                                                    onclick="alterar_senha();">Alterar Senha</button>
                                             </div>
                                             <div class="login-or">
                                                 <span class="span-or">Ou</span>
@@ -501,6 +532,6 @@ router_add('esqueceu_senha', function () {
     </body>
 
     </html>
-<?php
+    <?php
 });
 ?>

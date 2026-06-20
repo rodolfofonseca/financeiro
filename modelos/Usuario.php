@@ -1,5 +1,5 @@
 <?php
-require_once 'Classes/bancoDeDados.php';
+require_once 'classes/bancoDeDados.php';
 require_once 'Interface.php';
 require_once 'Sistema.php';
 require_once 'ContasContabeis.php';
@@ -7,8 +7,8 @@ require_once 'ContasFornecedores.php';
 
 class Usuario implements InterfaceModelo
 {
-    private mixed $id_usuario;
-    private mixed $empresa;
+    private int $id_usuario;
+    private int $empresa;
     private string $nome_usuario;
     private string $email_usuario;
     private string $senha_usuario;
@@ -34,12 +34,12 @@ class Usuario implements InterfaceModelo
 
     public function tabela()
     {
-        return (string) 'usuarios';
+        return (string) 'usuario';
     }
 
     public function modelo()
     {
-        return (array) ['empresa' => 'objectId', 'nome_usuario' => (string) '', 'email_usuario' => (string) '', 'senha_usuario' => (string) '', 'data_cadastro' => 'date', 'ultimo_login' => 'date', 'salario' => (float) 0, 'login_usuario' => (string) '', 'cargo' => (string) '', 'tipo_usuario' => (string) '', 'celular' => (string) '', 'cep' => (string) '', 'logradouro' => (string) '', 'numero' => (string) '', 'bairro' => (string) '', 'uf' => (string) '', 'estado' => (string) '', 'cpf_cnpj' => (string) '', 'status_usuario' => (bool) true];
+        return (array) [];
     }
 
     /**
@@ -51,16 +51,16 @@ class Usuario implements InterfaceModelo
     {
         if (array_key_exists('codigo_usuario', $dados) == true) {
             if ($dados['codigo_usuario'] != '') {
-                $this->id_usuario = model_id($dados['codigo_usuario']);
-            }else{
-                $this->id_usuario = null;
+                $this->id_usuario = $dados['codigo_usuario'];
+            } else {
+                $this->id_usuario = 0;
             }
-        }else{
-            $this->id_usuario = null;
+        } else {
+            $this->id_usuario = 0;
         }
 
         if (array_key_exists('empresa', $dados) == true) {
-            $this->empresa = model_id($dados['empresa']);
+            $this->empresa = $dados['empresa'];
         }
 
         if (array_key_exists('nome_usuario', $dados) == true) {
@@ -83,7 +83,7 @@ class Usuario implements InterfaceModelo
             $this->salario = (float) 0;
         }
 
-        $this->login_usuario = (string) (isset($dados['login_usuario']) ? (string) $dados['login_usuario'] : 'Sem Login');
+        $this->login_usuario = (string) (isset($dados['login_usuario']) ? (string) $dados['login_usuario'] : '');
         $this->tipo_usuario = (string) (isset($dados['tipo_usuario']) ? (string) $dados['tipo_usuario'] : 'Administrador');
         $this->cargo = (string) (isset($dados['cargo']) ? (string) $dados['cargo'] : '');
         $this->celular = (string) (isset($dados['celular']) ? (string) $dados['celular'] : '');
@@ -100,6 +100,7 @@ class Usuario implements InterfaceModelo
         $this->status_usuario_pesquisa = (string) (isset($dados['status_usuario_pesquisa']) ? (string) $dados['status_usuario_pesquisa'] : 'TODOS');
 
         $this->data_ultimo_login = (isset($dados['data_ultimo_login']) ? model_date($dados['data_ultimo_login']) : model_date());
+        $this->data_cadastro = (string) (isset($dados['data_cadastro']) ? (string) model_date($dados['data_cadastro']) : model_date());
     }
 
     /**
@@ -110,42 +111,40 @@ class Usuario implements InterfaceModelo
     public function salvar_dados($dados)
     {
         $this->colocar_dados($dados);
-        $retorno_operacao = (bool) false;
-        $retorno_checagem = (bool) false;
+        // file_put_contents('json.json', json_encode($this->montar_array()));
 
-        $retorno_checagem = (bool) model_check((string) $this->tabela(), (array) ['email_usuario', '===', (string) $this->email_usuario]);
 
-        if ($retorno_checagem == true) {
-            if ($this->atualizacao_completa == true) {
-                $retorno_operacao = (bool) model_update((string) $this->tabela(), (array) ['_id', '===', $this->id_usuario], (array) ['empresa' => $this->empresa, 'nome_usuario' => (string) $this->nome_usuario, 'email_usuario' => (string) $this->email_usuario, 'data_cadastro' => model_date(), 'ultimo_login' => model_date(), 'salario' => (float) $this->salario, 'login_usuario' => (string) $this->login_usuario, 'tipo_usuario' => (string) $this->tipo_usuario, 'cargo' => (string) $this->cargo, 'celular' => (string) $this->celular, 'cep' => (string) $this->cep, 'logradouro' => (string) $this->logradouro, 'numero' => (string) $this->numero, 'bairro' => (string) $this->bairro, 'uf' => (string) $this->uf, 'estado' => (string) $this->estado, 'cpf_cnpj' => (string) $this->cpf_cnpj, 'status_usuario' => (bool) $this->status_usuario]);
-            } else {
-                $retorno_operacao = (bool) model_update((string) $this->tabela(), (array) ['_id', '===', $this->id_usuario], (array) ['empresa' => $this->empresa, 'nome_usuario' => (string) $this->nome_usuario, 'email_usuario' => (string) $this->email_usuario, 'ultimo_login' => model_date(), 'celular' => (string) $this->celular, 'cep' => (string) $this->cep, 'logradouro' => (string) $this->logradouro, 'numero' => (string) $this->numero, 'bairro' => (string) $this->bairro, 'uf' => (string) $this->uf, 'estado' => (string) $this->estado, 'cpf_cnpj' => (string) $this->cpf_cnpj, 'status_usuario' => (bool) $this->status_usuario]);
+        if($this->id_usuario == 0){
+            $user_dados = $this->montar_array();
+
+            if($this->tipo_usuario == 'Administrador'){
+                $user_dados['senha_usuario'] = $this->senha_usuario;
             }
-        } else {
-            $retorno_operacao = (bool) model_insert((string) $this->tabela(), (array) ['empresa' => $this->empresa, 'nome_usuario' => (string) $this->nome_usuario, 'email_usuario' => (string) $this->email_usuario, 'senha_usuario' => (string) $this->senha_usuario, 'data_cadastro' => model_date(), 'ultimo_login' => model_date(), 'salario' => (float) $this->salario, 'login_usuario' => (string) $this->login_usuario, 'tipo_usuario' => (string) $this->tipo_usuario, 'cargo' => (string) $this->cargo, 'celular' => (string) $this->celular, 'cep' => (string) $this->cep, 'logradouro' => (string) $this->logradouro, 'numero' => (string) $this->numero, 'bairro' => (string) $this->bairro, 'uf' => (string) $this->uf, 'estado' => (string) $this->estado, 'cpf_cnpj' => (string) $this->cpf_cnpj, 'status_usuario' => (bool) $this->status_usuario]);
+
+            return (bool) model_insert((string) $this->tabela(), (array) $user_dados);
+        }else{
+            return (bool) model_update((string) $this->tabela(), ['where' => (array) [['codigo_usuario', '=', (int) $this->id_usuario]]], (array) $this->montar_array());
         }
-
-
-
-        return (bool) $retorno_operacao;
+        // return (bool) true;
     }
 
     /**
      * Função responsável por realizar o login do usuário no sistema. Esta função recebe como parâmetro atrávés de array o login e senha e retorna o código se existir login e senha compatíveis senão retorna 0.
      * @param array $dados ['login_usuario' => 'xxxx', 'senha_usuario' => (string) 'xxxxxx' ];
-     * @return array 
+     * @return array
      */
     public function login_sistema($dados)
     {
         $this->colocar_dados($dados);
 
-        $retorno_usuario = (array) model_one($this->tabela(), ['email_usuario', '===', (string) $this->email_usuario]);
-
+        $retorno_usuario = (array) model_one($this->tabela(), ['where' => [['email_usuario', '=', (string) $this->email_usuario]]]);
         if (empty($retorno_usuario) == false) {
             $retorno_senha = (bool) password_verify($dados['senha_usuario'], $retorno_usuario['senha_usuario']);
             // $retorno_senha = (bool) true;
             $objeto_sistema = new Sistema();
-            $retorno_sistema = (array) $objeto_sistema->pesquisar(['empresa', '===', $retorno_usuario['empresa']]);
+            $retorno_sistema = (array) $objeto_sistema->pesquisar(['filtro' => ['where' => [['codigo_empresa', '=', $retorno_usuario['codigo_empresa']]]]]);
+            
+            file_put_contents('json.json', json_encode(['retorno' => $retorno_usuario, 'fil' => ['where' => [['email_usuario', '=', (string) $this->email_usuario]], 'sistema' => $retorno_sistema]]));
 
             $versao_sistema = (string) 'alfa 0.0';
 
@@ -162,6 +161,7 @@ class Usuario implements InterfaceModelo
         } else {
             return (array) [];
         }
+        return (array) [];
     }
 
     /**
@@ -171,7 +171,8 @@ class Usuario implements InterfaceModelo
      */
     public function pesquisar_todos($dados)
     {
-        return (array) model_all($this->tabela(), $dados['filtro'], $dados['ordenacao'], $dados['limite']);
+        return (array) model_all($this->tabela(), $dados['filtro'], $dados['ordenacao']);
+        return (array) [];
     }
 
     /**
@@ -182,26 +183,28 @@ class Usuario implements InterfaceModelo
     public function pesquisar($filtro)
     {
         return (array) model_one($this->tabela(), $filtro['filtro']);
+        return (array) [];
     }
 
     /**
      * Função responsáel por pesquisar o login_usuario no banco de e retornar essa informação
-     * @param mixed $id_usuario identificador do usuário do tipo _id
+     * @param mixed $id_usuario identificador do usuário do tipo codigo_usuario
      * @return (string) login_usuario retorna o login do usuário
      */
     public function retornar_usuario($id_usuario)
     {
-        $retorno_usuario = (array) $this->pesquisar((array) ['filtro' => (array) ['_id', '===', $id_usuario]]);
+        // $retorno_usuario = (array) $this->pesquisar((array) ['filtro' => (array) ['codigo_usuario', '===', $id_usuario]]);
 
-        if (empty($retorno_usuario) == false) {
-            if (array_key_exists('email_usuario', $retorno_usuario) == true) {
-                return (string) $retorno_usuario['email_usuario'];
-            } else {
-                return (string) '';
-            }
-        } else {
-            return (string) '';
-        }
+        // if (empty($retorno_usuario) == false) {
+        //     if (array_key_exists('email_usuario', $retorno_usuario) == true) {
+        //         return (string) $retorno_usuario['email_usuario'];
+        //     } else {
+        //         return (string) '';
+        //     }
+        // } else {
+        //     return (string) '';
+        // }
+        return (string) '';
     }
 
     /**
@@ -211,7 +214,8 @@ class Usuario implements InterfaceModelo
      */
     public function update_ultimo_login($dados)
     {
-        $retorno = (bool) model_update((string) $this->tabela(), (array) ['_id', '===', $dados['codigo_usuario']], (array) ['ultimo_login' => model_date()]);
+        $retorno = (bool) model_update((string) $this->tabela(), (array) ['where' => ['codigo_usuario', '=', $dados['codigo_usuario']]], (array) ['ultimo_login' => model_date()]);
+
     }
 
     /**
@@ -244,6 +248,7 @@ class Usuario implements InterfaceModelo
         } else {
             return (bool) false;
         }
+        return (bool) false;
     }
 
     /**
@@ -255,7 +260,7 @@ class Usuario implements InterfaceModelo
     {
         $this->colocar_dados($dados);
 
-        $retorno_pesquisa = (array) $this->pesquisar((array) ['filtro' => (array) ['_id', '===', $this->id_usuario]]);
+        $retorno_pesquisa = (array) $this->pesquisar((array) ['filtro' => (array) ['where' => [['codigo_usuario', '=', $this->id_usuario]]]]);
 
         if (empty($retorno_pesquisa) == false) {
             $this->colocar_dados($retorno_pesquisa);
@@ -263,6 +268,7 @@ class Usuario implements InterfaceModelo
         } else {
             return (bool) false;
         }
+        return (bool) false;
     }
 
     /**
@@ -272,7 +278,8 @@ class Usuario implements InterfaceModelo
      */
     public function alterar_salario($dados)
     {
-        return (bool) model_update((string) $this->tabela(), (array) ['_id', '===', model_id($dados['codigo_usuario'])], (array) ['salario' => (double) doubleval(str_replace(',', '.', $dados['salario']))]);
+        return (bool) model_update((string) $this->tabela(), (array) ['where' => [['codigo_usuario', '=', $dados['codigo_usuario']]]], (array) ['salario' => (double) doubleval(str_replace(',', '.', $dados['salario']))]);
+        return (bool) false;
     }
 
     /**
@@ -284,13 +291,14 @@ class Usuario implements InterfaceModelo
     {
         $this->colocar_dados($dados);
 
-        $retorno_usuario = (array) $this->pesquisar((array) ['filtro' => (array) ['email_usuario', '===', (string) $this->email_usuario]]);
+        $retorno_usuario = (array) $this->pesquisar((array) ['filtro' => (array) ['where' => [['email_usuario', '===', (string) $this->email_usuario]]]]);
 
         if (empty($retorno_usuario) == false) {
-            return (bool) model_update((string) $this->tabela(), ['_id', '===', $retorno_usuario['_id']], (array) ['senha_usuario' => (string) $this->senha_usuario]);
+            return (bool) model_update((string) $this->tabela(), ['where' => [['codigo_usuario', '=', $retorno_usuario['codigo_usuario']]]], (array) ['senha_usuario' => (string) $this->senha_usuario]);
         } else {
             return (bool) false;
         }
+        return (bool) false;
     }
 
     /**
@@ -302,46 +310,46 @@ class Usuario implements InterfaceModelo
     public function pesquisar_cliente($dados)
     {
         $this->colocar_dados($dados);
+        $retorno_final = (array) [];
 
         $modulo_contabil = (bool) (isset($dados['modulo_contabil']) ? (bool) filter_var($dados['modulo_contabil'], FILTER_VALIDATE_BOOLEAN) : false);
 
-        $retorno_final = (array) [];
         $filtro = (array) [];
         $retorno = (array) [];
 
         if (!empty($this->empresa)) {
-            array_push($filtro, ['empresa', '===', $this->empresa]);
+            array_push($filtro, ['codigo_empresa', '=', $this->empresa]);
         }
 
         if (!empty($this->nome_usuario)) {
-            array_push($filtro, ['nome_usuario', '=', (string) $this->nome_usuario]);
+            array_push($filtro, ['nome_usuario', 'LIKE', (string) $this->nome_usuario]);
         }
 
         if (!empty($this->email_usuario)) {
-            array_push($filtro, ['email_usuario', '===', (string) $this->email_usuario]);
+            array_push($filtro, ['email_usuario', '=', (string) $this->email_usuario]);
         }
 
         if (!empty($this->celular)) {
-            array_push($filtro, ['celular', '===', (string) $this->celular]);
+            array_push($filtro, ['celular', '=', (string) $this->celular]);
         }
 
         if (!empty($this->cpf_cnpj)) {
-            array_push($filtro, ['cpf_cnpj', '===', (string) $this->cpf_cnpj]);
+            array_push($filtro, ['cpf_cnpj', '=', (string) $this->cpf_cnpj]);
         }
 
         if (!empty($this->tipo_usuario)) {
             if ($this->tipo_usuario == 'CLIENTE') {
-                array_push($filtro, ['tipo_usuario', '===', (string) 'CLIENTE']);
+                array_push($filtro, ['tipo_usuario', '=', (string) 'CLIENTE']);
             } else if ($this->tipo_usuario == 'FORNECEDOR') {
-                array_push($filtro, ['tipo_usuario', '===', (string) 'FORNECEDOR']);
+                array_push($filtro, ['tipo_usuario', '=', (string) 'FORNECEDOR']);
             }
         }
 
         if ($this->status_usuario_pesquisa != 'TODOS') {
             if ($this->status_usuario_pesquisa == 'ATIVO') {
-                array_push($filtro, ['status_usuario', '===', (bool) true]);
+                array_push($filtro, ['status_usuario', '=', (bool) true]);
             } else if ($this->status_usuario_pesquisa == 'INATIVO') {
-                array_push($filtro, ['status_usuario', '===', (bool) false]);
+                array_push($filtro, ['status_usuario', '=', (bool) false]);
             }
         }
 
@@ -352,10 +360,12 @@ class Usuario implements InterfaceModelo
             }
         }
 
-        if (empty($filtro) == false) {
-            $retorno = (array) $this->pesquisar_todos((array) ['filtro' => (array) ['and' => (array) $filtro], 'ordenacao' => (array) ['nome_usuario' => (bool) true], 'limite' => (int) 0]);
-        }
 
+        if (empty($filtro) == false) {
+            $retorno = (array) $this->pesquisar_todos((array) ['filtro' => (array) ['where' => (array) $filtro], 'ordenacao' => (array) [['nome_usuario', 'ASC']]]);
+            }
+
+            // file_put_contents('json.json', json_encode($retorno));
         if ($modulo_contabil == true) {
             if (!empty($retorno)) {
                 $objeto_conta_contabil = new ContasContabeis();
@@ -369,7 +379,7 @@ class Usuario implements InterfaceModelo
                         array_push($filtro_montando_conta, (array) ['empresa', '===', $this->empresa]);
                     }
 
-                    array_push($filtro_montando_conta, (array) ['id_local', '===', $cliente_fornecedor['_id']]);
+                    array_push($filtro_montando_conta, (array) ['id_local', '===', $cliente_fornecedor['codigo_cliente_fornecedor']]);
 
                     $filtro_conta['filtro'] = (array) ['and' => (array) $filtro_montando_conta];
 
@@ -412,19 +422,21 @@ class Usuario implements InterfaceModelo
      */
     public function update_status_usuario($dados)
     {
-        $array_filtro = (array) ['filtro' => (array) ['_id', '===', $dados['codigo_usuario']]];
+        // $array_filtro = (array) ['filtro' => (array) ['codigo_usuario', '===', $dados['codigo_usuario']]];
 
-        $retorno_usuario = (array) $this->pesquisar((array) $array_filtro);
+        // $retorno_usuario = (array) $this->pesquisar((array) $array_filtro);
 
-        if (empty($retorno_usuario) == false) {
-            $retorno_usuario['codigo_usuario'] = (string) $retorno_usuario['_id'];
-            $retorno_usuario['status_usuario'] = (bool) true;
-            $retorno_usuario['atualizacao_completa'] = (bool) false;
+        // if (empty($retorno_usuario) == false) {
+        //     $retorno_usuario['codigo_usuario'] = (string) $retorno_usuario['codigo_usuario'];
+        //     $retorno_usuario['status_usuario'] = (bool) true;
+        //     $retorno_usuario['atualizacao_completa'] = (bool) false;
 
-            return (bool) $this->salvar_dados($retorno_usuario);
-        } else {
-            return (bool) false;
-        }
+        //     return (bool) $this->salvar_dados($retorno_usuario);
+        // } else {
+        //     return (bool) false;
+        // }
+
+        return (bool) false;
     }
 
     /**
@@ -434,40 +446,43 @@ class Usuario implements InterfaceModelo
      */
     public function inativar_usuario_120_dias($dados)
     {
-        $data_atual = new DateTime();
-        $data_atual->modify('-120 days');
+        // $data_atual = new DateTime();
+        // $data_atual->modify('-120 days');
 
-        $filtro = (array) ['filtro' => (array) [], 'ordenacao' => (array) ['ultimo_login' => (bool) true], 'limite' => (int) 0];
-        $filtro_montando = (array) [];
+        // $filtro = (array) ['filtro' => (array) [], 'ordenacao' => (array) ['ultimo_login' => (bool) true], 'limite' => (int) 0];
+        // $filtro_montando = (array) [];
 
-        array_push($filtro_montando, ['empresa', '===', model_id($dados['empresa'])]);
-        array_push($filtro_montando, ['ultimo_login', '<=', model_date($data_atual->format('Y-m-d'), '23:59:59')]);
-        $filtro['filtro'] = (array) ['and' => (array) $filtro_montando];
+        // array_push($filtro_montando, ['codigo_empresa', '===', $dados['empresa']]);
+        // array_push($filtro_montando, ['ultimo_login', '<=', model_date($data_atual->format('Y-m-d'), '23:59:59')]);
+        // $filtro['filtro'] = (array) ['and' => (array) $filtro_montando];
 
-        $retorno_usuarios = (array) $this->pesquisar_todos($filtro);
+        // $retorno_usuarios = (array) $this->pesquisar_todos($filtro);
 
-        if (empty($retorno_usuarios) == false) {
-            $contador = (int) 0;
-            $objeto_contas_fornecedores = new ContasFornecedores();
+        // if (empty($retorno_usuarios) == false) {
+        //     $contador = (int) 0;
+        //     $objeto_contas_fornecedores = new ContasFornecedores();
 
-            foreach ($retorno_usuarios as $usuario) {
-                $usuario['codigo_usuario'] = (string) $usuario['_id'];
-                $usuario['status_usuario'] = (bool) false;
-                $usuario['atualizacao_completa'] = (bool) false;
+        //     foreach ($retorno_usuarios as $usuario) {
+        //         $usuario['codigo_usuario'] = (string) $usuario['codigo_usuario'];
+        //         $usuario['status_usuario'] = (bool) false;
+        //         $usuario['atualizacao_completa'] = (bool) false;
 
-                $retorno = (bool) $this->salvar_dados($usuario);
+        //         $retorno = (bool) $this->salvar_dados($usuario);
 
-                if ($retorno == true) {
-                    $objeto_contas_fornecedores->inativar_conta_fornecedor((array) ['empresa' => (string) $usuario['empresa'], 'fornecedor' => (string) $usuario['_id'], 'status' => (bool) false]);
-                }
+        //         if ($retorno == true) {
+        //             $objeto_contas_fornecedores->inativar_conta_fornecedor((array) ['empresa' => (string) $usuario['empresa'], 'fornecedor' => (string) $usuario['codigo_usuario'], 'status' => (bool) false]);
+        //         }
 
-                $contador++;
-            }
+        //         $contador++;
+        //     }
 
-            return (array) ['status' => (bool) true, 'achou' => (bool) true, 'mensagem' => (string) 'Quantidade de usuários inativados: ' . $contador, 'quantidade' => (int) $contador];
-        } else {
-            return (array) ['status' => (bool) false, 'achou' => (bool) false, 'mensagem' => (string) '', 'quantidade' => (int) 0];
-        }
+        //     return (array) ['status' => (bool) true, 'achou' => (bool) true, 'mensagem' => (string) 'Quantidade de usuários inativados: ' . $contador, 'quantidade' => (int) $contador];
+        // } else {
+        //     return (array) ['status' => (bool) false, 'achou' => (bool) false, 'mensagem' => (string) '', 'quantidade' => (int) 0];
+        // }
+
+
+        return (array) ['status' => (bool) false, 'achou' => (bool) false, 'mensagem' => (string) '', 'quantidade' => (int) 0];
     }
 
     /**
@@ -477,33 +492,111 @@ class Usuario implements InterfaceModelo
      */
     function alterar_status_usuario($dados)
     {
-        $this->colocar_dados($dados);
+        // $this->colocar_dados($dados);
 
-        $retorno_usuario = (array) $this->pesquisar((array) ['filtro' => (array) ['_id', '===', $this->id_usuario]]);
+        // $retorno_usuario = (array) $this->pesquisar((array) ['filtro' => (array) ['codigo_usuario', '===', $this->id_usuario]]);
 
-        $this->colocar_dados($dados);
+        // $this->colocar_dados($dados);
 
-        if (empty($retorno_usuario) == false) {
-            $dados_update['status_usuario'] = (bool) $this->status_usuario;
-            $dados_update['ultimo_login'] = $this->data_ultimo_login;
+        // if (empty($retorno_usuario) == false) {
+        //     $dados_update['status_usuario'] = (bool) $this->status_usuario;
+        //     $dados_update['ultimo_login'] = $this->data_ultimo_login;
 
-            if (array_key_exists('cpf_cnpj', $retorno_usuario) == false) {
-                $dados_update['cpf_cnpj'] = (string) '';
-            }
+        //     if (array_key_exists('cpf_cnpj', $retorno_usuario) == false) {
+        //         $dados_update['cpf_cnpj'] = (string) '';
+        //     }
 
-            $retorno = (bool) model_update($this->tabela(), (array) ['_id', '===', $this->id_usuario], (array) $dados_update);
+        //     $retorno = (bool) model_update($this->tabela(), (array) ['codigo_usuario', '===', $this->id_usuario], (array) $dados_update);
 
-            if ($retorno == true) {
-                $objeto_conta_fornecedor = new ContasFornecedores();
-                $array_conta_fornecedor = (array) ['empresa' => (string) $this->empresa, 'fornecedor' => (string) $this->id_usuario, 'status' => (bool) $this->status_usuario];
-                $objeto_conta_fornecedor->inativar_conta_fornecedor($array_conta_fornecedor);
+        //     if ($retorno == true) {
+        //         $objeto_conta_fornecedor = new ContasFornecedores();
+        //         $array_conta_fornecedor = (array) ['empresa' => (string) $this->empresa, 'fornecedor' => (string) $this->id_usuario, 'status' => (bool) $this->status_usuario];
+        //         $objeto_conta_fornecedor->inativar_conta_fornecedor($array_conta_fornecedor);
 
-                return (bool) true;
-            } else {
-                return (bool) false;
-            }
-        } else {
-            return (bool) false;
+        //         return (bool) true;
+        //     } else {
+        //         return (bool) false;
+        //     }
+        // } else {
+        //     return (bool) false;
+        // }
+        return (bool) false;
+    }
+
+    public function montar_array()
+    {
+        $dados = (array) [];
+
+        if($this->empresa != 0){
+            $dados['codigo_empresa'] = (int) $this->empresa;
         }
+
+        if($this->nome_usuario != ''){
+            $dados['nome_usuario'] = (string) $this->nome_usuario;
+        }
+
+        if($this->email_usuario != ''){
+            $dados['email_usuario'] = (string) $this->email_usuario;
+        }
+
+        if($this->data_cadastro != ''){
+            $dados['data_cadastro'] = (string) $this->data_cadastro;
+        }
+
+        if($this->data_ultimo_login != ''){
+            $dados['ultimo_login'] = (string) $this->data_ultimo_login;
+        }
+
+        if($this->salario != 0){
+            $dados['salario'] = (double) $this->salario;
+        }
+
+        if($this->login_usuario != ''){
+            $dados['login_usuario'] = (string) $this->login_usuario;
+        }
+
+        if($this->cargo != ''){
+            $dados['cargo'] = (string) $this->cargo;
+        }
+
+        if($this->tipo_usuario != ''){
+            $dados['tipo_usuario'] = (string) $this->tipo_usuario;
+        }
+
+        if($this->celular != ''){
+            $dados['celular'] = (string) $this->celular;
+        }
+
+        if($this->cep != ''){
+            $dados['cep'] = (string) $this->cep;
+        }
+
+        if($this->logradouro != ''){
+            $dados['logradouro'] = (string) $this->logradouro;
+        }
+
+        if($this->numero != ''){
+            $dados['numero'] = (string) $this->numero;
+        }
+
+        if($this->bairro != ''){
+            $dados['bairro'] = (string) $this->bairro;
+        }
+
+        if($this->uf != ''){
+            $dados['uf'] = (string) $this->uf;
+        }
+
+        if($this->estado != ''){
+            $dados['estado'] = (string) $this->estado;
+        }
+
+        if($this->cpf_cnpj != ''){
+            $dados['cpf_cnpj'] = (string) $this->cpf_cnpj;
+        }
+
+        $dados['status_usuario'] = (bool) $this->status_usuario;
+
+        return (array) $dados;
     }
 }

@@ -9,7 +9,7 @@ class Empresa implements InterfaceModelo
     private $cnpj;
     private $endereco;
     private $data_cadastro;
-    
+
     public function tabela()
     {
         return (string) 'empresa';
@@ -17,7 +17,7 @@ class Empresa implements InterfaceModelo
 
     public function modelo()
     {
-          return (array) ['nome_empresa' => (string) '', 'nome_fantasia' => (string) '', 'cnpj' => (string) '', 'endereco' => (string) '', 'data_cadastro' => 'date', 'cidade' => (string) ''];
+        return (array) ['nome_empresa' => (string) '', 'nome_fantasia' => (string) '', 'cnpj' => (string) '', 'endereco' => (string) '', 'data_cadastro' => 'date', 'cidade' => (string) ''];
     }
 
     public function colocar_dados($dados)

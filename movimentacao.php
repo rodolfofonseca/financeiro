@@ -33,12 +33,12 @@ router_add('pesquisar_contas', function () {
  */
 router_add('deletar_movimentacao', function () {
     $objeto_movimentacao = new Movimentacao();
-    $codigo_movimentacao = (string) (isset($_REQUEST['codigo_movimentacao']) ? (string) $_REQUEST['codigo_movimentacao'] : '');
+    $codigo_movimentacao = (int) (isset($_REQUEST['codigo_movimentacao']) ? (int) $_REQUEST['codigo_movimentacao'] : 0);
     $filtro = (array) [];
     $retorno = (bool) false;
 
-    if ($codigo_movimentacao != '') {
-        $filtro['filtro'] = (array) ['_id', '===', model_id($codigo_movimentacao)];
+    if ($codigo_movimentacao != 0) {
+        $filtro['filtro'] = (array) ['where' => [['codigo_movimentacao', '=', $codigo_movimentacao]]];
         $retorno = (bool) $objeto_movimentacao->deletar_movimentacao($filtro);
     }
 
@@ -212,25 +212,26 @@ router_add('index', function () {
 
                     let linha = document.createElement('tr');
 
+                    linha.appendChild(sistema.gerar_td(['text-start', 'fw-bold'], movimentacao.codigo_movimentacao, 'inner'));
                     linha.appendChild(sistema.gerar_td(['text-start', 'fw-bold'], movimentacao.nome_conta, 'inner'));
                     linha.appendChild(sistema.gerar_td(['text-start'], movimentacao.descricao, 'inner'));
 
-                    if (movimentacao.tipo_lancamento == 'CREDITO' || movimentacao.tipo_lancamento == 'TRANSFERENCIA_CREDITO') {
+                    if (movimentacao.tipo_lancamento == true) {
                         linha.appendChild(sistema.gerar_td(['text-center', 'text-success', 'fw-bold'], sistema.number_format(movimentacao.valor_lancamento), 'inner'));
                     } else {
                         linha.appendChild(sistema.gerar_td(['text-center', 'text-danger', 'fw-bold'], sistema.number_format(movimentacao.valor_lancamento), 'inner'));
                     }
 
-                    linha.appendChild(sistema.gerar_td(['text-center'], sistema.retornar_data(movimentacao.data_lancamento, 'BRASIL', true), 'inner'));
+                    linha.appendChild(sistema.gerar_td(['text-center'], sistema.retornar_data(movimentacao.data_lancamento, true), 'inner'));
 
-                    if (movimentacao.tipo_lancamento == 'CREDITO' || movimentacao.tipo_lancamento == 'TRANSFERENCIA_CREDITO') {
-                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_lancamento_' + movimentacao._id.$oid, 'CREDITO', ['btn', 'btn-success'], function visualizar() { }), 'append'));
+                    if (movimentacao.tipo_lancamento == true) {
+                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_lancamento_' + movimentacao.codigo_movimentacao, 'CREDITO', ['btn', 'btn-success'], function visualizar() { }), 'append'));
                     } else {
-                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_lancamento_' + movimentacao._id.$oid, 'DEBITO', ['btn', 'btn-danger'], function visualizar() { }), 'append'));
+                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_lancamento_' + movimentacao.codigo_movimentacao, 'DEBITO', ['btn', 'btn-danger'], function visualizar() { }), 'append'));
                     }
 
-                    linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_deletar_movimentacao_' + movimentacao._id.$oid, 'EXCLUIR', ['btn', 'btn-danger'], function deletar_movimentacao_botao() {
-                        deletar_movimentacao(movimentacao._id.$oid);
+                    linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_deletar_movimentacao_' + movimentacao.codigo_movimentacao, 'EXCLUIR', ['btn', 'btn-danger'], function deletar_movimentacao_botao() {
+                        deletar_movimentacao(movimentacao.codigo_movimentacao);
                     }), 'append'));
 
                     tabela.appendChild(linha);
@@ -291,7 +292,7 @@ router_add('index', function () {
                 let conta = retorno.dados;
 
                 sistema.each(conta, function (index, contas) {
-                    let option = sistema.gerar_option(contas._id.$oid, contas.nome_conta + ' | ' + contas.saldo_conta);
+                    let option = sistema.gerar_option(contas.codigo_conta, contas.nome_conta + ' | ' + contas.saldo_conta);
                     select.appendChild(option);
                 });
             });
@@ -345,7 +346,7 @@ router_add('index', function () {
                                 <div class="col-3 text-center">
                                     <label class="text">Conta</label>
                                     <select id="conta" class="form-control">
-                                        <option value="TODOS">Todas as Contas</option>
+                                        <option value="0">Todas as Contas</option>
                                     </select>
                                 </div>
                                 <div class="col-3 text-center">
@@ -384,6 +385,7 @@ router_add('index', function () {
                                         <table class="table table-nowrap text-nowrap table-hover" id="tabela_movimentacoes">
                                             <thead>
                                                 <tr>
+                                                    <th scope="col">#</th>
                                                     <th scope="col" class="text-center">Nome Conta</th>
                                                     <th scope="col" class="text-center">Descrição</th>
                                                     <th scope="col" class="text-center">Valor</th>
@@ -435,7 +437,7 @@ router_add('cadastro_movimentacao', function () {
             function pesquisar_contas() {
                 sistema.request.post('/contas.php', {
                     'rota': 'pesquisar_contas',
-                    'status': 'ATIVO',
+                    'status': true,
                     'empresa': EMPRESA
                 }, function (retorno) {
                     let contas = retorno.dados;
@@ -443,11 +445,12 @@ router_add('cadastro_movimentacao', function () {
                     let select_destino = document.querySelector('#conta_destino');
 
                     sistema.each(contas, function (index, conta) {
-                        let option = sistema.gerar_option(conta._id.$oid, conta.nome_conta + ' | ' + conta.saldo_conta);
+                        let option = sistema.gerar_option(conta.codigo_conta, conta.nome_conta + ' | ' + sistema.number_format(conta.saldo_conta, 2, ',', '.'));
                         select.appendChild(option);
                     });
+
                     sistema.each(contas, function (index, conta) {
-                        let option = sistema.gerar_option(conta._id.$oid, conta.nome_conta + ' | ' + conta.saldo_conta);
+                        let option = sistema.gerar_option(conta.codigo_conta, conta.nome_conta + ' | ' + sistema.number_format(conta.saldo_conta, 2, ',', '.'));
                         select_destino.appendChild(option);
                     });
                 });
@@ -500,7 +503,7 @@ router_add('cadastro_movimentacao', function () {
 
                 if (valida_conta == true && valida_descricao == true && valida_tipo_lancamento == true && valida_valor_lancamento == true) {
 
-                    if (conta_destino != '') {
+                    if (conta_destino != 0) {
                         sistema.request.post('/movimentacao.php', {
                             'rota': 'salvar_dados',
                             'conta': conta,
@@ -512,6 +515,7 @@ router_add('cadastro_movimentacao', function () {
                             'conta_destino': conta_destino
                         }, function (retorno) {
                             validar_retorno(retorno, '/movimentacao.php');
+                            console.log(retorno);
                         });
                     } else {
                         sistema.request.post('/movimentacao.php', {
@@ -524,6 +528,7 @@ router_add('cadastro_movimentacao', function () {
                             'empresa': EMPRESA
                         }, function (retorno) {
                             validar_retorno(retorno, '/movimentacao.php');
+                            console.log(retorno);
                         });
                     }
                 }
@@ -561,41 +566,47 @@ router_add('cadastro_movimentacao', function () {
                                     <select class="form-control" id="conta">
                                         <option value="">Selecione uma opção</option>
                                     </select>
-                                    <div class="invalid-feedback text-start" id="conta_validacao" style="display: none;">Por favor, selecione uma conta!</div>
+                                    <div class="invalid-feedback text-start" id="conta_validacao" style="display: none;">Por
+                                        favor, selecione uma conta!</div>
                                 </div>
                                 <div class="col-2 text-center">
                                     <label class="text">Tipo de Lançamento</label>
                                     <select class="form-control" id="tipo_lancamento">
                                         <option value="">Selecione uma Opção</option>
-                                        <option value="CREDITO">CREDITO</option>
-                                        <option value="DEBITO">DÉBITO</option>
-                                        <option value="TRANSFERENCIA">TRANSFÊNCIA</option>
+                                        <option value="1">CREDITO</option>
+                                        <option value="0">DÉBITO</option>
+                                        <option value="3">TRANSFÊNCIA</option>
                                     </select>
-                                    <div class="invalid-feedback text-start" id="tipo_lancamento_validacao" style="display: none;">Por favor, selecione um tipo de lançamento!</div>
+                                    <div class="invalid-feedback text-start" id="tipo_lancamento_validacao"
+                                        style="display: none;">Por favor, selecione um tipo de lançamento!</div>
                                 </div>
                                 <div class="col-2 text-center">
                                     <label class="text">Valor Lançamento</label>
                                     <input type="text" class="form-control" id="valor_lancamento" sistema-mask="moeda">
-                                    <div class="invalid-feedback text-start" id="valor_lancamento_validacao" style="display: none;">Por favor, informe um valor válido!</div>
+                                    <div class="invalid-feedback text-start" id="valor_lancamento_validacao"
+                                        style="display: none;">Por favor, informe um valor válido!</div>
                                 </div>
                                 <div class="col-2 text-center">
                                     <label class="text">Data Lançamento</label>
                                     <input type="date" class="form-control" id="data_lancamento">
-                                    <div class="invalid-feedback text-start" id="data_lancamento_validacao" style="display: none;">Por favor, selecione uma data válida!</div>
+                                    <div class="invalid-feedback text-start" id="data_lancamento_validacao"
+                                        style="display: none;">Por favor, selecione uma data válida!</div>
                                 </div>
                                 <div class="col-2 text-center">
                                     <label class="text">Tipo de Lançamento</label>
                                     <select class="form-control" id="conta_destino">
                                         <option value="">Selecione uma Opção</option>
                                     </select>
-                                    <div class="invalid-feedback text-start" id="conta_destino_validacao" style="display: none;">Por favor, selecione uma conta de destino!</div>
+                                    <div class="invalid-feedback text-start" id="conta_destino_validacao"
+                                        style="display: none;">Por favor, selecione uma conta de destino!</div>
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-12 text-center">
                                     <label class="text">Descrição</label>
                                     <textarea id="descricao" class="form-control text-uppercase"></textarea>
-                                    <div class="invalid-feedback text-start" id="descricao_validacao" style="display: none;">Por favor, informe uma descrição válida!</div>
+                                    <div class="invalid-feedback text-start" id="descricao_validacao"
+                                        style="display: none;">Por favor, informe uma descrição válida!</div>
                                 </div>
                             </div>
                             <br />

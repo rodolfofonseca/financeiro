@@ -95,9 +95,9 @@ class Produtos implements InterfaceModelo
 
     /**
      * Função para colocar a foto do produto. Recebe os dados do produto e o arquivo da foto, salva a foto no servidor e atualiza o caminho da imagem no banco de dados. Retorna true se a operação for bem-sucedida, ou false caso contrário.
-      * @param array $dados Os dados do produto.
-      * @param array $file O arquivo da foto do produto.
-        * @return bool Retorna true se a operação for bem-sucedida, ou false caso contrário.
+     * @param array $dados Os dados do produto.
+     * @param array $file O arquivo da foto do produto.
+     * @return bool Retorna true se a operação for bem-sucedida, ou false caso contrário.
      */
     public function colocar_foto($dados, $file)
     {

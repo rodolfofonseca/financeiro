@@ -561,7 +561,8 @@ router_add('cadastro_movimentacao', function () {
                                     <select class="form-control" id="conta">
                                         <option value="">Selecione uma opção</option>
                                     </select>
-                                    <div class="invalid-feedback text-start" id="conta_validacao" style="display: none;">Por favor, selecione uma conta!</div>
+                                    <div class="invalid-feedback text-start" id="conta_validacao" style="display: none;">Por
+                                        favor, selecione uma conta!</div>
                                 </div>
                                 <div class="col-2 text-center">
                                     <label class="text">Tipo de Lançamento</label>
@@ -571,31 +572,36 @@ router_add('cadastro_movimentacao', function () {
                                         <option value="DEBITO">DÉBITO</option>
                                         <option value="TRANSFERENCIA">TRANSFÊNCIA</option>
                                     </select>
-                                    <div class="invalid-feedback text-start" id="tipo_lancamento_validacao" style="display: none;">Por favor, selecione um tipo de lançamento!</div>
+                                    <div class="invalid-feedback text-start" id="tipo_lancamento_validacao"
+                                        style="display: none;">Por favor, selecione um tipo de lançamento!</div>
                                 </div>
                                 <div class="col-2 text-center">
                                     <label class="text">Valor Lançamento</label>
                                     <input type="text" class="form-control" id="valor_lancamento" sistema-mask="moeda">
-                                    <div class="invalid-feedback text-start" id="valor_lancamento_validacao" style="display: none;">Por favor, informe um valor válido!</div>
+                                    <div class="invalid-feedback text-start" id="valor_lancamento_validacao"
+                                        style="display: none;">Por favor, informe um valor válido!</div>
                                 </div>
                                 <div class="col-2 text-center">
                                     <label class="text">Data Lançamento</label>
                                     <input type="date" class="form-control" id="data_lancamento">
-                                    <div class="invalid-feedback text-start" id="data_lancamento_validacao" style="display: none;">Por favor, selecione uma data válida!</div>
+                                    <div class="invalid-feedback text-start" id="data_lancamento_validacao"
+                                        style="display: none;">Por favor, selecione uma data válida!</div>
                                 </div>
                                 <div class="col-2 text-center">
                                     <label class="text">Tipo de Lançamento</label>
                                     <select class="form-control" id="conta_destino">
                                         <option value="">Selecione uma Opção</option>
                                     </select>
-                                    <div class="invalid-feedback text-start" id="conta_destino_validacao" style="display: none;">Por favor, selecione uma conta de destino!</div>
+                                    <div class="invalid-feedback text-start" id="conta_destino_validacao"
+                                        style="display: none;">Por favor, selecione uma conta de destino!</div>
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-12 text-center">
                                     <label class="text">Descrição</label>
                                     <textarea id="descricao" class="form-control text-uppercase"></textarea>
-                                    <div class="invalid-feedback text-start" id="descricao_validacao" style="display: none;">Por favor, informe uma descrição válida!</div>
+                                    <div class="invalid-feedback text-start" id="descricao_validacao"
+                                        style="display: none;">Por favor, informe uma descrição válida!</div>
                                 </div>
                             </div>
                             <br />

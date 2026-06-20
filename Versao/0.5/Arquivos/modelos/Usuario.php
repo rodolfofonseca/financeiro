@@ -1,5 +1,5 @@
 <?php
-require_once 'Classes/bancoDeDados.php';
+require_once 'classes/bancoDeDados.php';
 require_once 'Interface.php';
 require_once 'Sistema.php';
 require_once 'ContasContabeis.php';
@@ -52,10 +52,10 @@ class Usuario implements InterfaceModelo
         if (array_key_exists('codigo_usuario', $dados) == true) {
             if ($dados['codigo_usuario'] != '') {
                 $this->id_usuario = model_id($dados['codigo_usuario']);
-            }else{
+            } else {
                 $this->id_usuario = null;
             }
-        }else{
+        } else {
             $this->id_usuario = null;
         }
 

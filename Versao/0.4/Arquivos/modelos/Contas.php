@@ -76,7 +76,7 @@ class Contas implements InterfaceModelo
      * este habilitado esta opção nas configurações do sistema.
      * @param array $dados - Dados contendo as informações do filtro
      * @param array $retorno - Retorno com as contas cadastrados no sistema.
-    */
+     */
     public function pesquisar_contas($dados)
     {
         $this->nome_conta = (string) (isset($dados['nome_conta']) ? (string) strtoupper($dados['nome_conta']) : '');

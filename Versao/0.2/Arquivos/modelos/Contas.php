@@ -17,7 +17,8 @@ class Contas implements InterfaceModelo
         return (string) 'contas';
     }
 
-    public function modelo(){
+    public function modelo()
+    {
         return (array) ['empresa' => 'objectId', 'nome_conta' => (string) '', 'descricao' => (string) '', 'saldo_conta' => (double) 0, 'status' => (string) '', 'data_cadastro' => 'date'];
     }
 
@@ -38,7 +39,7 @@ class Contas implements InterfaceModelo
         $this->nome_conta = (string) (isset($dados['nome_conta']) ? (string) strtoupper($dados['nome_conta']) : '');
         $this->descricao = (string) (isset($dados['descricao']) ? (string) strtoupper($dados['descricao']) : '');
         $this->status = (string) (isset($dados['status']) ? (string) $dados['status'] : 'ATIVO');
-        $this->data_cadastro = (isset($dados['data_cadastro']) ? model_date($dados['data_cadastro']): model_date());
+        $this->data_cadastro = (isset($dados['data_cadastro']) ? model_date($dados['data_cadastro']) : model_date());
     }
 
     public function salvar_dados($dados)
@@ -62,7 +63,8 @@ class Contas implements InterfaceModelo
         return (array) model_all((string) $this->tabela(), (array) $filtro['filtro'], (array) $filtro['ordenacao'], (int) $filtro['limite']);
     }
 
-    public function deletar_conta($codigo_conta){
+    public function deletar_conta($codigo_conta)
+    {
         return (bool) model_delete((string) $this->tabela(), ['_id', '===', model_id($codigo_conta)]);
     }
 }

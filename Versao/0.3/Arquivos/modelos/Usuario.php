@@ -1,5 +1,5 @@
 <?php
-require_once 'Classes/bancoDeDados.php';
+require_once 'classes/bancoDeDados.php';
 require_once 'Interface.php';
 require_once 'Sistema.php';
 
@@ -89,7 +89,7 @@ class Usuario implements InterfaceModelo
         } else if ($this->tipo_usuario == 'CLIENTE' && $this->id_usuario != null) {
             $retorno_checagem = (bool) model_check((string) $this->tabela(), (array) ['_id', '===', (string) $this->id_usuario]);
         }
-        
+
         if ($retorno_checagem == true) {
             $retorno_operacao = (bool) model_update((string) $this->tabela(), (array) ['_id', '===', $this->id_usuario], (array) ['empresa' => $this->empresa, 'nome_usuario' => (string) $this->nome_usuario, 'email_usuario' => (string) $this->email_usuario, 'data_cadastro' => model_date(), 'ultimo_login' => model_date(), 'salario' => (double) $this->salario, 'login_usuario' => (string) $this->login_usuario, 'tipo_usuario' => (string) $this->tipo_usuario, 'cargo' => (string) $this->cargo, 'celular' => (string) $this->celular, 'cep' => (string) $this->cep, 'logradouro' => (string) $this->logradouro, 'numero' => (string) $this->numero, 'bairro' => (string) $this->bairro, 'uf' => (string) $this->uf, 'estado' => (string) $this->estado]);
         } else {
@@ -113,7 +113,7 @@ class Usuario implements InterfaceModelo
         $retorno_usuario = (array) model_one($this->tabela(), ['email_usuario', '===', (string) $this->email_usuario]);
 
         if (empty($retorno_usuario) == false) {
-            $retorno_senha =  (bool) password_verify($dados['senha_usuario'], $retorno_usuario['senha_usuario']);
+            $retorno_senha = (bool) password_verify($dados['senha_usuario'], $retorno_usuario['senha_usuario']);
 
             $objeto_sistema = new Sistema();
             $retorno_sistema = (array) $objeto_sistema->pesquisar(['empresa', '===', $retorno_usuario['empresa']]);
@@ -183,11 +183,11 @@ class Usuario implements InterfaceModelo
 
         $pasta = (string) 'imagens/avatar';
 
-        if(!is_dir($pasta)){
+        if (!is_dir($pasta)) {
             mkdir($pasta, 0777, true);
         }
 
-        $nome_arquivo = (string) $pasta.'/' . $codigo_usuario . "." . $extensao;
+        $nome_arquivo = (string) $pasta . '/' . $codigo_usuario . "." . $extensao;
 
         if (move_uploaded_file($file['arquivo']['tmp_name'], $nome_arquivo)) {
             return (bool) true;
@@ -215,7 +215,8 @@ class Usuario implements InterfaceModelo
      * @param (array) $dados
      * @return (bool) return;
      */
-    public function alterar_salario($dados){
+    public function alterar_salario($dados)
+    {
         return (bool) model_update((string) $this->tabela(), (array) ['_id', '===', model_id($dados['codigo_usuario'])], (array) ['salario' => (double) doubleval(str_replace(',', '.', $dados['salario']))]);
     }
 
@@ -224,14 +225,15 @@ class Usuario implements InterfaceModelo
      * @param (array) $dados
      * @return (bool) $return
      */
-    public function alterar_senha($dados){
+    public function alterar_senha($dados)
+    {
         $this->colocar_dados($dados);
-        
+
         $retorno_usuario = (array) $this->pesquisar((array) ['filtro' => (array) ['email_usuario', '===', (string) $this->email_usuario]]);
 
-        if(empty($retorno_usuario) == false){
+        if (empty($retorno_usuario) == false) {
             return (bool) model_update((string) $this->tabela(), ['_id', '===', $retorno_usuario['_id']], (array) ['senha_usuario' => (string) $this->senha_usuario]);
-        }else{
+        } else {
             return (bool) false;
         }
     }

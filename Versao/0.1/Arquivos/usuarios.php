@@ -6,7 +6,7 @@ router_add('index', function () {
     include_once 'includes/head.php';
     $mensagem = (string) (isset($_REQUEST['retorno']) ? (string) $_REQUEST['retorno'] : 'false');
     $cadastro_avatar = (string) (isset($_REQUEST['cadastro_avatar']) ? (string) $_REQUEST['cadastro_avatar'] : 'false');
-?>
+    ?>
     <script>
         let MENSAGEM = "<?php echo $mensagem; ?>";
         let CADASTRO = "<?php echo $cadastro_avatar; ?>";
@@ -24,7 +24,7 @@ router_add('index', function () {
                 'rota': 'alterar_com_pesquisa',
                 'senha_usuario': senha,
                 'codigo_usuario': CODIGO_USUARIO
-            }, function(retorno) {
+            }, function (retorno) {
                 validar_retorno(retorno, '/usuarios.php');
             });
         }
@@ -36,7 +36,7 @@ router_add('index', function () {
                 'rota': 'alterar_com_pesquisa',
                 'salario': salario,
                 'codigo_usuario': CODIGO_USUARIO
-            }, function(retorno) {
+            }, function (retorno) {
                 validar_retorno(retorno, '/usuarios.php');
             });
         }
@@ -60,20 +60,24 @@ router_add('index', function () {
                                 <button class="btn btn-primary w-100" onclick="cadastro_avatar();">Cadastrar Avatar</button>
                             </div>
                             <div class="col-3 text-center">
-                                <button class="btn btn-secondary w-100" data-bs-toggle="modal" data-bs-target="#modal_trocar_senha">Trocar Senha</button>
+                                <button class="btn btn-secondary w-100" data-bs-toggle="modal"
+                                    data-bs-target="#modal_trocar_senha">Trocar Senha</button>
                             </div>
                             <div class="col-3 text-center">
-                                <button class="btn btn-info w-100" data-bs-toggle="modal" data-bs-target="#cadastro_salario">Cadastro Salário</button>
+                                <button class="btn btn-info w-100" data-bs-toggle="modal"
+                                    data-bs-target="#cadastro_salario">Cadastro Salário</button>
                             </div>
                             <div class="col-3 text-center">
-                                <button class="btn btn-warning w-100" onclick="alterar_informacoes_gerais();">Informações</button>
+                                <button class="btn btn-warning w-100"
+                                    onclick="alterar_informacoes_gerais();">Informações</button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="modal fade" id="modal_trocar_senha" tabindex="-1" role="dialog" aria-labelledby="modal_troca_senha" aria-hidden="true">
+        <div class="modal fade" id="modal_trocar_senha" tabindex="-1" role="dialog" aria-labelledby="modal_troca_senha"
+            aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -93,7 +97,8 @@ router_add('index', function () {
                 </div>
             </div>
         </div>
-        <div class="modal fade" id="cadastro_salario" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+        <div class="modal fade" id="cadastro_salario" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel"
+            aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -103,7 +108,8 @@ router_add('index', function () {
                     <div class="modal-body">
                         <div class="row">
                             <div class="col-8">
-                                <input type="text" class="form-control" id="salario" placeholder="Salário" sistema-mask="moeda">
+                                <input type="text" class="form-control" id="salario" placeholder="Salário"
+                                    sistema-mask="moeda">
                             </div>
                             <div class="col-4">
                                 <button class="btn btn-success w-100" onclick="salvar_salario();">Salvar</button>
@@ -114,7 +120,7 @@ router_add('index', function () {
             </div>
         </div>
         <script>
-            window.onload = function() {
+            window.onload = function () {
                 if (CADASTRO == 'true') {
                     if (MENSAGEM == 'true') {
                         Swal.fire('Sucesso!', 'Operação realizada com sucesso!', 'success');
@@ -126,9 +132,9 @@ router_add('index', function () {
                 }
             }
         </script>
-    <?php
-    include_once 'includes/footer.php';
-    exit;
+        <?php
+        include_once 'includes/footer.php';
+        exit;
 });
 
 router_add('cadastrar_avatar', function () {
@@ -157,7 +163,8 @@ router_add('cadastrar_avatar', function () {
                                 <input type="hidden" name="codigo_usuario" value="<?php echo $codigo_usuario; ?>">
                                 <div class="row">
                                     <div class="col-12">
-                                        <input type="file" class="form-control custom-radius text-center" id="arquivo" placeholder="Imagem Avatar" name="arquivo" />
+                                        <input type="file" class="form-control custom-radius text-center" id="arquivo"
+                                            placeholder="Imagem Avatar" name="arquivo" />
                                     </div>
                                 </div>
                                 <br />
@@ -169,7 +176,8 @@ router_add('cadastrar_avatar', function () {
                                         <input type="reset" class="btn btn-info btn-lg w-100" value="Limpar Campos" />
                                     </div>
                                     <div class="col-4">
-                                        <button class="btn btn-danger btn-lg w-100" onclick="retornar(event, true);">Voltar</button>
+                                        <button class="btn btn-danger btn-lg w-100"
+                                            onclick="retornar(event, true);">Voltar</button>
                                     </div>
                                 </div>
                             </form>
@@ -177,14 +185,14 @@ router_add('cadastrar_avatar', function () {
                     </div>
                 </div>
             </div>
-        <?php
-        include_once 'includes/footer.php';
-        exit;
-    });
+            <?php
+            include_once 'includes/footer.php';
+            exit;
+});
 
-    router_add('alterar_informacoes_gerais', function () {
-        include_once 'includes/head.php';
-        ?>
+router_add('alterar_informacoes_gerais', function () {
+    include_once 'includes/head.php';
+    ?>
             <script>
                 const ID_USUARIO = "<?php echo $codigo_usuario; ?>";
 
@@ -192,7 +200,7 @@ router_add('cadastrar_avatar', function () {
                     sistema.request.post('/usuarios.php', {
                         'rota': 'pesquisa_usuario',
                         'codigo_usuario': ID_USUARIO
-                    }, function(retorno) {
+                    }, function (retorno) {
                         let usuario = retorno.dados;
 
                         document.querySelector('#nome_usuario').value = usuario.nome_usuario;
@@ -220,8 +228,8 @@ router_add('cadastrar_avatar', function () {
                     let tipo_usuario = document.querySelector('#tipo_usuario').value;
 
                     sistema.request.post('/usuarios.php', {
-                        'rota': 'salvar_dados', 'salario':salario, 'login_usuario':login_usuario, 'tipo_usuario':tipo_usuario, 'codigo_usuario':ID_USUARIO, 'email_usuario':email_usuario, 'nome_usuario':nome_usuario 
-                    }, function(retorno){
+                        'rota': 'salvar_dados', 'salario': salario, 'login_usuario': login_usuario, 'tipo_usuario': tipo_usuario, 'codigo_usuario': ID_USUARIO, 'email_usuario': email_usuario, 'nome_usuario': nome_usuario
+                    }, function (retorno) {
                         validar_retorno(retorno, '/usuarios.php');
                     });
                 }
@@ -237,11 +245,13 @@ router_add('cadastrar_avatar', function () {
                                 <div class="row">
                                     <div class="col-6 text-center">
                                         <label class="text">Nome Usuário</label>
-                                        <input type="text" class="form-control" id="nome_usuario" readonly="true" placeholder="Nome Usuário">
+                                        <input type="text" class="form-control" id="nome_usuario" readonly="true"
+                                            placeholder="Nome Usuário">
                                     </div>
                                     <div class="col-6 text-center">
                                         <label class="text">Email</label>
-                                        <input type="text" class="form-control" id="email_usuario" placeholder="Email" readonly="true">
+                                        <input type="text" class="form-control" id="email_usuario" placeholder="Email"
+                                            readonly="true">
                                     </div>
                                 </div>
                                 <br />
@@ -259,11 +269,13 @@ router_add('cadastrar_avatar', function () {
                                 <div class="row">
                                     <div class="col-4 text-center">
                                         <label class="text">Salário</label>
-                                        <input type="text" class="form-control" id="salario" placeholder="Salário R$ 2000,00">
+                                        <input type="text" class="form-control" id="salario"
+                                            placeholder="Salário R$ 2000,00">
                                     </div>
                                     <div class="text-center col-4">
                                         <label class="text">Login Usuário</label>
-                                        <input type="text" class="form-control" id="login_usuario" placeholder="Login Usuário">
+                                        <input type="text" class="form-control" id="login_usuario"
+                                            placeholder="Login Usuário">
                                     </div>
                                     <div class="col-4 text-center">
                                         <label class="text">Tipo Usuário</label>
@@ -280,59 +292,59 @@ router_add('cadastrar_avatar', function () {
                     </div>
                 </div>
                 <script>
-                    window.onload = function() {
+                    window.onload = function () {
                         document.querySelector('#btn_limpar_dados').disabled = true;
                         pesquisar_usuario();
                     }
                 </script>
-            <?php
-            include_once 'includes/footer.php';
-            exit;
-        });
+                <?php
+                include_once 'includes/footer.php';
+                exit;
+});
 
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            if (!empty($_POST)) {
-                if (array_key_exists('rota', $_POST) == true) {
-                    if ($_POST['rota'] == 'salvar_avatar') {
-                        $objeto_usuario = new Usuario();
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    if (!empty($_POST)) {
+        if (array_key_exists('rota', $_POST) == true) {
+            if ($_POST['rota'] == 'salvar_avatar') {
+                $objeto_usuario = new Usuario();
 
-                        $retorno = (bool) $objeto_usuario->salvar_imagem_avatar($_POST, $_FILES);
+                $retorno = (bool) $objeto_usuario->salvar_imagem_avatar($_POST, $_FILES);
 
-                        if ($retorno == true) {
-                            header('Location: usuarios.php?cadastro_avatar=true&retorno=true');
-                        } else {
-                            header('Location: usuarios.php?cadastro_avatar=true&retorno=false');
-                        }
-                    }
+                if ($retorno == true) {
+                    header('Location: usuarios.php?cadastro_avatar=true&retorno=true');
+                } else {
+                    header('Location: usuarios.php?cadastro_avatar=true&retorno=false');
                 }
             }
         }
+    }
+}
 
-        router_add('alterar_com_pesquisa', function () {
-            $objeto_usuario = new Usuario();
+router_add('alterar_com_pesquisa', function () {
+    $objeto_usuario = new Usuario();
 
-            echo json_encode((array) ['status' => (bool) $objeto_usuario->alterar_com_pesquisa($_REQUEST)], JSON_UNESCAPED_UNICODE);
-            exit;
-        });
+    echo json_encode((array) ['status' => (bool) $objeto_usuario->alterar_com_pesquisa($_REQUEST)], JSON_UNESCAPED_UNICODE);
+    exit;
+});
 
-        router_add('pesquisa_usuario', function () {
-            $objeto_usuario = new Usuario();
-            $codigo_usuario = (string) (isset($_REQUEST['codigo_usuario']) ? (string) $_REQUEST['codigo_usuario'] : '');
+router_add('pesquisa_usuario', function () {
+    $objeto_usuario = new Usuario();
+    $codigo_usuario = (string) (isset($_REQUEST['codigo_usuario']) ? (string) $_REQUEST['codigo_usuario'] : '');
 
-            $retorno_usuario = (array) [];
+    $retorno_usuario = (array) [];
 
-            if ($codigo_usuario != '') {
-                $retorno_usuario = (array) $objeto_usuario->pesquisar((array) ['filtro' => (array) ['_id', '===', model_id($codigo_usuario)]]);
-            }
+    if ($codigo_usuario != '') {
+        $retorno_usuario = (array) $objeto_usuario->pesquisar((array) ['filtro' => (array) ['_id', '===', model_id($codigo_usuario)]]);
+    }
 
-            echo json_encode((array) ['dados' => (array) $retorno_usuario], JSON_UNESCAPED_UNICODE);
-            exit;
-        });
+    echo json_encode((array) ['dados' => (array) $retorno_usuario], JSON_UNESCAPED_UNICODE);
+    exit;
+});
 
-        router_add('salvar_dados', function(){
-            $objeto_usuario = new Usuario();
-            
-            echo json_encode(['status' => (bool) $objeto_usuario->salvar_dados($_REQUEST)], JSON_UNESCAPED_UNICODE);
-        exit;
-        });
-            ?>
+router_add('salvar_dados', function () {
+    $objeto_usuario = new Usuario();
+
+    echo json_encode(['status' => (bool) $objeto_usuario->salvar_dados($_REQUEST)], JSON_UNESCAPED_UNICODE);
+    exit;
+});
+?>

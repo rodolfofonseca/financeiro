@@ -10,6 +10,7 @@ router_add('index', function () {
 
     $ano_atual = $data->format('Y');
     $data_atual = $data->format('Y-m-01');
+    $data_final = $data->format('Y-m-t');
     $ano_conta_futura = $ano_atual - 1;
     $mes_atual = $data->format('m');
     $mes_anterior = $mes_atual - 1;
@@ -25,19 +26,19 @@ router_add('index', function () {
     $objeto_fechamento_contabil_geral = new FechamentoContabilGeral();
     $objeto_usuario = new Usuario();
 
-    $retorno_inativacao_usuario = (array) $objeto_usuario->inativar_usuario_120_dias((array) ['empresa' => (string) $codigo_empresa]);
+    // $retorno_inativacao_usuario = (array) $objeto_usuario->inativar_usuario_120_dias((array) ['empresa' => (string) $codigo_empresa]);
 
-    $retorno_alterar_status_conta = (bool) $objeto_contas_pagar_receber->alterar_status(['empresa' => (string) $codigo_empresa]);
+    // $retorno_alterar_status_conta = (bool) $objeto_contas_pagar_receber->alterar_status(['empresa' => (string) $codigo_empresa]);
 
-    $retorno_conta = (array) $objeto_conta->pesquisar_todos((array) ['filtro' => (array) ['and' => (array) [(array) ['empresa', '===', model_id($codigo_empresa)], (array) ['status', '===', (string) 'ATIVO']]], 'ordenacao' => ['nome_conta' => (bool) true], 'limite' => 0]);
-    $retorno_contas_pagar = (array) $objeto_contas_pagar_receber->relatorio_contas_pagar($codigo_empresa);
-    $retorno_contas_pagar_mes = (array) $objeto_contas_pagar_receber->relatorio_conta_pagar_mes($codigo_empresa, DATA_INICIO, DATA_FINAL);
-    $retorno_contas_pagar_mes_anterior = (array) $objeto_contas_pagar_receber->relatorio_conta_pagar_mes($codigo_empresa, $data_inicio_mes_anterior, $data_final_mes_anterior);
-    $retorno_contas_pagar_mes_proximo = (array) $objeto_contas_pagar_receber->relatorio_conta_pagar_mes($codigo_empresa, $data_inicio_mes_proximo, $data_final_mes_proximo);
-    $retorno_contas_futuras = (array) $objeto_contas_pagar_receber->relatorio_contas_pagar_mensal($codigo_empresa, $ano_conta_futura . '-01-01', '00:00:00');
-    $retorno_contas_vencidas = (array) $objeto_contas_pagar_receber->contar_contas_vencidas((array) ['empresa' => $codigo_empresa]);
+    $retorno_conta = (array) $objeto_conta->pesquisar_todos((array) ['filtro' => (array) ['where' => [['codigo_empresa', '=', EMPRESA]]]]);
+    $retorno_contas_pagar = (array) $objeto_contas_pagar_receber->relatorio_contas_futuras(EMPRESA);
+    $retorno_contas_pagar_mes = (array) $objeto_contas_pagar_receber->relatorio_conta_pagar_mes(EMPRESA, $data_atual, $data_final);
+    $retorno_contas_pagar_mes_anterior = (array) $objeto_contas_pagar_receber->relatorio_conta_pagar_mes(EMPRESA, $data_inicio_mes_anterior, $data_final_mes_anterior);
+    $retorno_contas_pagar_mes_proximo = (array) $objeto_contas_pagar_receber->relatorio_conta_pagar_mes(EMPRESA, $data_inicio_mes_proximo, $data_final_mes_proximo);
+    $retorno_contas_futuras = (array) $objeto_contas_pagar_receber->relatorio_contas_pagar_mensal(EMPRESA, $ano_atual);
+    $retorno_contas_vencidas = (array) [];
 
-    $retorno_fechamento_contabil = (array) $objeto_fechamento_contabil_geral->pesquisar_todos(['filtro' => (array) ['and' => (array) [['ano_referencia', '===', (int) $ano_atual], ['empresa', '===', model_id($codigo_empresa)]]], 'ordenacao' => (array) ['mes_referencia' => (bool) true], 'limite' => (int) 12]);
+    $retorno_fechamento_contabil = (array) $objeto_fechamento_contabil_geral->pesquisar_todos((array)['filtro' => ['where' => [['codigo_empresa', '=', EMPRESA]]], 'ordenacao' => (array) [['codigo_fechamento_contabil_geral', 'DESC']], 'limite' => (int) 12]);
     ?>
     <script>
         const CORES = {
@@ -150,8 +151,10 @@ router_add('index', function () {
             sistema.each(CONTAS_PAGAR_RECEBER, function (contador, conta) {
                 let soma_contador = (contador + 1);
 
-                nomes['data' + soma_contador] = conta['tipo_conta'] + ' ' + conta['status_conta'] + ' ' + sistema.number_format(conta['SUM(valor_conta)']);
-                valor_contas.push(['data' + soma_contador, conta['SUM(valor_conta)']]);
+                if(conta['tipo_conta'] == 'RECEBER'){
+                    nomes['data' + soma_contador] = conta['tipo_conta']+' '+conta['status_conta'] + ' (' + conta['quantidade'] + ') R$: ' + sistema.number_format(conta['total_previsto']);
+                    valor_contas.push(['data' + soma_contador, conta['total_previsto']]);
+                }
             });
 
             var chart = c3.generate({
@@ -183,8 +186,13 @@ router_add('index', function () {
             sistema.each(CONTAS_PAGAR_MES, function (contador, conta) {
                 let soma_contador = (contador + 1);
 
-                nomes['data' + soma_contador] = conta['tipo_conta'] + ' ' + conta['status_conta'] + ' ' + sistema.number_format(conta['SUM(valor_conta)']);
-                valor_contas.push(['data' + soma_contador, conta['SUM(valor_conta)']]);
+                if(conta['total_baixado'] != 0){
+                    nomes['data' + soma_contador] = conta['tipo_conta'] + ' ' + conta['status_conta'] + ' ' + sistema.number_format(conta['total_baixado']);
+                    valor_contas.push(['data' + soma_contador, conta['total_baixado']]);
+                }else{
+                    nomes['data' + soma_contador] = conta['tipo_conta'] + ' ' + conta['status_conta'] + ' ' + sistema.number_format(conta['total_previsto']);
+                    valor_contas.push(['data' + soma_contador, conta['total_previsto']]);
+                }
             });
 
             var chart = c3.generate({
@@ -215,8 +223,14 @@ router_add('index', function () {
 
             sistema.each(CONTAS_PAGAR_MES_ANTERIOR, function (contador, conta) {
                 let soma_contador = (contador + 1);
-                nomes['data' + soma_contador] = conta['tipo_conta'] + ' ' + conta['status_conta'] + ' ' + sistema.number_format(conta['SUM(valor_conta)']);
-                valor_contas.push(['data' + soma_contador, conta['SUM(valor_conta)']]);
+
+                if(conta['total_baixado'] != 0){
+                    nomes['data' + soma_contador] = conta['tipo_conta'] + ' ' + conta['status_conta'] + ' ' + sistema.number_format(conta['total_baixado']);
+                    valor_contas.push(['data' + soma_contador, conta['total_baixado']]);
+                }else{
+                    nomes['data' + soma_contador] = conta['tipo_conta'] + ' ' + conta['status_conta'] + ' ' + sistema.number_format(conta['total_previsto']);
+                    valor_contas.push(['data' + soma_contador, conta['total_previsto']]);
+                }
             });
 
             var chart = c3.generate({
@@ -248,8 +262,13 @@ router_add('index', function () {
             sistema.each(CONTAS_PAGAR_MES_PROXIMO, function (contador, conta) {
                 let soma_contador = (contador + 1);
 
-                nomes['data' + soma_contador] = conta['tipo_conta'] + ' ' + conta['status_conta'] + ' ' + sistema.number_format(conta['SUM(valor_conta)']);
-                valor_contas.push(['data' + soma_contador, conta['SUM(valor_conta)']]);
+                if(conta['total_baixado'] != 0){
+                    nomes['data' + soma_contador] = conta['tipo_conta'] + ' ' + conta['status_conta'] + ' ' + sistema.number_format(conta['total_baixado']);
+                    valor_contas.push(['data' + soma_contador, conta['total_baixado']]);
+                }else{
+                    nomes['data' + soma_contador] = conta['tipo_conta'] + ' ' + conta['status_conta'] + ' ' + sistema.number_format(conta['total_previsto']);
+                    valor_contas.push(['data' + soma_contador, conta['total_previsto']]);
+                }
             });
 
             var chart = c3.generate({
@@ -285,9 +304,23 @@ router_add('index', function () {
             };
 
             sistema.each(FECHAMENTO_CONTABIL, function (contador, fechamento) {
-                debito.push(fechamento.total_debito);
-                credito.push(fechamento.total_credito);
-                resultado.push(fechamento.valor_resultado);
+                if(fechamento.total_debito != null){
+                    debito.push(fechamento.total_debito);
+                }else{
+                    debito.push(0);    
+                }
+
+                if(fechamento.total_credito != null){
+                    credito.push(fechamento.total_credito);
+                }else{
+                    credito.push(0);
+                }
+
+                if(fechamento.valor_resultado != null){
+                    resultado.push(fechamento.valor_resultado);
+                }else{
+                    resultado.push(0);
+                }
             });
 
             var chart = c3.generate({
@@ -331,8 +364,7 @@ router_add('index', function () {
             let mesesUnicos = [];
 
             sistema.each(CONTAS_FUTURAS, function (contador, contas) {
-
-                let chaveMes = contas.ano + '-' + ('0' + contas.mes).slice(-2);
+                let chaveMes = contas.mes_ano;
 
                 let chaveSerie = contas.tipo_conta + ' - ' + contas.status_conta;
 
@@ -345,7 +377,7 @@ router_add('index', function () {
                 }
 
                 if (!series[chaveSerie + '_' + chaveMes]) {
-                    series[chaveSerie + '_' + chaveMes] = contas.total_valor;
+                    series[chaveSerie + '_' + chaveMes] = contas.valor_total;
                 }
             });
 
@@ -403,10 +435,11 @@ router_add('index', function () {
                     </div>
                 </div>
             </div>
-            <?php         
-            if($retorno_inativacao_usuario['quantidade'] > 0){
+            <?php
+            $retorno_inativacao_usuario['quantidade'] = 0;
+            if ($retorno_inativacao_usuario['quantidade'] > 0) {
                 $texto = (string) retornar_texto_data($login_usuario);
-                $texto = '<br/>'.$retorno_inativacao_usuario['mensagem'];
+                $texto = '<br/>' . $retorno_inativacao_usuario['mensagem'];
                 ?>
                 <div class="bg-primary rounded welcome-wrap position-relative mb-3">
                     <div class="row">
@@ -420,6 +453,7 @@ router_add('index', function () {
                 <?php
             }
 
+            $retorno_contas_vencidas['quantidade_contas'] = 0;
             if ($retorno_contas_vencidas['quantidade_contas'] > 0) {
                 $texto = (string) retornar_texto_data($login_usuario);
 

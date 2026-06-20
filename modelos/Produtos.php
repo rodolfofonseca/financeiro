@@ -4,9 +4,9 @@ require_once 'modelos/Interface.php';
 
 class Produtos implements InterfaceModelo
 {
-    private mixed $codigo_produto;
-    private mixed $empresa;
-    private mixed $fornecedor;
+    private int $codigo_produto;
+    private int $empresa;
+    private int $fornecedor;
     private string $nome_produto;
     private string $descricao;
     private string $imagem;
@@ -24,12 +24,12 @@ class Produtos implements InterfaceModelo
 
     public function tabela()
     {
-        return (string) 'produtos';
+        return (string) 'produto';
     }
 
     public function modelo()
     {
-        return (array) ['empresa' => 'objectId', 'fornecedor' => 'objectId', 'nome_produto' => (string) '', 'descricao' => (string) '', 'imagem' => (string) '', 'codigo_barras' => (string) '', 'quantidade_alerta' => (float) 0, 'data_cadastro' => 'date', 'valor_venda' => (float) 0, 'valor_custo' => (float) 0, 'unidade_medida' => (string) '', 'status' => 'bool', 'tipo_produto' => 'bool', 'sku_produto' => (string) ''];
+        return (array) [];
     }
 
     /**
@@ -40,17 +40,17 @@ class Produtos implements InterfaceModelo
     public function colocar_dados($dados)
     {
         if (array_key_exists('codigo_produto', $dados)) {
-            if ($dados['codigo_produto'] != null) {
-                $this->codigo_produto = model_id($dados['codigo_produto']);
-            }else{
-                $this->codigo_produto = null;
+            if ($dados['codigo_produto'] != 0) {
+                $this->codigo_produto = (int) intval($dados['codigo_produto'], 10);
+            } else {
+                $this->codigo_produto = 0;
             }
-        }else{
-            $this->codigo_produto = null;
+        } else {
+            $this->codigo_produto = 0;
         }
 
-        $this->empresa = (isset($dados['empresa']) ? model_id($dados['empresa']) : null);
-        $this->fornecedor = (isset($dados['fornecedor']) ? model_id($dados['fornecedor']) : null);
+        $this->empresa = (int) (isset($dados['empresa']) ? (int) intval($dados['empresa'], 10) : 0);
+        $this->fornecedor = (int) (isset($dados['fornecedor']) ? (int) intval($dados['fornecedor'], 10) : 0);
         $this->nome_produto = (isset($dados['nome_produto']) ? (string) strtoupper($dados['nome_produto']) : '');
         $this->descricao = (isset($dados['descricao']) ? (string) htmlspecialchars($dados['descricao']) : '');
         $this->imagem = (string) (isset($dados['imagem']) ? (string) $dados['imagem'] : '');
@@ -62,7 +62,7 @@ class Produtos implements InterfaceModelo
         $this->unidade_medida = (string) (isset($dados['unidade_medida']) ? (string) $dados['unidade_medida'] : '');
         $this->status = (bool) (isset($dados['status_produto']) ? (bool) filter_var($dados['status_produto'], FILTER_VALIDATE_BOOLEAN) : false);
         $this->tipo_produto = (bool) (isset($dados['tipo_produto']) ? (bool) filter_var($dados['tipo_produto'], FILTER_VALIDATE_BOOLEAN) : false);
-        $this->sku_produto = (string) (isset($dados['sku_produto']) ? (string) $dados['sku_produto']:'');
+        $this->sku_produto = (string) (isset($dados['sku_produto']) ? (string) $dados['sku_produto'] : '');
     }
 
     /**
@@ -74,10 +74,10 @@ class Produtos implements InterfaceModelo
     {
         $this->colocar_dados($dados);
 
-        if ($this->codigo_produto != null) {
-            return (bool) model_update((string) $this->tabela(), (array) ['_id', '===', $this->codigo_produto], (array) ['empresa' => $this->empresa, 'fornecedor' => $this->fornecedor, 'nome_produto' => (string) $this->nome_produto, 'descricao' => (string) $this->descricao, 'imagem' => (string) $this->imagem, 'codigo_barras' => (string) $this->codigo_barras, 'quantidade_alerta' => (float) $this->quantidade_alerta, 'data_cadastro' => $this->data_cadastro, 'valor_venda' => (float) $this->valor_venda, 'valor_custo' => (float) $this->valor_custo, 'unidade_medida' => (string) $this->unidade_medida, 'status' => (bool) $this->status, 'tipo_produto' => (bool) $this->tipo_produto, 'sku_produto' => (string) $this->sku_produto]);
+        if ($this->codigo_produto != 0) {
+            return (bool) model_update((string) $this->tabela(), (array) ['where' => [['codigo_produto', '=', $this->codigo_produto]]], (array) $this->montar_array());
         } else {
-            return (bool) model_insert((string) $this->tabela(), (array) ['empresa' => $this->empresa, 'fornecedor' => $this->fornecedor, 'nome_produto' => (string) $this->nome_produto, 'descricao' => (string) $this->descricao, 'imagem' => (string) $this->imagem, 'codigo_barras' => (string) $this->codigo_barras, 'quantidade_alerta' => (float) $this->quantidade_alerta, 'data_cadastro' => $this->data_cadastro, 'valor_venda' => (float) $this->valor_venda, 'valor_custo' => (float) $this->valor_custo, 'unidade_medida' => (string) $this->unidade_medida, 'status' => (bool) $this->status, 'tipo_produto' => (bool) $this->tipo_produto, 'sku_produto' => (string) $this->sku_produto]);
+            return (bool) model_insert((string) $this->tabela(), (array) $this->montar_array());
         }
     }
 
@@ -108,12 +108,12 @@ class Produtos implements InterfaceModelo
      */
     public function alterar_status($codigo_produto)
     {
-        $filtro = (array) ['_id', '===', model_id($codigo_produto)];
+        $filtro = (array) ['where' => [['codigo_produto', '=', $codigo_produto]]];
         $produto = (array) $this->pesquisar((array) ['filtro' => $filtro]);
 
         if (!empty($produto)) {
             $novo_status = !$produto['status'];
-            return (bool) model_update((string) $this->tabela(), (array) ['_id', '===', model_id($codigo_produto)], (array) ['status' => (bool) $novo_status]);
+            return (bool) model_update((string) $this->tabela(), (array) ['where' => [['codigo_produto', '=', $codigo_produto]]], (array) ['status' => (bool) $novo_status]);
         } else {
             return (bool) false;
         }
@@ -151,38 +151,9 @@ class Produtos implements InterfaceModelo
      * @param mixed $dados
      * @return int
      */
-    public function contar_quantidade_produtos($dados){
-        $pipeline = [
-            [
-                '$match' => [
-                    'empresa' => model_id($dados['empresa'])
-                ]
-            ],
-            [
-                '$group' => [
-                    '_id' => [],
-                    'COUNT(*)' => [
-                        '$sum' => 1
-                    ]
-                ]
-            ],
-            [
-                '$project' => [
-                    'COUNT(*)' => '$COUNT(*)',
-                    '_id' => 0
-                ]
-            ]
-        ];
-
-        $cursor = pesquisa_banco_aggregate((string) $this->tabela(), $pipeline);
-
-        $retorno = (array) [];
-
-        foreach ($cursor as $document) {
-            $retorno = $document;
-        }
-
-        return (int) intval($retorno['COUNT(*)'], 10);
+    public function contar_quantidade_produtos($dados)
+    {
+        return (int) model_count((string) $this->tabela(), ['where' => [['codigo_empresa', '=', $dados['empresa']]]]);
     }
 
     /**
@@ -190,35 +161,36 @@ class Produtos implements InterfaceModelo
      * @param array $filtro
      * @return array
      */
-    public function filtro_pesquisar_produto($filtro){
+    public function filtro_pesquisar_produto($filtro)
+    {
         $filtro_montando = (array) [];
 
-        if(array_key_exists('nome_produto', $filtro) == true){
-            array_push($filtro_montando, ['nome_produto', '=', $filtro['nome_produto']]);
+        if (array_key_exists('nome_produto', $filtro) == true) {
+            array_push($filtro_montando, ['nome_produto', 'LIKE', $filtro['nome_produto']]);
         }
 
-        if(array_key_exists('empresa', $filtro) == true){
-            array_push($filtro_montando, ['empresa', '===', model_id($filtro['empresa'])]);
+        if (array_key_exists('empresa', $filtro) == true) {
+            array_push($filtro_montando, ['codigo_empresa', '=', intval($filtro['empresa'])]);
         }
 
-        if(array_key_exists('status_produto', $filtro) == true){
-            array_push($filtro_montando, ['status', '===', (bool) filter_var($filtro['status_produto'], FILTER_VALIDATE_BOOLEAN)]);
+        if (array_key_exists('status_produto', $filtro) == true) {
+            array_push($filtro_montando, ['status', '=', (bool) filter_var($filtro['status_produto'], FILTER_VALIDATE_BOOLEAN)]);
         }
 
-        if(array_key_exists('tipo_produto', $filtro) == true){
-            array_push($filtro_montando, ['tipo_produto', '===', (bool) filter_var($filtro['tipo_produto'], FILTER_VALIDATE_BOOLEAN)]);
+        if (array_key_exists('tipo_produto', $filtro) == true) {
+            array_push($filtro_montando, ['tipo_produto', '=', (bool) filter_var($filtro['tipo_produto'], FILTER_VALIDATE_BOOLEAN)]);
         }
 
-        if(array_key_exists('unidade_medida', $filtro) == true){
-            array_push($filtro_montando, ['unidade_medida', '===', (string) $filtro['unidade_medida']]);
+        if (array_key_exists('unidade_medida', $filtro) == true) {
+            array_push($filtro_montando, ['unidade_medida', '=', (string) $filtro['unidade_medida']]);
         }
 
-        if(array_key_exists('data_cadastro', $filtro) == true){
+        if (array_key_exists('data_cadastro', $filtro) == true) {
             array_push($filtro_montando, ['data_cadastro', '>=', model_date($filtro['data_cadastro'], '00:00:00')]);
             array_push($filtro_montando, ['data_cadastro', '<=', model_date($filtro['data_cadastro'], '23:59:59')]);
         }
 
-        return (array) ['filtro' => (array) ['and' => (array) $filtro_montando], 'ordenacao' => ['nome_produto' => (bool) true], 'limite' => (int) 0];
+        return (array) ['filtro' => (array) ['where' => (array) $filtro_montando], 'ordenacao' => [['nome_produto', 'ASC']], 'limite' => (int) 0];
     }
 
     /**
@@ -226,18 +198,72 @@ class Produtos implements InterfaceModelo
      * @param array $filtro_parametro
      * @return array
      */
-    function pesquisar_produtos_estoque($filtro_parametro){
+    function pesquisar_produtos_estoque($filtro_parametro)
+    {
         $filtro = $this->filtro_pesquisar_produto($filtro_parametro);
 
         $retorno_produto = (array) $this->pesquisar_todos($filtro);
 
-        if(empty($retorno_produto) == false){
+        if (empty($retorno_produto) == false) {
             // foreach($retorno_produto as $produto){
 
             // }
             return (array) ['dados' => (array) $retorno_produto];
-        }else{
+        } else {
             return (array) ['dados' => (array) []];
         }
+    }
+
+    public function montar_array(){
+        $dados = (array) [];
+
+        if($this->empresa != 0){
+            $dados['codigo_empresa'] = (int) $this->empresa;
+        }
+
+        if($this->fornecedor != 0){
+            $dados['codigo_usuario'] = (int) $this->fornecedor;
+        }
+
+        if($this->sku_produto != ''){
+            $dados['sku_produto'] = (string) $this->sku_produto;
+        }
+
+        if($this->nome_produto != ''){
+            $dados['nome_produto'] = (string) $this->nome_produto;
+        }
+
+        if($this->descricao != ''){
+            $dados['descricao'] = (string) $this->descricao;
+        }
+
+        if($this->imagem != ''){
+            $dados['imagem'] = (string) $this->imagem;
+        }
+
+        if($this->codigo_barras != ''){
+            $dados['codigo_barras'] = (string) $this->codigo_barras;
+        }
+
+        if($this->quantidade_alerta != 0){
+            $dados['quantidade_alerta'] = (int) $this->quantidade_alerta;
+        }
+
+        if($this->data_cadastro != ''){
+            $dados['data_cadastro'] = (string) $this->data_cadastro;
+        }
+
+        if($this->valor_venda != 0){
+            $dados['valor_venda'] = (double) arredondar($this->valor_venda);
+        }
+
+        if($this->valor_custo != 0){
+            $dados['valor_custo'] = (double) arredondar($this->valor_custo);
+        }
+
+        $dados['status'] = (bool) $this->status;
+        $dados['tipo_produto'] = (bool) $this->tipo_produto;
+
+        return (array) $dados;
     }
 }

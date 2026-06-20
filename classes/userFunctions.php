@@ -1,12 +1,4 @@
 <?php
-function pesquisa_banco_aggregate($tabela, $pipeline)
-{
-  $classe = new DB();
-  $retorno = $classe->connect($tabela);
-  $connection = $classe->connection;
-
-  return $connection->aggregate($pipeline, ['allowDiskUse' => TRUE]);
-}
 
 /**
  * Função responsável por realizar o arredondamento de cálculos
@@ -14,6 +6,7 @@ function pesquisa_banco_aggregate($tabela, $pipeline)
  * @param string $operacao que deseja realizar dentro da função! EX '*'
  * @param double $quantidade a quantidade do item
  * @param int $casas_decimais a quantidade de casas decimais que deseja que a função retorne 
+ * @return double
  */
 function arredondar($valor, $operacao = '', $quantidade = null, $casas_decimais = 2)
 {
@@ -63,19 +56,27 @@ function arredondar($valor, $operacao = '', $quantidade = null, $casas_decimais 
     $numero = (double) round(($numero / pow(10, $casas_decimais)), intval($casas_decimais, 10));
     return doubleval($numero);
   }
+
   return $valor;
 }
 
 /** FORMATAR NÚMERO
  * - Responsável por alterar a formatação do valor passado
- * @param $numero Deve ser informado o número a ser formatado
- * @param $decimais Pode ser informado a quantidade de números decimais
- * @param $decimal Pode ser informado o separador do decimal
- * @param $milhar Pode ser informado o separador dos milhares
+ * @param float $numero Deve ser informado o número a ser formatado
+ * @param int $decimais Pode ser informado a quantidade de números decimais
+ * @param string $decimal Pode ser informado o separador do decimal
+ * @param string $milhar Pode ser informado o separador dos milhares
+ * @param bool $return tipo de retorno, numero ou string
+ * @return mixed
  */
-function formatar_numero($numero, $decimais = 2, $decimal = ',', $milhar = '')
+function formatar_numero($numero, $decimais = 2, $decimal = ',', $milhar = '', $return = false)
 {
   $numero = (double) arredondar($numero, '', 0, $decimais);
-  return (string) number_format($numero, $decimais, $decimal, $milhar);
+  
+  if($return == false){
+    return (string) number_format($numero, $decimais, $decimal, $milhar);
+  }else{
+    return (float) floatval(number_format($numero, $decimais, $decimal));
+  }
 }
 ?>

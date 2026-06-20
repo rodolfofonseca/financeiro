@@ -5,7 +5,7 @@ require_once 'modelos/ContasPagarReceber.php';
 router_add('index', function () {
     include_once 'includes/head.php';
     $data_hoje = $data->format('Y-m-d');
-?>
+    ?>
     <script>
         const EMPRESA = "<?php echo $codigo_empresa; ?>";
         const DATA_HOJE = "<?php echo $data_hoje; ?>";
@@ -42,7 +42,7 @@ router_add('index', function () {
                 'data_vencimento_inicio': data_vencimento_inicio,
                 'data_vencimento_fim': data_vencimento_fim,
                 'empresa': EMPRESA
-            }, function(retorno) {
+            }, function (retorno) {
                 let contas = retorno.dados;
                 let tabela_contas = document.querySelector('#tabela_contas tbody');
                 let tamanho_retorno = contas.length;
@@ -54,7 +54,7 @@ router_add('index', function () {
                     linha.appendChild(sistema.gerar_td(['text-center'], 'NENHUMA CONTA ENCONTRADA, COM OS FILTROS PASSADOS!', 'inner', true, 10));
                     tabela_contas.appendChild(linha);
                 } else {
-                    sistema.each(contas, function(index, conta) {
+                    sistema.each(contas, function (index, conta) {
                         let linha = document.createElement('tr');
 
                         linha.appendChild(sistema.gerar_td(['text-center'], conta.nome_conta, 'inner'));
@@ -70,19 +70,19 @@ router_add('index', function () {
                         }
 
                         if (conta.tipo_conta == 'PAGAR') {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_conta_' + conta._id.$oid, 'PAGAR', ['btn', 'btn-outline-danger'], function tipo_conta() {}), 'append'));
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_conta_' + conta._id.$oid, 'PAGAR', ['btn', 'btn-outline-danger'], function tipo_conta() { }), 'append'));
                         } else {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_conta_' + conta._id.$oid, 'RECEBER', ['btn', 'btn-outline-success'], function tipo_conta() {}), 'append'));
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_conta_' + conta._id.$oid, 'RECEBER', ['btn', 'btn-outline-success'], function tipo_conta() { }), 'append'));
                         }
 
                         if (conta.status_conta == 'AGUARDANDO') {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_conta_' + conta._id.$oid, 'AGUARDANDO', ['btn', 'btn-outline-secondary'], function status_conta() {}), 'append'));
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_conta_' + conta._id.$oid, 'AGUARDANDO', ['btn', 'btn-outline-secondary'], function status_conta() { }), 'append'));
                         } else if (conta.status_conta == 'PAGO') {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_conta_' + conta._id.$oid, 'PAGO', ['btn', 'btn-outline-success'], function status_conta() {}), 'append'));
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_conta_' + conta._id.$oid, 'PAGO', ['btn', 'btn-outline-success'], function status_conta() { }), 'append'));
                         } else if (conta.status_conta == 'CANCELADO') {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_conta_' + conta._id.$oid, 'CANCELADO', ['btn', 'btn-outline-warning'], function status_conta() {}), 'append'));
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_conta_' + conta._id.$oid, 'CANCELADO', ['btn', 'btn-outline-warning'], function status_conta() { }), 'append'));
                         } else if (conta.status_conta == 'VENCIDO') {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_conta_' + conta._id.$oid, 'VENCIDO', ['btn', 'btn-outline-danger'], function status_conta() {}), 'append'));
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_conta_' + conta._id.$oid, 'VENCIDO', ['btn', 'btn-outline-danger'], function status_conta() { }), 'append'));
                         }
 
                         let botao = document.createElement('button');
@@ -93,7 +93,7 @@ router_add('index', function () {
                         botao.dataset.bsToggle = "modal";
                         botao.dataset.bsTarget = "#modal_baixar_conta";
 
-                        botao.addEventListener('click', function() {
+                        botao.addEventListener('click', function () {
                             document.querySelector('#valor_conta').value = sistema.number_format(conta.valor_conta);
                             document.querySelector('#data_vencimento').value = sistema.retornar_data(conta.data_vencimento, 'AMERICANO');
                             document.querySelector('#codigo_conta_pagar_receber').value = conta._id.$oid;
@@ -142,13 +142,13 @@ router_add('index', function () {
                 'rota': 'pesquisar_contas',
                 'empresa': EMPRESA,
                 'status': 'ATIVO'
-            }, function(retorno) {
+            }, function (retorno) {
                 let contas = retorno.dados;
                 let tamanho_retorno = contas.length;
                 if (tamanho_retorno > 0) {
                     let select_conta = document.querySelector('#conta');
 
-                    sistema.each(contas, function(index, conta) {
+                    sistema.each(contas, function (index, conta) {
                         select_conta.appendChild(sistema.gerar_option(conta._id.$oid, conta.nome_conta + " | " + sistema.number_format(conta.saldo_conta)));
                     });
                 }
@@ -165,7 +165,7 @@ router_add('index', function () {
             let tipo_conta = document.querySelector('#tipo_conta_input').value;
             let nome_conta = document.querySelector('#nome_conta_input').value;
 
-            sistema.request.post('/contas_pagar_receber.php', {'rota':'baixar_conta', 'codigo_conta_pagar_receber': codigo_conta_pagar_receber, 'valor_pago':valor_pago, 'tipo_juro_desconto': tipo_juro_desconto, 'valor_juro_desconto':valor_juro_desconto, 'data_baixa':data_baixa, 'codigo_conta_bancaria':codigo_conta_bancaria, 'empresa':EMPRESA, 'tipo_conta':tipo_conta, 'nome_conta':nome_conta}, function(retorno){
+            sistema.request.post('/contas_pagar_receber.php', { 'rota': 'baixar_conta', 'codigo_conta_pagar_receber': codigo_conta_pagar_receber, 'valor_pago': valor_pago, 'tipo_juro_desconto': tipo_juro_desconto, 'valor_juro_desconto': valor_juro_desconto, 'data_baixa': data_baixa, 'codigo_conta_bancaria': codigo_conta_bancaria, 'empresa': EMPRESA, 'tipo_conta': tipo_conta, 'nome_conta': nome_conta }, function (retorno) {
                 validar_retorno(retorno, '/contas_pagar_receber.php');
             });
         }
@@ -178,7 +178,8 @@ router_add('index', function () {
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap gap-2">
                     <div class="dropdown">
-                        <button class="btn btn-primary d-flex align-items-center justify-content-center" onclick="cadastro_contas('');">
+                        <button class="btn btn-primary d-flex align-items-center justify-content-center"
+                            onclick="cadastro_contas('');">
                             Cadastrar Conta
                         </button>
                     </div>
@@ -272,7 +273,8 @@ router_add('index', function () {
                                             </thead>
                                             <tbody>
                                                 <tr>
-                                                    <td colspan="10" class="text-center">UTILIZE O FILTRO PARA FACILITAR A PESQUISA!</td>
+                                                    <td colspan="10" class="text-center">UTILIZE O FILTRO PARA FACILITAR A
+                                                        PESQUISA!</td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -284,7 +286,8 @@ router_add('index', function () {
                 </div>
             </div>
         </div>
-        <div class="modal fade" id="modal_baixar_conta" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+        <div class="modal fade" id="modal_baixar_conta" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel"
+            aria-hidden="true">
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -298,7 +301,8 @@ router_add('index', function () {
                         <div class="row">
                             <div class="col-6 text-center">
                                 <label class="text">Valor Conta</label>
-                                <input type="text" class="form-control" id="valor_conta" placeholder="Valor Conta" sistema-mask="moeda" disabled="true">
+                                <input type="text" class="form-control" id="valor_conta" placeholder="Valor Conta"
+                                    sistema-mask="moeda" disabled="true">
                             </div>
                             <div class="col-6 text-center">
                                 <label class="text">Data Vencimento</label>
@@ -309,11 +313,13 @@ router_add('index', function () {
                         <div class="row">
                             <div class="col-3 text-center">
                                 <label class="text">Valor Pago</label>
-                                <input type="text" class="form-control" id="valor_pago" sistema-mask="moeda" placeholder="Valor Pago" onblur="validar_juro_desconto();">
+                                <input type="text" class="form-control" id="valor_pago" sistema-mask="moeda"
+                                    placeholder="Valor Pago" onblur="validar_juro_desconto();">
                             </div>
                             <div class="col-3 text-center">
                                 <label class="text">Juro/Desconto</label>
-                                <input type="text" class="form-control" id="valor_juro_desconto" sistema-mask="moeda" placeholder="Juro/Desconto" sistema-mask="moeda">
+                                <input type="text" class="form-control" id="valor_juro_desconto" sistema-mask="moeda"
+                                    placeholder="Juro/Desconto" sistema-mask="moeda">
                             </div>
                             <div class="col-3 text-center">
                                 <label class="text">Tipo Juro/Desconto</label>
@@ -340,7 +346,8 @@ router_add('index', function () {
                         <br />
                         <div class="row">
                             <div class="col-4 push-4">
-                                <button type="button" class="btn btn-danger w-100" data-bs-dismiss="modal" aria-label="Close">Fechar</button>
+                                <button type="button" class="btn btn-danger w-100" data-bs-dismiss="modal"
+                                    aria-label="Close">Fechar</button>
                             </div>
                             <div class="col-4">
                                 <button class="btn btn-success w-100" onclick="baixar_conta();">Baixar</button>
@@ -351,15 +358,15 @@ router_add('index', function () {
             </div>
         </div>
         <script>
-            window.onload = function() {
+            window.onload = function () {
                 document.querySelector('#data_baixa').value = DATA_HOJE;
                 pesquisar_contas();
                 pesquisar_conta_bancaria();
             }
         </script>
-    <?php
-    include_once 'includes/footer.php';
-    exit;
+        <?php
+        include_once 'includes/footer.php';
+        exit;
 });
 
 router_add('cadastro_contas', function () {
@@ -406,7 +413,7 @@ router_add('cadastro_contas', function () {
                     'data_baixa': data_baixa,
                     'tipo_conta': tipo_conta,
                     'status_conta': status_conta
-                }, function(retorno) {
+                }, function (retorno) {
                     validar_retorno(retorno, '/contas_pagar_receber.php');
                 });
             }
@@ -447,22 +454,26 @@ router_add('cadastro_contas', function () {
                                     </div>
                                     <div class="col-8 text-center">
                                         <label class="text">Descrição</label>
-                                        <input type="text" class="form-control" id="descricao" placeholder="Descrição da Conta">
+                                        <input type="text" class="form-control" id="descricao"
+                                            placeholder="Descrição da Conta">
                                     </div>
                                 </div>
                                 <br />
                                 <div class="row">
                                     <div class="col-3 text-center">
                                         <label class="text">Valor Conta</label>
-                                        <input type="text" class="form-control" id="valor_conta" placeholder="Valor Conta" sistema-mask="moeda">
+                                        <input type="text" class="form-control" id="valor_conta" placeholder="Valor Conta"
+                                            sistema-mask="moeda">
                                     </div>
                                     <div class="col-3 tex-center">
                                         <label class="text">Valor Pago</label>
-                                        <input type="text" class="form-control" id="valor_pago" placeholder="Valor pago" sistema-mask="moeda">
+                                        <input type="text" class="form-control" id="valor_pago" placeholder="Valor pago"
+                                            sistema-mask="moeda">
                                     </div>
                                     <div class="col-3 text-center">
                                         <label class="text">Valor Juro/Desconto</label>
-                                        <input type="text" class="form-control" id="valor_juro_desconto" placeholder="Valor Juro/Desconto" sistema-mask="moeda">
+                                        <input type="text" class="form-control" id="valor_juro_desconto"
+                                            placeholder="Valor Juro/Desconto" sistema-mask="moeda">
                                     </div>
                                     <div class="col-3 text-center">
                                         <label class="text">Tipo Juro/Desconto</label>
@@ -514,7 +525,7 @@ router_add('cadastro_contas', function () {
                 </div>
             </div>
             <script>
-                window.onload = function() {
+                window.onload = function () {
                     document.querySelector('#data_cadastro').value = HOJE;
                     document.querySelector('#data_vencimento').value = DATA_VENCIMENTO;
 
@@ -522,7 +533,7 @@ router_add('cadastro_contas', function () {
                         sistema.request.post('/contas_pagar_receber.php', {
                             'rota': 'pesquisar_conta',
                             'codigo_conta_pagar_receber': CODIGO_CONTA_PAGAR_RECEBER
-                        }, function(retorno) {
+                        }, function (retorno) {
                             let conta = retorno.dados;
                             document.querySelector('#nome_conta').value = conta.nome_conta;
                             document.querySelector('#descricao').value = conta.descricao;
@@ -552,103 +563,103 @@ router_add('cadastro_contas', function () {
                     }
                 }
             </script>
-        <?php
-        include_once 'includes/footer.php';
-    });
+            <?php
+            include_once 'includes/footer.php';
+});
 
-    router_add('pesquisar_conta', function () {
-        $objeto_contas_pagar_receber = new ContasPagarReceber();
+router_add('pesquisar_conta', function () {
+    $objeto_contas_pagar_receber = new ContasPagarReceber();
 
-        $codigo_conta = (string) (isset($_REQUEST['codigo_conta_pagar_receber']) ? (string) $_REQUEST['codigo_conta_pagar_receber'] : '');
-        $filtro = (array) ['filtro' => (array) []];
+    $codigo_conta = (string) (isset($_REQUEST['codigo_conta_pagar_receber']) ? (string) $_REQUEST['codigo_conta_pagar_receber'] : '');
+    $filtro = (array) ['filtro' => (array) []];
 
-        if ($codigo_conta != '') {
-            $filtro['filtro'] = (array) ['_id', '===', model_id($codigo_conta)];
-        }
+    if ($codigo_conta != '') {
+        $filtro['filtro'] = (array) ['_id', '===', model_id($codigo_conta)];
+    }
 
-        echo json_encode((array) ['dados' => (array) $objeto_contas_pagar_receber->pesquisar($filtro)], JSON_UNESCAPED_UNICODE);
-        exit;
-    });
-
-    router_add('salvar_dados', function () {
-        $objeto_contas_pagar_receber = new ContasPagarReceber();
-
-        echo json_encode((array) ['status' => (bool) $objeto_contas_pagar_receber->salvar_dados($_REQUEST)], JSON_UNESCAPED_UNICODE);
-        exit;
-    });
-
-    router_add('pesquisar_contas', function () {
-        $objeto_contas_pagar_receber = new ContasPagarReceber();
-        $filtro = (array) ['filtro' => (array) [], 'ordenacao' => (array) ['data_vencimento' => (bool) true], 'limite' => (int) 0];
-        $filtro_montando = (array) [];
-
-        $nome_conta = (string) (isset($_REQUEST['nome_conta']) ? (string) $_REQUEST['nome_conta'] : '');
-        $descricao = (string) (isset($_REQUEST['descricao']) ? (string) $_REQUEST['descricao'] : '');
-        $tipo_conta = (string) (isset($_REQUEST['tipo_conta']) ? (string) $_REQUEST['tipo_conta'] : 'TODOS');
-        $status_conta = (string) (isset($_REQUEST['status_conta']) ? (string) $_REQUEST['status_conta'] : 'TODOS');
-        $data_inicio_cadastro = (string) (isset($_REQUEST['data_cadastro_inicio']) ? (string) $_REQUEST['data_cadastro_inicio'] : '');
-        $data_fim_cadastro = (string) (isset($_REQUEST['data_cadastro_fim']) ? (string) $_REQUEST['data_cadastro_fim'] : '');
-        $data_vencimento_inicio = (string) (isset($_REQUEST['data_vencimento_inicio']) ? (string) $_REQUEST['data_vencimento_inicio'] : '');
-        $data_vencimento_fim = (string) (isset($_REQUEST['data_vencimento_fim']) ? (string) $_REQUEST['data_vencimento_fim'] : '');
-        $data_baixa_inicio = (string) (isset($_REQUEST['data_baixa_inicio']) ? (string) $_REQUEST['data_baixa_inicio'] : '');
-        $data_baixa_fim = (string) (isset($_REQUEST['data_baixa_fim']) ? (string) $_REQUEST['data_baixa_fim'] : '');
-        $empresa = (string) (isset($_REQUEST['empresa']) ? (string) $_REQUEST['empresa'] : '');
-
-        if ($nome_conta != '') {
-            array_push($filtro_montando, (array) ['nome_conta', '=', (string) strtoupper($nome_conta)]);
-        }
-
-        if ($descricao != '') {
-            array_push($filtro_montando, (array) ['descricao', '=', (string) $descricao]);
-        }
-
-        if ($tipo_conta != 'TODOS') {
-            array_push($filtro_montando, (array) ['tipo_conta', '===', (string) $tipo_conta]);
-        }
-
-        if ($status_conta != 'TODOS') {
-            array_push($filtro_montando, (array) ['status_conta', '===', (string) $status_conta]);
-        }
-
-        if ($empresa != '') {
-            array_push($filtro_montando, (array) ['empresa', '===', model_id($empresa)]);
-        }
-
-        if ($data_inicio_cadastro != '') {
-            array_push($filtro_montando, (array) ['data_cadastro', '>=', model_date($data_inicio_cadastro)]);
-        }
-
-        if ($data_fim_cadastro != '') {
-            array_push($filtro_montando, (array) ['data_cadastro', '<=', model_date($data_fim_cadastro)]);
-        }
-
-        if ($data_vencimento_inicio != '') {
-            array_push($filtro_montando, (array) ['data_vencimento', '>=', model_date($data_vencimento_inicio)]);
-        }
-
-        if ($data_vencimento_fim != '') {
-            array_push($filtro_montando, (array) ['data_vencimento', '<=', model_date($data_vencimento_fim)]);
-        }
-
-        if ($data_baixa_inicio != '') {
-            array_push($filtro_montando, (array) ['data_baixa', '>=', model_date($data_baixa_inicio)]);
-        }
-
-        if ($data_baixa_fim != '') {
-            array_push($filtro_montando, (array) ['data_baixa', '<=', model_date($data_baixa_fim)]);
-        }
-
-        $filtro['filtro'] = (array) ['and' => (array) $filtro_montando];
-        echo json_encode((array) ['dados' => (array) $objeto_contas_pagar_receber->pesquisar_todos($filtro)], JSON_UNESCAPED_UNICODE);
-        exit;
-    });
-
-    router_add('baixar_conta', function(){
-        $objeto_contas_pagar_receber = new ContasPagarReceber();
-
-        // file_put_contents('json.json', json_encode($_REQUEST, JSON_UNESCAPED_UNICODE));
-        // echo json_encode(['status' => (bool) true], JSON_UNESCAPED_UNICODE);
-        echo json_encode(['status' => (bool) $objeto_contas_pagar_receber->baixar_contas($_REQUEST)], JSON_UNESCAPED_UNICODE);
+    echo json_encode((array) ['dados' => (array) $objeto_contas_pagar_receber->pesquisar($filtro)], JSON_UNESCAPED_UNICODE);
     exit;
-    });
-        ?>
+});
+
+router_add('salvar_dados', function () {
+    $objeto_contas_pagar_receber = new ContasPagarReceber();
+
+    echo json_encode((array) ['status' => (bool) $objeto_contas_pagar_receber->salvar_dados($_REQUEST)], JSON_UNESCAPED_UNICODE);
+    exit;
+});
+
+router_add('pesquisar_contas', function () {
+    $objeto_contas_pagar_receber = new ContasPagarReceber();
+    $filtro = (array) ['filtro' => (array) [], 'ordenacao' => (array) ['data_vencimento' => (bool) true], 'limite' => (int) 0];
+    $filtro_montando = (array) [];
+
+    $nome_conta = (string) (isset($_REQUEST['nome_conta']) ? (string) $_REQUEST['nome_conta'] : '');
+    $descricao = (string) (isset($_REQUEST['descricao']) ? (string) $_REQUEST['descricao'] : '');
+    $tipo_conta = (string) (isset($_REQUEST['tipo_conta']) ? (string) $_REQUEST['tipo_conta'] : 'TODOS');
+    $status_conta = (string) (isset($_REQUEST['status_conta']) ? (string) $_REQUEST['status_conta'] : 'TODOS');
+    $data_inicio_cadastro = (string) (isset($_REQUEST['data_cadastro_inicio']) ? (string) $_REQUEST['data_cadastro_inicio'] : '');
+    $data_fim_cadastro = (string) (isset($_REQUEST['data_cadastro_fim']) ? (string) $_REQUEST['data_cadastro_fim'] : '');
+    $data_vencimento_inicio = (string) (isset($_REQUEST['data_vencimento_inicio']) ? (string) $_REQUEST['data_vencimento_inicio'] : '');
+    $data_vencimento_fim = (string) (isset($_REQUEST['data_vencimento_fim']) ? (string) $_REQUEST['data_vencimento_fim'] : '');
+    $data_baixa_inicio = (string) (isset($_REQUEST['data_baixa_inicio']) ? (string) $_REQUEST['data_baixa_inicio'] : '');
+    $data_baixa_fim = (string) (isset($_REQUEST['data_baixa_fim']) ? (string) $_REQUEST['data_baixa_fim'] : '');
+    $empresa = (string) (isset($_REQUEST['empresa']) ? (string) $_REQUEST['empresa'] : '');
+
+    if ($nome_conta != '') {
+        array_push($filtro_montando, (array) ['nome_conta', '=', (string) strtoupper($nome_conta)]);
+    }
+
+    if ($descricao != '') {
+        array_push($filtro_montando, (array) ['descricao', '=', (string) $descricao]);
+    }
+
+    if ($tipo_conta != 'TODOS') {
+        array_push($filtro_montando, (array) ['tipo_conta', '===', (string) $tipo_conta]);
+    }
+
+    if ($status_conta != 'TODOS') {
+        array_push($filtro_montando, (array) ['status_conta', '===', (string) $status_conta]);
+    }
+
+    if ($empresa != '') {
+        array_push($filtro_montando, (array) ['empresa', '===', model_id($empresa)]);
+    }
+
+    if ($data_inicio_cadastro != '') {
+        array_push($filtro_montando, (array) ['data_cadastro', '>=', model_date($data_inicio_cadastro)]);
+    }
+
+    if ($data_fim_cadastro != '') {
+        array_push($filtro_montando, (array) ['data_cadastro', '<=', model_date($data_fim_cadastro)]);
+    }
+
+    if ($data_vencimento_inicio != '') {
+        array_push($filtro_montando, (array) ['data_vencimento', '>=', model_date($data_vencimento_inicio)]);
+    }
+
+    if ($data_vencimento_fim != '') {
+        array_push($filtro_montando, (array) ['data_vencimento', '<=', model_date($data_vencimento_fim)]);
+    }
+
+    if ($data_baixa_inicio != '') {
+        array_push($filtro_montando, (array) ['data_baixa', '>=', model_date($data_baixa_inicio)]);
+    }
+
+    if ($data_baixa_fim != '') {
+        array_push($filtro_montando, (array) ['data_baixa', '<=', model_date($data_baixa_fim)]);
+    }
+
+    $filtro['filtro'] = (array) ['and' => (array) $filtro_montando];
+    echo json_encode((array) ['dados' => (array) $objeto_contas_pagar_receber->pesquisar_todos($filtro)], JSON_UNESCAPED_UNICODE);
+    exit;
+});
+
+router_add('baixar_conta', function () {
+    $objeto_contas_pagar_receber = new ContasPagarReceber();
+
+    // file_put_contents('json.json', json_encode($_REQUEST, JSON_UNESCAPED_UNICODE));
+    // echo json_encode(['status' => (bool) true], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['status' => (bool) $objeto_contas_pagar_receber->baixar_contas($_REQUEST)], JSON_UNESCAPED_UNICODE);
+    exit;
+});
+?>

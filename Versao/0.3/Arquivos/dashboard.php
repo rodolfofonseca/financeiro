@@ -6,7 +6,7 @@ require_once 'modelos/FechamentoContabilGeral.php';
 
 router_add('index', function () {
     require_once 'includes/head.php';
-    
+
     $ano_atual = $data->format('Y');
     $data_atual = $data->format('Y-m-01');
     $ano_conta_futura = $ano_atual - 1;
@@ -19,10 +19,10 @@ router_add('index', function () {
 
     $retorno_conta = (array) $objeto_conta->pesquisar_todos((array) ['filtro' => (array) ['empresa', '===', model_id($codigo_empresa)], 'ordenacao' => ['nome_conta' => (bool) true], 'limite' => 0]);
     $retorno_contas_pagar = (array) $objeto_contas_pagar_receber->relatorio_contas_pagar($codigo_empresa);
-    $retorno_contas_futuras = (array) $objeto_contas_pagar_receber->relatorio_contas_pagar_mensal($codigo_empresa, $ano_conta_futura.'-01-01', '00:00:00');
+    $retorno_contas_futuras = (array) $objeto_contas_pagar_receber->relatorio_contas_pagar_mensal($codigo_empresa, $ano_conta_futura . '-01-01', '00:00:00');
 
     $retorno_fechamento_contabil = (array) $objeto_fechamento_contabil_geral->pesquisar_todos(['filtro' => (array) ['and' => (array) [['ano_referencia', '===', (int) $ano_atual], ['empresa', '===', model_id($codigo_empresa)]]], 'ordenacao' => (array) ['mes_referencia' => (bool) true], 'limite' => (int) 12]);
-?>
+    ?>
     <script>
         const CORES = {
             data1: '#664dc9',
@@ -86,7 +86,7 @@ router_add('index', function () {
             let saldo_contas = [];
             let nomes = {};
 
-            sistema.each(CONTAS, function(contador, conta) {
+            sistema.each(CONTAS, function (contador, conta) {
                 let soma_contador = (contador + 1);
 
                 if (conta.saldo_conta == 0) {
@@ -123,10 +123,10 @@ router_add('index', function () {
             let valor_contas = [];
             let nomes = {};
 
-            sistema.each(CONTAS_PAGAR_RECEBER, function(contador, conta) {
+            sistema.each(CONTAS_PAGAR_RECEBER, function (contador, conta) {
                 let soma_contador = (contador + 1);
 
-                nomes['data' + soma_contador] = conta['tipo_conta']+' '+conta['status_conta'] + ' ' + sistema.number_format(conta['SUM(valor_conta)']);
+                nomes['data' + soma_contador] = conta['tipo_conta'] + ' ' + conta['status_conta'] + ' ' + sistema.number_format(conta['SUM(valor_conta)']);
                 valor_contas.push(['data' + soma_contador, conta['SUM(valor_conta)']]);
             });
 
@@ -159,7 +159,7 @@ router_add('index', function () {
                 'data3': 'RESULTADO'
             };
 
-            sistema.each(FECHAMENTO_CONTABIL, function(contador, fechamento) {
+            sistema.each(FECHAMENTO_CONTABIL, function (contador, fechamento) {
                 debito.push(fechamento.total_debito);
                 credito.push(fechamento.total_credito);
                 resultado.push(fechamento.valor_resultado);
@@ -276,76 +276,76 @@ router_add('index', function () {
 
         function historico_contas() {
 
-    let series = {};
-    let categories = [];
-    let mesesUnicos = [];
+            let series = {};
+            let categories = [];
+            let mesesUnicos = [];
 
-    sistema.each(CONTAS_FUTURAS, function (contador, contas) {
+            sistema.each(CONTAS_FUTURAS, function (contador, contas) {
 
-        let chaveMes = contas.ano + '-' + ('0' + contas.mes).slice(-2);
+                let chaveMes = contas.ano + '-' + ('0' + contas.mes).slice(-2);
 
-        let chaveSerie = contas.tipo_conta + ' - ' + contas.status_conta;
+                let chaveSerie = contas.tipo_conta + ' - ' + contas.status_conta;
 
-        // 🔹 garante eixo X
-        if (!mesesUnicos.includes(chaveMes)) {
-            mesesUnicos.push(chaveMes);
-        }
+                // 🔹 garante eixo X
+                if (!mesesUnicos.includes(chaveMes)) {
+                    mesesUnicos.push(chaveMes);
+                }
 
-        // 🔹 inicializa série
-        if (!series[chaveSerie]) {
-            series[chaveSerie] = [chaveSerie];
-        }
+                // 🔹 inicializa série
+                if (!series[chaveSerie]) {
+                    series[chaveSerie] = [chaveSerie];
+                }
 
-        // 🔹 salva por chave mês
-        if (!series[chaveSerie + '_' + chaveMes]) {
-            series[chaveSerie + '_' + chaveMes] = contas.total_valor;
-        }
-    });
-
-    // 🔹 ordena meses
-    mesesUnicos.sort();
-
-    // 🔹 monta colunas no formato C3
-    let columns = [];
-
-    Object.keys(series).forEach(function (key) {
-
-        if (key.indexOf('_') === -1) {
-            // é nome da série
-            let arr = [key];
-
-            mesesUnicos.forEach(function (mes) {
-
-                let valor = series[key + '_' + mes] || 0;
-                arr.push(valor);
-
+                // 🔹 salva por chave mês
+                if (!series[chaveSerie + '_' + chaveMes]) {
+                    series[chaveSerie + '_' + chaveMes] = contas.total_valor;
+                }
             });
 
-            columns.push(arr);
-        }
-    });
+            // 🔹 ordena meses
+            mesesUnicos.sort();
 
-    var chart = c3.generate({
-        bindto: '#historico_contas',
-        data: {
-            columns: columns,
-            type: 'spline'
-        },
-        axis: {
-            x: {
-                type: 'category',
-                categories: mesesUnicos
-            }
-        },
-        legend: {
-            show: true
-        },
-        padding: {
-            bottom: 0,
-            top: 0
+            // 🔹 monta colunas no formato C3
+            let columns = [];
+
+            Object.keys(series).forEach(function (key) {
+
+                if (key.indexOf('_') === -1) {
+                    // é nome da série
+                    let arr = [key];
+
+                    mesesUnicos.forEach(function (mes) {
+
+                        let valor = series[key + '_' + mes] || 0;
+                        arr.push(valor);
+
+                    });
+
+                    columns.push(arr);
+                }
+            });
+
+            var chart = c3.generate({
+                bindto: '#historico_contas',
+                data: {
+                    columns: columns,
+                    type: 'spline'
+                },
+                axis: {
+                    x: {
+                        type: 'category',
+                        categories: mesesUnicos
+                    }
+                },
+                legend: {
+                    show: true
+                },
+                padding: {
+                    bottom: 0,
+                    top: 0
+                }
+            });
         }
-    });
-}
     </script>
 
     <div class="page-wrapper">
@@ -401,14 +401,14 @@ router_add('index', function () {
             </div>
         </div>
         <script>
-            window.onload = function() {
+            window.onload = function () {
                 montar_relatorio_contas();
                 montar_relatorio_contas_pagar();
                 relatorio_fechamento_contabil();
                 historico_contas();
             }
         </script>
-    <?php
-    require_once 'includes/footer.php';
+        <?php
+        require_once 'includes/footer.php';
 });
-    ?>
+?>

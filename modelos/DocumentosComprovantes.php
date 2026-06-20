@@ -60,6 +60,12 @@ class DocumentosComprovantes implements InterfaceModelo
         return (array) model_all((string) $this->tabela(), (array) $filtro['filtro'], (array) $filtro['ordenacao'], (int) $filtro['limite']);
     }
 
+    /**
+     * Função responsável por salvar os dados no banco de dados e os arquivos
+     * @param mixed $dados
+     * @param mixed $file
+     * @return bool
+     */
     public function salvar_dados_arquivos($dados, $file)
     {
         $objeto_conta_pagar_receber = new ContasPagarReceber();
@@ -102,5 +108,9 @@ class DocumentosComprovantes implements InterfaceModelo
         } else {
             return (bool) false;
         }
+    }
+
+    public function montar_array(){
+        return (array) [];
     }
 }

@@ -160,27 +160,27 @@ class Movimentacao implements InterfaceModelo
         $this->data_inicio = (isset($dados['data_inicio']) ? model_date($dados['data_inicio'], '00:00:00') : model_date($data->format('Y-m-01'), '00:00:00'));
         $this->data_final = (isset($dados['data_final']) ? model_date($dados['data_final'], '23:59:59') : model_date($data->format('Y-m-t'), '23:59:59'));
         $this->empresa = (isset($dados['empresa']) ? (string) $dados['empresa'] : '');
-        $this->pesquisar_conta = (bool) (isset($dados['pesquisar_conta']) ? (bool) $dados['pesquisar_conta']:true);
+        $this->pesquisar_conta = (bool) (isset($dados['pesquisar_conta']) ? (bool) $dados['pesquisar_conta'] : true);
 
         $retorno_validacao = (array) [];
         $filtro = (array) [];
         $filtro_pesquisa = (array) ['filtro' => (array) [], 'ordenacao' => (array) ['_id' => (bool) false], 'limite' => (int) 0];
-        $retorno = (array)[];
+        $retorno = (array) [];
 
-        array_push($filtro,(array) ['data_lancamento', '>=', $this->data_inicio]);
-        array_push($filtro,(array) ['data_lancamento', '<=', $this->data_final]);
+        array_push($filtro, (array) ['data_lancamento', '>=', $this->data_inicio]);
+        array_push($filtro, (array) ['data_lancamento', '<=', $this->data_final]);
 
-        if($this->conta != 'TODOS'){
+        if ($this->conta != 'TODOS') {
             array_push($filtro, (array) ['conta', '===', model_id($this->conta)]);
         }
 
-        if($this->tipo_lancamento != 'TODOS'){
+        if ($this->tipo_lancamento != 'TODOS') {
             array_push($filtro, (array) ['tipo_lancamento', '===', (string) $this->tipo_lancamento]);
         }
 
-        if($this->empresa != ''){
+        if ($this->empresa != '') {
             array_push($filtro, (array) ['empresa', '===', model_id($this->empresa)]);
-        }else{
+        } else {
             return (array) [];
         }
 
@@ -188,28 +188,28 @@ class Movimentacao implements InterfaceModelo
 
         $retorno_validacao = (array) $this->pesquisar_todos($filtro_pesquisa);
 
-        if(empty($retorno_validacao) == false){
-            if($this->pesquisar_conta == true){
+        if (empty($retorno_validacao) == false) {
+            if ($this->pesquisar_conta == true) {
                 $objeto_conta = new Contas();
 
-                foreach($retorno_validacao as $movimentacao){
+                foreach ($retorno_validacao as $movimentacao) {
                     $retorno_temporario = (array) ['nome_conta' => (string) ''];
                     $retorno_conta = (array) $objeto_conta->pesquisar((array) ['filtro' => (array) ['_id', '===', $movimentacao['conta']]]);
 
                     $retorno_temporario = (array) $movimentacao;
 
-                    if(empty($retorno_conta) == false){
-                        $retorno_temporario['nome_conta'] = (string)  $retorno_conta['nome_conta'];
+                    if (empty($retorno_conta) == false) {
+                        $retorno_temporario['nome_conta'] = (string) $retorno_conta['nome_conta'];
                     }
 
                     array_push($retorno, $retorno_temporario);
                 }
 
                 return (array) $retorno;
-            }else{
+            } else {
                 return (array) $retorno_validacao;
             }
-        }else{
+        } else {
             return (array) [];
         }
     }
@@ -219,18 +219,19 @@ class Movimentacao implements InterfaceModelo
      * @param mixed $dados - código da empresa que será realizada a exclusão dos dados.
      * @return bool
      */
-    public function deletar_antigo($dados){
+    public function deletar_antigo($dados)
+    {
         $this->colocar_dados($dados);
-        
+
         $data_atual = (new DateTime())->modify('-5 years')->format('Y-m-d');
 
-        if($this->empresa != ''){
+        if ($this->empresa != '') {
             $filtro_montando = (array) [];
             array_push($filtro_montando, (array) ['empresa', '===', $this->empresa]);
             array_push($filtro_montando, (array) ['data_lancamento', '<=', model_date($data_atual)]);
 
             return (bool) model_delete((string) $this->tabela(), (array) ['and' => (array) $filtro_montando]);
-        }else{
+        } else {
             return (bool) false;
         }
     }

@@ -13,11 +13,8 @@ $data = new DateTime();
 require_once 'funcoes.php';
 require_once 'userFunctions.php';
 
-require_once __DIR__ . '/sistema/env.php';
-env_load_dotenv((string) (dirname(__DIR__) . '/configuracao.env'));
-
-
-function rota($procurar='index') {
+function rota($procurar = 'index')
+{
   $atual = (string) 'index';
   $procurar = (string) strtolower($procurar);
 
@@ -26,5 +23,19 @@ function rota($procurar='index') {
   }
 
   return ($atual == $procurar);
+}
+
+/** * Função responsável por fazer o roteamento do sistema 
+ * @param string $rota 
+ * @param mixed $pagina 
+ * @return void 
+ * */
+function router_add($rota, $pagina)
+{
+  $rota_atual = $_REQUEST['rota'] ?? 'index';
+  if ($rota_atual == $rota) {
+    call_user_func($pagina);
+    exit;
+  }
 }
 ?>

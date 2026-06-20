@@ -14,7 +14,7 @@ router_add('pesquisar_clientes', function () {
     $objeto_usuario = new Usuario();
 
     $empresa = (string) (isset($_REQUEST['empresa']) ? (string) $_REQUEST['empresa'] : '');
-    $nome_usuario  = (string) (isset($_REQUEST['nome_usuario']) ? (string) strtoupper($_REQUEST['nome_usuario']) : '');
+    $nome_usuario = (string) (isset($_REQUEST['nome_usuario']) ? (string) strtoupper($_REQUEST['nome_usuario']) : '');
     $email_usuario = (string) (isset($_REQUEST['email_usuario']) ? (string) $_REQUEST['email_usuario'] : '');
     $celular = (string) (isset($_REQUEST['celular']) ? (string) $_REQUEST['celular'] : '');
     $tipo_usuario = (string) (isset($_REQUEST['tipo_usuario']) ? (string) $_REQUEST['tipo_usuario'] : 'CLIENTE_FORNECEDOR');
@@ -76,13 +76,13 @@ router_add('pesquisar_clientes', function () {
                 if (empty($retorno_modulo_contabil) == false) {
                     $contador = (int) 1;
 
-                    foreach($retorno_modulo_contabil as $contabil){
-                        if($contador == 1){
+                    foreach ($retorno_modulo_contabil as $contabil) {
+                        if ($contador == 1) {
                             $modulo_contabil['local_conta_id_1'] = (string) $contabil['local_conta_id'];
                             $modulo_contabil['conta_contabil_1'] = (string) $contabil['conta_contabil'];
-                            
+
                             $contador++;
-                        }else{
+                        } else {
                             $modulo_contabil['local_conta_id_2'] = (string) $contabil['local_conta_id'];
                             $modulo_contabil['conta_contabil_2'] = (string) $contabil['conta_contabil'];
                         }
@@ -119,7 +119,7 @@ router_add('pesquisar_cliente', function () {
 
 router_add('index', function () {
     require_once 'includes/head.php';
-?>
+    ?>
     <script>
         const CODIGO_EMPRESA = "<?php echo $codigo_empresa; ?>";
         const MODULO_CONTABIL = "<?php echo $_SESSION['modulo_contabil'] ? 'true' : 'false'; ?>";
@@ -145,7 +145,7 @@ router_add('index', function () {
                 'email_usuario': email_cliente,
                 'tipo_usuario': tipo_usuario,
                 'modulo_contabil': MODULO_CONTABIL
-            }, function(retorno) {
+            }, function (retorno) {
                 let clientes = retorno.dados;
                 let tamanho_retorno = clientes.length;
                 let tabela = document.querySelector('#tabela_clientes tbody');
@@ -157,34 +157,34 @@ router_add('index', function () {
                     linha.appendChild(sistema.gerar_td(['text-center'], 'NENHUM CLIENTE ENCONTRADO COM OS FILTROS PASSADOS!', 'inner', true, 10));
                     tabela.appendChild(linha);
                 } else {
-                    sistema.each(clientes, function(index, cliente) {
+                    sistema.each(clientes, function (index, cliente) {
                         let linha = document.createElement('tr');
                         linha.appendChild(sistema.gerar_td(['text-start'], sistema.cortar_string(cliente.nome_usuario, 30), 'inner', false, '', cliente.nome_usuario));
                         linha.appendChild(sistema.gerar_td(['text-center'], cliente.celular, 'inner'));
                         linha.appendChild(sistema.gerar_td(['text-center'], cliente.email_usuario, 'inner'));
 
                         if (cliente.tipo_usuario == 'CLIENTE') {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_usuario_' + cliente._id.$oid, 'CLIENTE', ['btn', 'btn-outline-secondary'], () => {}), 'append'));
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_usuario_' + cliente._id.$oid, 'CLIENTE', ['btn', 'btn-outline-secondary'], () => { }), 'append'));
                         } else {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_usuario_' + cliente._id.$oid, 'FORNECEDOR', ['btn', 'btn-outline-primary'], () => {}), 'append'));
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_usuario_' + cliente._id.$oid, 'FORNECEDOR', ['btn', 'btn-outline-primary'], () => { }), 'append'));
                         }
-                        
-                        if(MODULO_CONTABIL == 'true' || MODULO_CONTABIL == true){
-                            if(cliente.modulo_contabil.local_conta_id_1 == 'ATIVO_CIRCULANTE_CLIENTE'){
-                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_usuario_' + cliente._id.$oid, 'ATIVO CIRCULANTE CLIENTE', ['btn', 'btn-outline-dark'], () => {}), 'append'));
-                            }else if(cliente.modulo_contabil.local_conta_id_1 == 'PASSIVO_CIRCULANTE_FORNECEDOR'){
-                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_usuario_' + cliente._id.$oid, 'PASSIVO CIRCULANTE FORNECEDOR', ['btn', 'btn-outline-primary'], () => {}), 'append'));
-                            }else{
+
+                        if (MODULO_CONTABIL == 'true' || MODULO_CONTABIL == true) {
+                            if (cliente.modulo_contabil.local_conta_id_1 == 'ATIVO_CIRCULANTE_CLIENTE') {
+                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_usuario_' + cliente._id.$oid, 'ATIVO CIRCULANTE CLIENTE', ['btn', 'btn-outline-dark'], () => { }), 'append'));
+                            } else if (cliente.modulo_contabil.local_conta_id_1 == 'PASSIVO_CIRCULANTE_FORNECEDOR') {
+                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_usuario_' + cliente._id.$oid, 'PASSIVO CIRCULANTE FORNECEDOR', ['btn', 'btn-outline-primary'], () => { }), 'append'));
+                            } else {
                                 linha.appendChild(sistema.gerar_td(['text-center'], '', 'inner'));
                             }
-                            
+
                             linha.appendChild(sistema.gerar_td(['text-center'], cliente.modulo_contabil.conta_contabil_1, 'inner'));
-                            
-                            if(cliente.modulo_contabil.local_conta_id_2 == 'ATIVO_NAO_CIRCULANTE_CLIENTE'){
-                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_usuario_' + cliente._id.$oid, 'ATIVO NÃO CIRCULANTE CLIENTE', ['btn', 'btn-outline-dark'], () => {}), 'append'));
-                            }else if(cliente.modulo_contabil.local_conta_id_2 == 'PASSIVO_NAO_CIRCULANTE_FORNECEDOR'){
-                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_usuario_' + cliente._id.$oid, 'PASSIVO NÃO CIRCULANTE FORNECEDOR', ['btn', 'btn-outline-primary'], () => {}), 'append'));
-                            }else{
+
+                            if (cliente.modulo_contabil.local_conta_id_2 == 'ATIVO_NAO_CIRCULANTE_CLIENTE') {
+                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_usuario_' + cliente._id.$oid, 'ATIVO NÃO CIRCULANTE CLIENTE', ['btn', 'btn-outline-dark'], () => { }), 'append'));
+                            } else if (cliente.modulo_contabil.local_conta_id_2 == 'PASSIVO_NAO_CIRCULANTE_FORNECEDOR') {
+                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_usuario_' + cliente._id.$oid, 'PASSIVO NÃO CIRCULANTE FORNECEDOR', ['btn', 'btn-outline-primary'], () => { }), 'append'));
+                            } else {
                                 linha.appendChild(sistema.gerar_td(['text-center'], '', 'inner'));
                             }
 
@@ -210,7 +210,8 @@ router_add('index', function () {
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap gap-2">
                     <div class="dropdown">
-                        <button class="btn btn-primary d-flex align-items-center justify-content-center" onclick="cadastro_cliente('');">
+                        <button class="btn btn-primary d-flex align-items-center justify-content-center"
+                            onclick="cadastro_cliente('');">
                             Cadastrar Cliente/Fornecedor
                         </button>
                     </div>
@@ -226,7 +227,8 @@ router_add('index', function () {
                             <div class="row">
                                 <div class="col-3 text-center">
                                     <label class="text">Nome Cliente/Fornecedor</label>
-                                    <input type="text" class="form-control text-uppercase" id="nome_cliente" placeholder="NOME CLIENTE">
+                                    <input type="text" class="form-control text-uppercase" id="nome_cliente"
+                                        placeholder="NOME CLIENTE">
                                 </div>
                                 <div class="col-3 text-center">
                                     <label class="text">Email</label>
@@ -234,7 +236,8 @@ router_add('index', function () {
                                 </div>
                                 <div class="col-3 text-center">
                                     <label class="text">Telefone Cliente/Fornecedor</label>
-                                    <input type="phone" class="form-control" id="telefone_cliente" placeholder="TELEFONE CLIENTE">
+                                    <input type="phone" class="form-control" id="telefone_cliente"
+                                        placeholder="TELEFONE CLIENTE">
                                 </div>
                                 <div class="col-3 text-center">
                                     <label class="text">Cliente/Fornecedor</label>
@@ -249,7 +252,8 @@ router_add('index', function () {
                             <br />
                             <div class="row">
                                 <div class="col-3 push-9">
-                                    <button class="btn btn-secondary w-100" onclick="pesquisar_cliente();">PESQUISAR</button>
+                                    <button class="btn btn-secondary w-100"
+                                        onclick="pesquisar_cliente();">PESQUISAR</button>
                                 </div>
                             </div>
                             <br />
@@ -277,7 +281,8 @@ router_add('index', function () {
                                             </thead>
                                             <tbody>
                                                 <tr>
-                                                    <td colspan="10" class="text-center">UTILIZE O FILTRO PARA FACILITAR A PESQUISA!</td>
+                                                    <td colspan="10" class="text-center">UTILIZE O FILTRO PARA FACILITAR A
+                                                        PESQUISA!</td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -294,8 +299,8 @@ router_add('index', function () {
                 pesquisar_cliente();
             }
         </script>
-    <?php
-    require_once 'includes/footer.php';
+        <?php
+        require_once 'includes/footer.php';
 });
 
 router_add('cadastro_clientes', function () {
@@ -320,7 +325,7 @@ router_add('cadastro_clientes', function () {
                     script.src = 'https://viacep.com.br/ws/' + cep + '/json/?callback=meu_callback';
                     document.body.appendChild(script);
 
-                    if (valida_cep.test(cep)) {}
+                    if (valida_cep.test(cep)) { }
                 } else {
                     Swal.fire({
                         title: "FALHA NA OPERAÇÃO!",
@@ -378,7 +383,7 @@ router_add('cadastro_clientes', function () {
                         'uf': uf,
                         'estado': estado,
                         'numero': numero
-                    }, function(retorno) {
+                    }, function (retorno) {
                         validar_retorno(retorno, '/clientes.php');
                     });
                 }
@@ -407,7 +412,7 @@ router_add('cadastro_clientes', function () {
                 sistema.request.post('/clientes.php', {
                     'rota': 'pesquisar_cliente',
                     'codigo_cliente': CODIGO_CLIENTE
-                }, function(retorno) {
+                }, function (retorno) {
                     let cliente = retorno.dados;
 
                     document.querySelector('#nome_usuario').value = cliente.nome_usuario;
@@ -435,15 +440,18 @@ router_add('cadastro_clientes', function () {
                                 <div class="row">
                                     <div class="col-4 text-center">
                                         <label class="text">Nome Cliente/Fornecedor</label>
-                                        <input type="text" class="form-control text-uppercase" placeholder="Nome Cliente/Fornecedor" id="nome_usuario">
+                                        <input type="text" class="form-control text-uppercase"
+                                            placeholder="Nome Cliente/Fornecedor" id="nome_usuario">
                                     </div>
                                     <div class="col-4 text-center">
                                         <label class="text">Email</label>
-                                        <input type="mail" class="form-control" placeholder="Email Cliente" id="email_usuario">
+                                        <input type="mail" class="form-control" placeholder="Email Cliente"
+                                            id="email_usuario">
                                     </div>
                                     <div class="col-2 text-center">
                                         <label class="text">Celular</label>
-                                        <input type="phone" class="form-control" placeholder="telefone Cliente" id="celular">
+                                        <input type="phone" class="form-control" placeholder="telefone Cliente"
+                                            id="celular">
                                     </div>
                                     <div class="col-2 text-center">
                                         <label class="text">Tipo Usuário</label>
@@ -458,19 +466,23 @@ router_add('cadastro_clientes', function () {
                                     <div class="row">
                                         <div class="col-2">
                                             <label class="text">Cep</label>
-                                            <input type="text" class="form-control" placeholder="Cep Cliente/Fornecedor" id="cep" onblur="pesquisar_cep(this.value);">
+                                            <input type="text" class="form-control" placeholder="Cep Cliente/Fornecedor"
+                                                id="cep" onblur="pesquisar_cep(this.value);">
                                         </div>
                                         <div class="col-2">
                                             <label class="text">Logradouro</label>
-                                            <input type="text" class="form-control" placeholder="Logradouro Cliente" id="logradouro">
+                                            <input type="text" class="form-control" placeholder="Logradouro Cliente"
+                                                id="logradouro">
                                         </div>
                                         <div class="col-2">
                                             <label class="text">Número</label>
-                                            <input type="text" class="form-control" placeholder="Número Residência" id="numero">
+                                            <input type="text" class="form-control" placeholder="Número Residência"
+                                                id="numero">
                                         </div>
                                         <div class="col-2">
                                             <label class="text">Bairro</label>
-                                            <input type="text" class="form-control" placeholder="Bairro Cliente" id="bairro">
+                                            <input type="text" class="form-control" placeholder="Bairro Cliente"
+                                                id="bairro">
                                         </div>
                                         <div class="col-2">
                                             <label class="text">Uf</label>
@@ -478,7 +490,8 @@ router_add('cadastro_clientes', function () {
                                         </div>
                                         <div class="col-2">
                                             <label class="text">Estado</label>
-                                            <input type="text" class="form-control" placeholder="Estado Cliente" id="estado">
+                                            <input type="text" class="form-control" placeholder="Estado Cliente"
+                                                id="estado">
                                         </div>
                                     </div>
                                 </div>
@@ -491,13 +504,13 @@ router_add('cadastro_clientes', function () {
                 </div>
             </div>
             <script>
-                window.onload = function() {
+                window.onload = function () {
                     if (CODIGO_CLIENTE != '') {
                         pesquisar_cliente();
                     }
                 }
             </script>
-        <?php
-        require_once 'includes/footer.php';
-    });
-        ?>
+            <?php
+            require_once 'includes/footer.php';
+});
+?>

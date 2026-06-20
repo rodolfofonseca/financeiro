@@ -55,7 +55,7 @@ router_add('pesquisar_todos_extratos', function () {
         array_push($filtro_montado, (array) ['data_pagamento', '<=', model_date($data_extrato, '23:59:59')]);
     }
 
-    if($status_extrato != 'TODOS'){
+    if ($status_extrato != 'TODOS') {
         array_push($filtro_montado, (array) ['status', '===', (string) $status_extrato]);
     }
 

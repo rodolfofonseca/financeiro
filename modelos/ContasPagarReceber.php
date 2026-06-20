@@ -1,6 +1,5 @@
 <?php
 require_once 'classes/bancoDeDados.php';
-require_once 'classes/Mongo/Mongo.php';
 require_once 'classes/CodigoBarras/EAN13.php';
 
 require_once 'modelos/Interface.php';
@@ -11,23 +10,23 @@ require_once 'modelos/ContasFornecedores.php';
 
 class ContasPagarReceber implements InterfaceModelo
 {
-    private mixed $codigo_conta_pagar_receber;
-    private mixed $empresa;
-    private mixed $cliente_fornecedor;
-    private mixed $conta_fornecedor;
+    private int $codigo_conta_pagar_receber;
+    private int $empresa;
+    private int $cliente_fornecedor;
+    private int $conta_fornecedor;
     private string $nome_conta;
     private string $descricao;
     private float $valor_conta;
     private float $valor_pago;
     private float $valor_juro_desconto;
     private string $tipo_juro_desconto;
-    private string $tipo_conta;
-    private mixed $data_cadastro;
-    private mixed $data_cadastro_fim;
-    private mixed $data_vencimento;
-    private mixed $data_vencimento_fim;
-    private mixed $data_baixa;
-    private mixed $data_baixa_fim;
+    private bool $tipo_conta;
+    private string $data_cadastro;
+    private string $data_cadastro_fim;
+    private string $data_vencimento;
+    private string $data_vencimento_fim;
+    private string $data_baixa;
+    private string $data_baixa_fim;
     private string $status_conta;
     private string $comprovante;
     private string $boleto;
@@ -35,42 +34,42 @@ class ContasPagarReceber implements InterfaceModelo
 
     public function tabela()
     {
-        return (string) 'contas_pagar_receber';
+        return (string) 'conta_pagar_receber';
     }
 
     public function modelo()
     {
-        return (array) ['empresa' => 'objectId', 'cliente_fornecedor' => 'objectId', 'conta_fornecedor' => 'objectId', 'nome_conta' => (string) '', 'descricao' => (string) '', 'valor_conta' => (float) 0, 'valor_pago' => (float) 0, 'valor_juro_desconto' => (float) 0, 'tipo_juro_desconto' => (string) '', 'tipo_conta' => (string) 'PAGAR', 'data_cadastro' => 'date', 'data_vencimento' => 'date', 'data_baixa' => 'date', 'status_conta' => (string) 'AGUARDANDO', 'comprovante' => (string) 'NAO', 'boleto' => (string) 'NAO', 'transacao' => (string) ''];
+        return (array) [];
     }
 
     public function colocar_dados($dados = [])
     {
         if (array_key_exists('codigo_conta_pagar_receber', $dados) == true) {
-            if ($dados['codigo_conta_pagar_receber'] != '') {
-                $this->codigo_conta_pagar_receber = model_id($dados['codigo_conta_pagar_receber']);
+            if ($dados['codigo_conta_pagar_receber'] != 0) {
+                $this->codigo_conta_pagar_receber = (int) intval($dados['codigo_conta_pagar_receber'], 10);
             } else {
-                $this->codigo_conta_pagar_receber = null;
+                $this->codigo_conta_pagar_receber = 0;
             }
         } else {
-            $this->codigo_conta_pagar_receber = null;
+            $this->codigo_conta_pagar_receber = 0;
         }
 
         $objeto_codigo_barras = new EAN13();
         $transacao = (string) $objeto_codigo_barras->getFullCode('');
 
-        $this->empresa = (isset($dados['empresa']) ? model_id($dados['empresa']) : '');
-        $this->cliente_fornecedor = (isset($dados['cliente_fornecedor']) ? model_id($dados['cliente_fornecedor']) : '');
-        $this->conta_fornecedor = (isset($dados['conta_fornecedor']) ? model_id($dados['conta_fornecedor']) : '');
+        $this->empresa = (isset($dados['empresa']) ? (int) intval($dados['empresa'], 10) : 0);
+        $this->cliente_fornecedor = (isset($dados['cliente_fornecedor']) ? (int) intval($dados['cliente_fornecedor'], 10) : 0);
+        $this->conta_fornecedor = (isset($dados['conta_fornecedor']) ? (int) intval($dados['conta_fornecedor']) : 0);
         $this->nome_conta = (string) (isset($dados['nome_conta']) ? strtoupper($dados['nome_conta']) : '');
         $this->descricao = (string) (isset($dados['descricao']) ? (string) strtoupper($dados['descricao']) : '');
-        $this->valor_conta = (float) (isset($dados['valor_conta']) ? (float) doubleval(str_replace(',', '.', $dados['valor_conta'])) : 0);
-        $this->valor_pago = (float) (isset($dados['valor_pago']) ? (float) doubleval(str_replace(',', '.', $dados['valor_pago'])) : 0);
-        $this->valor_juro_desconto = (float) (isset($dados['valor_juro_desconto']) ? (float) doubleval(str_replace(',', '.', $dados['valor_juro_desconto'])) : 0);
-        $this->tipo_juro_desconto = (string) (isset($dados['tipo_juro_desconto']) ? (string) $dados['tipo_juro_desconto'] : '');
-        $this->tipo_conta = (string) (isset($dados['tipo_conta']) ? (string) $dados['tipo_conta'] : 'PAGAR');
-        $this->data_cadastro = (isset($dados['data_cadastro']) ? model_date($dados['data_cadastro']) : model_date());
-        $this->data_vencimento = (isset($dados['data_vencimento']) ? model_date($dados['data_vencimento']) : model_date());
-        $this->data_baixa = (isset($dados['data_baixa']) ? model_date($dados['data_baixa']) : model_date());
+        $this->valor_conta = (float) (isset($dados['valor_conta']) ? (float) floatval(str_replace(',', '.', $dados['valor_conta'])) : 0);
+        $this->valor_pago = (float) (isset($dados['valor_pago']) ? (float) floatval(str_replace(',', '.', $dados['valor_pago'])) : 0);
+        $this->valor_juro_desconto = (float) (isset($dados['valor_juro_desconto']) ? (float) floatval(str_replace(',', '.', $dados['valor_juro_desconto'])) : 0);
+        $this->tipo_juro_desconto = (bool) (isset($dados['tipo_juro_desconto']) ? (bool) filter_var($dados['tipo_juro_desconto'], FILTER_VALIDATE_BOOLEAN) : false);
+        $this->tipo_conta = (bool) (isset($dados['tipo_conta']) ? (bool) filter_var($dados['tipo_conta'], FILTER_VALIDATE_BOOLEAN) : false);
+        $this->data_cadastro = (isset($dados['data_cadastro']) ? model_date($dados['data_cadastro']) : '');
+        $this->data_vencimento = (isset($dados['data_vencimento']) ? model_date($dados['data_vencimento']) : '');
+        $this->data_baixa = (isset($dados['data_baixa']) ? model_date($dados['data_baixa']) : '');
         $this->status_conta = (string) (isset($dados['status_conta']) ? (string) $dados['status_conta'] : 'AGUARDANDO');
         $this->comprovante = (string) (isset($dados['anexa_documentos']) ? (string) $dados['anexa_documentos'] : 'NAO');
         $this->boleto = (string) (isset($dados['boleto']) ? (string) $dados['boleto'] : 'NAO');
@@ -81,10 +80,10 @@ class ContasPagarReceber implements InterfaceModelo
     {
         $this->colocar_dados($dados);
 
-        if ($this->codigo_conta_pagar_receber != null) {
-            return (bool) model_update((string) $this->tabela(), (array) ['_id', '===', $this->codigo_conta_pagar_receber], (array) ['empresa' => $this->empresa, 'cliente_fornecedor' => $this->cliente_fornecedor, 'conta_fornecedor' => $this->conta_fornecedor, 'nome_conta' => (string) $this->nome_conta, 'descricao' => (string) $this->descricao, 'valor_conta' => (float) $this->valor_conta, 'valor_pago' => (float) $this->valor_pago, 'valor_juro_desconto' => (float) $this->valor_juro_desconto, 'tipo_juro_desconto' => (string) $this->tipo_juro_desconto, 'tipo_conta' => (string) $this->tipo_conta, 'data_cadastro' => $this->data_cadastro, 'data_vencimento' => $this->data_vencimento, 'data_baixa' => $this->data_baixa, 'status_conta' => (string) $this->status_conta, 'comprovante' => (string) $this->comprovante, 'boleto' => (string) $this->boleto, 'transacao' => (string) $this->transacao]);
+        if ($this->codigo_conta_pagar_receber != 0) {
+            return (bool) model_update((string) $this->tabela(), (array) ['where' => [['codigo_conta_pagar_receber', '=', $this->codigo_conta_pagar_receber]]], (array) $this->montar_array());
         } else {
-            return (bool) model_insert((string) $this->tabela(), (array) ['empresa' => $this->empresa, 'cliente_fornecedor' => $this->cliente_fornecedor, 'conta_fornecedor' => $this->conta_fornecedor, 'nome_conta' => (string) $this->nome_conta, 'descricao' => (string) $this->descricao, 'valor_conta' => (float) $this->valor_conta, 'valor_pago' => (float) $this->valor_pago, 'valor_juro_desconto' => (float) $this->valor_juro_desconto, 'tipo_juro_desconto' => (string) $this->tipo_juro_desconto, 'tipo_conta' => (string) $this->tipo_conta, 'data_cadastro' => $this->data_cadastro, 'data_vencimento' => $this->data_vencimento, 'data_baixa' => $this->data_baixa, 'status_conta' => (string) $this->status_conta, 'comprovante' => (string) $this->comprovante, 'boleto' => (string) $this->boleto, 'transacao' => (string) $this->transacao]);
+            return (bool) model_insert((string) $this->tabela(), (array) $this->montar_array());
         }
     }
 
@@ -128,42 +127,67 @@ class ContasPagarReceber implements InterfaceModelo
     {
         $this->colocar_dados($dados);
 
-        $objeto_movimentacao = new Movimentacao();
-
-        $conta = (array) $this->pesquisar((array) ['filtro' => (array) ['_id', '===', $this->codigo_conta_pagar_receber]]);
+        $conta = (array) $this->pesquisar((array) ['filtro' => (array) ['where' => [['codigo_conta_pagar_receber', '=', $this->codigo_conta_pagar_receber]]]]);
 
         if (empty($conta) == false) {
-            $array_movimentacao = (array) ['empresa' => (string) $dados['empresa'], 'conta' => (string) $dados['codigo_conta_bancaria'], 'valor_lancamento' => (float) $this->valor_pago];
+            $this->status_conta = (string) 'PAGO';
+            $retorno_update = (bool) model_update((string) $this->tabela(), ['where' => [['codigo_conta_pagar_receber', '=', $this->codigo_conta_pagar_receber]]], (array) $this->montar_array());
 
-            if ($this->tipo_conta == 'PAGAR') {
-                $array_movimentacao['tipo_lancamento'] = (string) 'DEBITO';
-                $array_movimentacao['descricao'] = (string) 'Pagamento da conta ' . $this->nome_conta;
-            } else {
-                $array_movimentacao['tipo_lancamento'] = (string) 'CREDITO';
-                $array_movimentacao['descricao'] = (string) 'Recebimento da conta ' . $this->nome_conta;
-            }
+            if ($retorno_update == true) {
+                $objeto_movimentacao = new Movimentacao();
 
-            $retorno_movimentacao = (bool) $objeto_movimentacao->salvar_dados($array_movimentacao);
+                $dados_movimentacao = (array) ['empresa' => $this->empresa, 'conta' => (int) intval($dados['codigo_conta_bancaria'], 10), 'valor_lancamento' => (float) $this->valor_pago];
 
-            if ($retorno_movimentacao == true) {
-                $retorno_contas_pagar_receber = (bool) model_update((string) $this->tabela(), ['_id', '===', $this->codigo_conta_pagar_receber], (array) ['valor_pago' => (float) $this->valor_pago, 'valor_juro_desconto' => (float) $this->valor_juro_desconto, 'tipo_juro_desconto' => (string) $this->tipo_juro_desconto, 'data_baixa' => $this->data_baixa, 'status_conta' => (string) 'PAGO']);
-
-                if ($retorno_movimentacao == true && $retorno_contas_pagar_receber == true) {
-                    $dados_cliente_fornecedor = (array) ['codigo_usuario' => (string) $conta['cliente_fornecedor']];
-
-                    $objeto_usuario = new Usuario();
-                    $retorno_usuario_update = (bool) $objeto_usuario->update_status_usuario($dados_cliente_fornecedor);
-
-                    return (bool) true;
+                if ($this->tipo_conta == false) {
+                    $dados_movimentacao['tipo_lancamento'] = (bool) false;
+                    $dados_movimentacao['descricao'] = (string) 'Pagamento da conta ' . $this->nome_conta;
                 } else {
-                    return (bool) false;
+                    $dados_movimentacao['tipo_lancamento'] = (bool) true;
+                    $dados_movimentacao['descricao'] = (string) 'Recebimento da conta ' . $this->nome_conta;
                 }
+
+                $retorno_movimentacao = (bool) $objeto_movimentacao->salvar_dados($dados_movimentacao);
+
+                return (bool) $retorno_movimentacao;
             } else {
                 return (bool) false;
             }
         } else {
             return (bool) false;
         }
+
+        // if (empty($conta) == false) {
+        //     $array_movimentacao = (array) ['empresa' => (string) $dados['empresa'], 'conta' => (string) $dados['codigo_conta_bancaria'], 'valor_lancamento' => (float) $this->valor_pago];
+
+        //     if ($this->tipo_conta == 'PAGAR') {
+        //         $array_movimentacao['tipo_lancamento'] = (string) 'DEBITO';
+        //         $array_movimentacao['descricao'] = (string) 'Pagamento da conta ' . $this->nome_conta;
+        //     } else {
+        //         $array_movimentacao['tipo_lancamento'] = (string) 'CREDITO';
+        //         $array_movimentacao['descricao'] = (string) 'Recebimento da conta ' . $this->nome_conta;
+        //     }
+
+        //     $retorno_movimentacao = (bool) $objeto_movimentacao->salvar_dados($array_movimentacao);
+
+        //     if ($retorno_movimentacao == true) {
+        //         $retorno_contas_pagar_receber = (bool) model_update((string) $this->tabela(), ['_id', '===', $this->codigo_conta_pagar_receber], (array) ['valor_pago' => (float) $this->valor_pago, 'valor_juro_desconto' => (float) $this->valor_juro_desconto, 'tipo_juro_desconto' => (string) $this->tipo_juro_desconto, 'data_baixa' => $this->data_baixa, 'status_conta' => (string) 'PAGO']);
+
+        //         if ($retorno_movimentacao == true && $retorno_contas_pagar_receber == true) {
+        //             $dados_cliente_fornecedor = (array) ['codigo_usuario' => (string) $conta['cliente_fornecedor']];
+
+        //             $objeto_usuario = new Usuario();
+        //             $retorno_usuario_update = (bool) $objeto_usuario->update_status_usuario($dados_cliente_fornecedor);
+
+        //             return (bool) true;
+        //         } else {
+        //             return (bool) false;
+        //         }
+        //     } else {
+        //         return (bool) false;
+        //     }
+        // } else {
+        //     return (bool) false;
+        // }
     }
 
     /**
@@ -181,29 +205,29 @@ class ContasPagarReceber implements InterfaceModelo
             $objeto_conta_fornecedor = new ContasFornecedores();
 
             foreach ($retorno_pesquisa as $pesquisa) {
-                if(array_key_exists('cliente_fornecedor', $pesquisa) == false){
+                if (array_key_exists('cliente_fornecedor', $pesquisa) == false) {
                     $usuario = (array) $objeto_usuario->pesquisar((array) ['filtro' => (array) ['and' => (array) [(array) ['empresa', '===', $pesquisa['empresa']], (array) ['tipo_usuario', '===', (string) 'CLIENTE'], (array) ['nome_usuario', '===', (string) 'CLIENTE PADRAO']]]]);
 
-                    if(empty($usuario) == false){
+                    if (empty($usuario) == false) {
                         $pesquisa['cliente_fornecedor'] = $usuario['_id'];
                     }
                 }
 
-                if(array_key_exists('conta_fornecedor', $pesquisa) == false){
+                if (array_key_exists('conta_fornecedor', $pesquisa) == false) {
                     $conta = (array) $objeto_conta_fornecedor->pesquisar((array) ['filtro' => (array) ['fornecedor', '===', $pesquisa['cliente_fornecedor']]]);
 
-                    if(empty($conta) == false){
+                    if (empty($conta) == false) {
                         $pesquisa['conta_fornecedor'] = $conta['_id'];
                     }
                 }
 
-                if(array_key_exists('transacao', $pesquisa) == false){
+                if (array_key_exists('transacao', $pesquisa) == false) {
                     $pesquisa['transacao'] = (string) $objeto_codigo_barras->getFullCode();
                 }
 
                 $pesquisa['status_conta'] = (string) 'VENCIDA';
                 $pesquisa['codigo_conta_pagar_receber'] = (string) $pesquisa['_id'];
-                
+
                 $this->salvar_dados($pesquisa);
             }
 
@@ -314,88 +338,55 @@ class ContasPagarReceber implements InterfaceModelo
      * Função para gerar um relatório de contas a pagar mensal, agrupando as contas por mês e status e calculando a quantidade total de contas e o valor total para cada grupo.
      * @param string $codigo_empresa - O código da empresa para a qual o relatório de contas a pagar mensal será gerado.
      * @param string $data - A data de vencimento das contas a serem incluídas no relatório.
-     * @param string $hora - A hora de vencimento das contas a serem incluídas no relatório.
      * @return array - Retorna um array contendo o relatório de contas a pagar mensal, onde cada elemento do array representa um grupo de contas e inclui a quantidade total de contas e o valor total para esse grupo.
      */
-    public function relatorio_contas_pagar_mensal($codigo_empresa, $data, $hora)
+    public function relatorio_contas_pagar_mensal($codigo_empresa, $data)
     {
-        $pipeline = [
+        $sql = "SELECT
+        EXTRACT(YEAR FROM data_vencimento) AS ano,
+    
+        EXTRACT(MONTH FROM data_vencimento) AS mes,
+    
+        TO_CHAR(data_vencimento, 'MM/YYYY') AS mes_ano,
+    
+        CASE
+            WHEN tipo_conta = TRUE THEN 'RECEBER'
+            ELSE 'PAGAR'
+        END AS tipo_conta,
+    
+        status_conta,
+    
+        COUNT(*) AS quantidade,
+    
+        SUM(
+            CASE
+                WHEN status_conta IN ('PAGO', 'CANCELADO')
+                    THEN COALESCE(valor_pago, 0)
+                ELSE
+                    COALESCE(valor_conta, 0)
+            END
+        ) AS valor_total
+    
+    FROM conta_pagar_receber
+    
+    WHERE codigo_empresa = :empresa
+      AND data_vencimento >= MAKE_TIMESTAMP(:ano, 1, 1, 0, 0, 0)
+    
+    GROUP BY
+        EXTRACT(YEAR FROM data_vencimento),
+        EXTRACT(MONTH FROM data_vencimento),
+        TO_CHAR(data_vencimento, 'MM/YYYY'),
+        tipo_conta,
+        status_conta
+    
+    ORDER BY
+        ano,
+        mes,
+        tipo_conta,
+        status_conta;";
 
-            [
-                '$match' => [
-                    'empresa' => model_id($codigo_empresa),
-                    'data_vencimento' => [
-                        '$gte' => model_date($data, $hora)
-                    ]
-                ]
-            ],
-            [
-                '$addFields' => [
-                    'status_normalizado' => [
-                        '$switch' => [
-                            'branches' => [
-                                [
-                                    'case' => ['$in' => ['$status_conta', ['VENCIDA', 'VENCIDO']]],
-                                    'then' => 'VENCIDO'
-                                ]
-                            ],
-                            'default' => '$status_conta'
-                        ]
-                    ]
-                ]
-            ],
-            [
-                '$group' => [
-                    '_id' => [
-                        'ano' => ['$year' => '$data_vencimento'],
-                        'mes' => ['$month' => '$data_vencimento'],
-                        'tipo_conta' => '$tipo_conta',
-                        'status_conta' => '$status_normalizado'
-                    ],
-                    'total_contas' => ['$sum' => 1],
-                    'total_valor' => ['$sum' => '$valor_conta']
-                ]
-            ],
-            [
-                '$project' => [
-                    '_id' => 0,
-                    'ano' => '$_id.ano',
-                    'mes' => '$_id.mes',
-                    'status_conta' => '$_id.status_conta',
-                    'tipo_conta' => '$_id.tipo_conta',
-                    'total_contas' => 1,
-                    'total_valor' => 1
-                ]
-            ],
-            [
-                '$sort' => [
-                    'ano' => 1,
-                    'mes' => 1,
-                    'tipo_conta' => 1,
-                    'status_conta' => 1
-                ]
-            ]
-        ];
-
-
-        $cursor = pesquisa_banco_aggregate((string) $this->tabela(), $pipeline);
-
-        $retorno = (array) [];
-
-        foreach ($cursor as $document) {
-            $array_temporario = (array) [];
-
-            $array_temporario['total_contas'] = (int) $document['total_contas'];
-            $array_temporario['total_valor'] = (float) doubleval(arredondar($document['total_valor']));
-            $array_temporario['ano'] = (int) $document['ano'];
-            $array_temporario['mes'] = (int) $document['mes'];
-            $array_temporario['status_conta'] = (string) $document['status_conta'];
-            $array_temporario['tipo_conta'] = (string) $document['tipo_conta'];
-
-            array_push($retorno, $array_temporario);
-        }
-
-        return (array) $retorno;
+        $dados = (array) model_query($sql, ['empresa' => $codigo_empresa, 'ano' => $data]);
+        return (array) $dados;
     }
 
     /**
@@ -516,73 +507,83 @@ class ContasPagarReceber implements InterfaceModelo
      */
     public function relatorio_conta_pagar_mes($codigo_empresa, $data_inicial, $data_final)
     {
+        $sql = (string) "SELECT
+        CASE
+            WHEN tipo_conta = TRUE THEN 'RECEBER'
+            ELSE 'PAGAR'
+        END AS tipo_conta,
+    
+        status_conta,
+    
+        COUNT(*) AS quantidade,
+    
+        SUM(
+            CASE
+                WHEN status_conta NOT IN ('PAGO', 'CANCELADO')
+                THEN COALESCE(valor_conta, 0)
+                ELSE 0
+            END
+        ) AS total_previsto,
+    
+        SUM(
+            CASE
+                WHEN status_conta IN ('PAGO', 'CANCELADO')
+                THEN COALESCE(valor_pago, 0)
+                ELSE 0
+            END
+        ) AS total_baixado
+    
+    FROM conta_pagar_receber
+    
+    WHERE codigo_empresa = :empresa
+  AND data_vencimento BETWEEN :inicio AND :fim
+    
+    GROUP BY
+        tipo_conta,
+        status_conta
+    
+    ORDER BY
+        tipo_conta,
+        status_conta;";
 
-        $pipeline = [
-    [
-        '$match' => [
-            '$and' => [
-                [
-                    'empresa' => model_id($codigo_empresa)
-                ],
-                [
-                    '$or' => [
-                        [
-                            '$and' => [
-                                ['tipo_conta' => 'PAGAR'],
-                                ['status_conta' => 'AGUARDANDO']
-                            ]
-                        ],
-                        [
-                            'status_conta' => 'VENCIDA'
-                        ],
-                        [
-                            'tipo_conta' => 'RECEBER'
-                        ]
-                    ]
-                ],
-                [
-                    'data_vencimento' => [
-                        '$gte' => model_date($data_inicial, '00:00:00'),
-                        '$lte' => model_date($data_final, '23:59:59')
-                    ]
-                ]
-            ]
-        ]
-    ],
-    [
-        '$group' => [
-            '_id' => [
-                'status_conta' => '$status_conta',
-                'tipo_conta' => '$tipo_conta'
-            ],
-            'COUNT(*)' => [
-                '$sum' => 1
-            ],
-            'SUM(valor_conta)' => [
-                '$sum' => '$valor_conta'
-            ]
-        ]
-    ],
-    [
-        '$project' => [
-            'status_conta' => '$_id.status_conta',
-            'tipo_conta' => '$_id.tipo_conta',
-            'COUNT(*)' => '$COUNT(*)',
-            'SUM(valor_conta)' => '$SUM(valor_conta)',
-            '_id' => 0
-        ]
-    ]
-];
+        $dados = (array) model_query($sql, ['empresa' => $codigo_empresa, 'inicio' => model_date($data_inicial, '00:00:00'), 'fim' => model_date($data_final, '23:59:59')]);
+        return (array) $dados;
+    }
 
-        $cursor = pesquisa_banco_aggregate((string) $this->tabela(), $pipeline);
+    /**
+     * Função que retorna as contas em aberto independentemente da data
+     * @param mixed $codigo_empresa
+     * @return array
+     */
+    public function relatorio_contas_futuras($codigo_empresa)
+    {
+        $sql = (string) "SELECT
+        CASE
+            WHEN tipo_conta = TRUE THEN 'RECEBER'
+            ELSE 'PAGAR'
+        END AS tipo_conta,
+    
+        status_conta,
+    
+        COUNT(*) AS quantidade,
+    
+        SUM(COALESCE(valor_conta, 0)) AS total_previsto
+    
+    FROM conta_pagar_receber
+    
+    WHERE codigo_empresa = :empresa
+      AND status_conta NOT IN ('PAGO', 'CANCELADO')
+    
+    GROUP BY
+        tipo_conta,
+        status_conta
+    
+    ORDER BY
+        tipo_conta,
+        status_conta;";
 
-        $retorno = (array) [];
-
-        foreach ($cursor as $document) {
-            array_push($retorno, $document);
-        }
-
-        return (array) $retorno;
+        $dados = (array) model_query($sql, ['empresa' => $codigo_empresa]);
+        return (array) $dados;
     }
 
     /**
@@ -594,74 +595,171 @@ class ContasPagarReceber implements InterfaceModelo
     {
         $this->nome_conta = (string) (isset($dados['nome_conta']) ? (string) $dados['nome_conta'] : '');
         $this->descricao = (string) (isset($dados['descricao']) ? (string) $dados['descricao'] : '');
-        
+
         $this->status_conta = (string) (isset($dados['status_conta']) ? (string) $dados['status_conta'] : 'TODOS');
-        $this->tipo_conta = (string) (isset($dados['tipo_conta']) ? (string) $dados['tipo_conta'] : 'TODOS');
-        
-        $this->data_cadastro = (string) (isset($dados['data_cadastro_inicio']) ? (string) $dados['data_cadastro_inicio']:'');
-        $this->data_cadastro_fim = (string) (isset($dados['data_cadastro_fim']) ?(string) $dados['data_cadastro_fim']:'');
-        $this->data_vencimento = (string) (isset($dados['data_vencimento_inicio']) ? (string) $dados['data_vencimento_inicio']:'');
-        $this->data_vencimento_fim = (string) (isset($dados['data_vencimento_fim']) ? (string) $dados['data_vencimento_fim']:'');
-        $this->data_baixa = (string) (isset($dados['data_baixa_inicio']) ? (string) $dados['data_baixa_inicio']:'');
-        $this->data_baixa_fim = (string) (isset($dados['data_baixa_fim']) ? (string) $dados['data_baixa_fim']:'');
+        // $this->tipo_conta = (string) (isset($dados['tipo_conta']) ? (string) $dados['tipo_conta'] : 'TODOS');
 
-        $this->empresa = (string) (isset($dados['empresa']) ? (string) $dados['empresa']:'');
-        $this->cliente_fornecedor = (string) (isset($dados['cliente_fornecedor']) ? (string) $dados['cliente_fornecedor']:'');
+        $this->data_cadastro = (string) (isset($dados['data_cadastro_inicio']) ? (string) $dados['data_cadastro_inicio'] : '');
+        $this->data_cadastro_fim = (string) (isset($dados['data_cadastro_fim']) ? (string) $dados['data_cadastro_fim'] : '');
+        $this->data_vencimento = (string) (isset($dados['data_vencimento_inicio']) ? (string) $dados['data_vencimento_inicio'] : '');
+        $this->data_vencimento_fim = (string) (isset($dados['data_vencimento_fim']) ? (string) $dados['data_vencimento_fim'] : '');
+        $this->data_baixa = (string) (isset($dados['data_baixa_inicio']) ? (string) $dados['data_baixa_inicio'] : '');
+        $this->data_baixa_fim = (string) (isset($dados['data_baixa_fim']) ? (string) $dados['data_baixa_fim'] : '');
 
-        $filtro = (array) ['filtro' => (array) [], 'ordenacao' => (array) ['data_vencimento' => (bool) true], 'limite' => (int) 0];
+        $this->empresa = (int) (isset($dados['empresa']) ? (int) intval($dados['empresa'], 10) : 0);
+        $this->cliente_fornecedor = (int) (isset($dados['cliente_fornecedor']) ? (int) intval($dados['cliente_fornecedor'], 10) : 0);
+
+        $filtro = (array) ['filtro' => (array) [], 'ordenacao' => (array) [['data_vencimento', 'ASC']], 'limite' => (int) 0];
         $filtro_montando = (array) [];
 
-        if($this->nome_conta != ''){
-            array_push($filtro_montando, ['nome_conta', '=', (string) $this->nome_conta]);
+        if ($this->nome_conta != '') {
+            array_push($filtro_montando, ['nome_conta', 'LIKE', (string) $this->nome_conta]);
         }
 
-        if($this->descricao != ''){
-            array_push($filtro_montando, ['descricao', '=', (string) $this->descricao]);
+        if ($this->descricao != '') {
+            array_push($filtro_montando, ['descricao', 'LIKE', (string) $this->descricao]);
         }
 
-        if($this->tipo_conta != 'TODOS'){
-            array_push($filtro_montando, ['tipo_conta', '===', (string) $this->tipo_conta]);
+        // if ($this->tipo_conta != 'TODOS') {
+        //     array_push($filtro_montando, ['tipo_conta', '=', (string) $this->tipo_conta]);
+        // }
+
+        if ($this->status_conta != 'TODOS') {
+            array_push($filtro_montando, ['status_conta', '=', (string) $this->status_conta]);
         }
 
-        if($this->status_conta != 'TODOS'){
-            array_push($filtro_montando, ['status_conta', '===', (string) $this->status_conta]);
+        if ($this->empresa != 0) {
+            array_push($filtro_montando, ['codigo_empresa', '=', $this->empresa]);
         }
 
-        if($this->empresa != ''){
-            array_push($filtro_montando, ['empresa', '===', model_id($this->empresa)]);
-        }
-
-        if($this->data_cadastro != ''){
+        if ($this->data_cadastro != '') {
             array_push($filtro_montando, ['data_cadastro', '>=', model_date($this->data_cadastro, '00:00:00')]);
         }
 
-        if($this->data_cadastro_fim != ''){
+        if ($this->data_cadastro_fim != '') {
             array_push($filtro_montando, ['data_cadastro', '<=', model_date($this->data_cadastro_fim, '23:59:59')]);
         }
 
-        if($this->data_vencimento != ''){
+        if ($this->data_vencimento != '') {
             array_push($filtro_montando, ['data_vencimento', '>=', model_date($this->data_vencimento, '00:00:00')]);
         }
 
-        if($this->data_vencimento_fim != ''){
+        if ($this->data_vencimento_fim != '') {
             array_push($filtro_montando, ['data_vencimento', '<=', model_date($this->data_vencimento_fim, '23:59:59')]);
         }
 
-        if($this->data_baixa != ''){
+        if ($this->data_baixa != '') {
             array_push($filtro_montando, ['data_baixa', '>=', model_date($this->data_baixa, '00:00:00')]);
         }
 
-        if($this->data_baixa_fim != ''){
+        if ($this->data_baixa_fim != '') {
             array_push($filtro_montando, ['data_baixa', '<=', model_date($this->data_baixa_fim, '23:59:59')]);
         }
 
-        if($this->cliente_fornecedor != ''){
-            array_push($filtro_montando, ['cliente_fornecedor', '===', model_id($this->cliente_fornecedor)]);
+        if ($this->cliente_fornecedor != 0) {
+            array_push($filtro_montando, ['codigo_usuario', '=', $this->cliente_fornecedor]);
         }
 
-        $filtro['filtro'] = (array) ['and' => (array) $filtro_montando];
+        $filtro['filtro'] = (array) ['where' => (array) $filtro_montando];
 
-        return (array) $this->pesquisar_todos($filtro);
+        $retorno_contas = (array) $this->pesquisar_todos($filtro);
+
+        if (empty($retorno_contas) == false) {
+            $objeto_cliente_fornecedor = new Usuario();
+            $contas = (array) [];
+
+            foreach ($retorno_contas as $contas_retorno) {
+                $filtro_cliente_fornecedor = (array) [];
+
+                $filtro_cliente_fornecedor = (array) ['filtro' => (array) ['where' => [['codigo_usuario', '=', $contas_retorno['codigo_usuario']]]]];
+
+                $pessoa = (array) $objeto_cliente_fornecedor->pesquisar($filtro_cliente_fornecedor);
+
+                if (empty($pessoa) == false) {
+                    $contas_retorno['pessoa'] = (array) $pessoa;
+                } else {
+                    $contas_retorno['pessoa'] = (array) [];
+                }
+
+                array_push($contas, $contas_retorno);
+            }
+
+            return (array) $contas;
+        } else {
+            return (array) [];
+        }
+    }
+
+    public function montar_array()
+    {
+        $dados = (array) [];
+
+        if ($this->cliente_fornecedor != 0) {
+            $dados['codigo_usuario'] = (int) $this->cliente_fornecedor;
+        }
+
+        if ($this->conta_fornecedor != 0) {
+            $dados['codigo_conta_fornecedor'] = (int) $this->conta_fornecedor;
+        }
+
+        if ($this->empresa != 0) {
+            $dados['codigo_empresa'] = (int) $this->empresa;
+        }
+
+        if ($this->nome_conta != '') {
+            $dados['nome_conta'] = (string) $this->nome_conta;
+        }
+
+        if ($this->descricao != '') {
+            $dados['descricao'] = (string) $this->descricao;
+        }
+
+        if ($this->valor_conta != 0) {
+            $dados['valor_conta'] = (string) formatar_numero($this->valor_conta, 2, '.');
+        }
+
+        if ($this->valor_pago != 0) {
+            $dados['valor_pago'] = (string) formatar_numero($this->valor_pago, 2, '.');
+        }
+
+        if ($this->valor_juro_desconto != 0) {
+            $dados['valor_juro_desconto'] = (string) formatar_numero($this->valor_juro_desconto, 2, '.');
+        }
+
+        if ($this->data_cadastro != '') {
+            $dados['data_cadastro'] = (string) $this->data_cadastro;
+        }
+
+        if ($this->data_vencimento != '') {
+            $dados['data_vencimento'] = (string) $this->data_vencimento;
+        }
+
+        if ($this->status_conta != '') {
+            $dados['status_conta'] = (string) $this->status_conta;
+
+            if ($this->status_conta != 'AGUARDANDO') {
+                if ($this->data_baixa != '') {
+                    $dados['data_baixa'] = (string) $this->data_baixa;
+                }
+            }
+        }
+
+        if ($this->comprovante != '') {
+            $dados['comprovante'] = (string) $this->comprovante;
+        }
+
+        if ($this->boleto != '') {
+            $dados['boleto'] = (string) $this->boleto;
+        }
+
+        if ($this->transacao != '') {
+            $dados['transacao'] = (string) $this->transacao;
+        }
+
+        $dados['tipo_juro_desconto'] = (bool) $this->tipo_juro_desconto;
+        $dados['tipo_conta'] = (bool) $this->tipo_conta;
+
+        return (array) $dados;
     }
 }
 ?>

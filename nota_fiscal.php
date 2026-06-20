@@ -23,9 +23,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 router_add('pesquisar_nota', function () {
     $objeto_nota_fiscal = new NotaFiscal();
 
-    $codigo_nota_fiscal = (string) (isset($_REQUEST['codigo_nota_fiscal']) ? (string) $_REQUEST['codigo_nota_fiscal'] : '');
+    $codigo_nota_fiscal = (int) (isset($_REQUEST['codigo_nota_fiscal']) ? (int) $_REQUEST['codigo_nota_fiscal'] : 0);
 
-    echo json_encode((array) ['dados' => (array) $objeto_nota_fiscal->pesquisar((array) ['filtro' => (array) ['_id', '===', model_id($codigo_nota_fiscal)]])], JSON_UNESCAPED_UNICODE);
+    echo json_encode((array) ['dados' => (array) $objeto_nota_fiscal->pesquisar((array) ['filtro' => (array) ['where' => [['codigo_nota_fiscal', '=', $codigo_nota_fiscal]]]])], JSON_UNESCAPED_UNICODE);
     exit;
 });
 
@@ -33,18 +33,18 @@ router_add('pesquisar_nota_fiscal', function () {
     $objeto_nota_fiscal = new NotaFiscal();
     $objeto_cliente_fornecedor = new Usuario();
 
-    $empresa = (string) (isset($_REQUEST['empresa']) ? (string) $_REQUEST['empresa'] : '');
+    $empresa = (int) (isset($_REQUEST['empresa']) ? (int) intval($_REQUEST['empresa'], 10) : 0);
     $data_nota_inicial = (string) (isset($_REQUEST['data_nota_inicial']) ? (string) $_REQUEST['data_nota_inicial'] : '');
     $data_nota_final = (string) (isset($_REQUEST['data_nota_final']) ? (string) $_REQUEST['data_nota_final'] : '');
     $valor_nota = (float) (isset($_REQUEST['valor_nota']) ? (float) doubleval(str_replace(',', '.', $_REQUEST['valor_nota'])) : 0);
     $chave_nota = (string) (isset($_REQUEST['chave_nota']) ? (string) $_REQUEST['chave_nota'] : '');
 
-    $filtro = (array) ['filtro' => (array) [], 'ordenacao' => (array) ['data_nota' => (bool) false,], 'limite' => (int) 100];
+    $filtro = (array) ['filtro' => (array) [], 'ordenacao' => (array) [['data_nota','ASC']], 'limite' => (int) 100];
     $filtro_montando = (array) [];
     $notas_a_retornar = (array) [];
 
     if ($empresa != '') {
-        array_push($filtro_montando, (array) ['empresa', '===', model_id($empresa)]);
+        array_push($filtro_montando, (array) ['codigo_empresa', '=', $empresa]);
     }
 
     if ($data_nota_inicial != '') {
@@ -56,11 +56,11 @@ router_add('pesquisar_nota_fiscal', function () {
     }
 
     if ($valor_nota != 0) {
-        array_push($filtro_montando, (array) ['valor_nota', '===', (float) $valor_nota]);
+        array_push($filtro_montando, (array) ['valor_nota', '=', (float) $valor_nota]);
     }
 
     if ($chave_nota != '') {
-        array_push($filtro_montando, (array) ['chave_nota', '===', (string) $chave_nota]);
+        array_push($filtro_montando, (array) ['chave_nota', '=', (string) $chave_nota]);
     }
 
     if (empty($filtro_montando) == false) {
@@ -71,7 +71,7 @@ router_add('pesquisar_nota_fiscal', function () {
 
     if (empty($retorno_nota) == false) {
         foreach ($retorno_nota as $notas) {
-            $retorno_cliente_fornecedor = (array) $objeto_cliente_fornecedor->pesquisar((array) ['filtro' => (array) ['_id', '===', $notas['cliente_fornecedor']]]);
+            $retorno_cliente_fornecedor = (array) $objeto_cliente_fornecedor->pesquisar((array) ['filtro' => (array) ['where' => [['codigo_usuario', '=', $notas['codigo_usuario']]]]]);
 
             $notas['cliente_fornecedor'] = (array) $retorno_cliente_fornecedor;
             array_push($notas_a_retornar, $notas);
@@ -116,7 +116,7 @@ router_add('index', function () {
                 let cliente_fornecedor = retorno.dados;
 
                 sistema.each(cliente_fornecedor, function (index, cliente) {
-                    select.appendChild(sistema.gerar_option(cliente._id.$oid, cliente.nome_usuario));
+                    select.appendChild(sistema.gerar_option(cliente.codigo_usuario, cliente.nome_usuario));
                 });
             });
         }
@@ -152,7 +152,7 @@ router_add('index', function () {
                 if (tamanho_retorno == 0) {
                     let linha = document.createElement('tr');
                     linha.appendChild(sistema.gerar_td(['text-center', 'fw-bold'], 'NENHUMA NOTA ENCONTRADA, COM OS FILTROS PASSADOS!', 'inner', true, 15));
-                    tabela_contas.appendChild(linha);
+                    tabela.appendChild(linha);
 
                     Swal.fire({ icon: 'warning', title: 'Nenhuma nota encontrada!' });
                     return;
@@ -170,13 +170,13 @@ router_add('index', function () {
                     linha.appendChild(sistema.gerar_td(['text-center', 'fw-bold'], nota.cliente_fornecedor.nome_usuario, 'inner'));
                     linha.appendChild(sistema.gerar_td(['text-center', 'fw-bold'], sistema.retornar_data(nota.data_nota), 'inner'));
                     linha.appendChild(sistema.gerar_td(['text-center', 'fw-bold'], sistema.number_format(nota.valor_nota), 'inner'));
-                    linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_visualizar_tipo_servico_' + nota._id.$oid, nota.tipo_nota, ['btn', 'btn-secondary'], () => { }), 'append'));
+                    linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_visualizar_tipo_servico_' + nota.codigo_nota_fiscal, nota.tipo_nota, ['btn', 'btn-secondary'], () => { }), 'append'));
 
-                    linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_baixar_nota_' + nota._id.$oid, 'BAIXAR', ['btn', 'btn-info'], function () {
+                    linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_baixar_nota_' + nota.codigo_nota_fiscal, 'BAIXAR', ['btn', 'btn-info'], function () {
                         window.open(sistema.url('/anexos/notas_fiscais/') + nota.chave_nota + '.pdf', '_blank');
                     }), 'append'));
-                    linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_editar_nota_' + nota._id.$oid, 'EDITAR', ['btn', 'btn-primary'], function editar_conta() {
-                        cadastrar_notas(nota._id.$oid);
+                    linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_editar_nota_' + nota.codigo_nota_fiscal, 'EDITAR', ['btn', 'btn-primary'], function editar_conta() {
+                        cadastrar_notas(nota.codigo_nota_fiscal);
                     }), 'append'));
 
                     tabela.appendChild(linha);
@@ -297,7 +297,7 @@ router_add('index', function () {
 
 router_add('cadastro_nota', function () {
     include_once 'includes/head.php';
-    $codigo_nota_fiscal = (string) (isset($_REQUEST['codigo_nota_fiscal']) ? (string) $_REQUEST['codigo_nota_fiscal'] : '');
+    $codigo_nota_fiscal = (int) (isset($_REQUEST['codigo_nota_fiscal']) ? (int) intval($_REQUEST['codigo_nota_fiscal'], 10) : 0);
     ?>
         <script>
             const CODIGO_EMPRESA = "<?php echo $codigo_empresa; ?>";
@@ -331,7 +331,7 @@ router_add('cadastro_nota', function () {
                     let cliente_fornecedor = retorno.dados;
 
                     sistema.each(cliente_fornecedor, function (index, cliente) {
-                        select.appendChild(sistema.gerar_option(cliente._id.$oid, cliente.nome_usuario));
+                        select.appendChild(sistema.gerar_option(cliente.codigo_usuario, cliente.nome_usuario));
                     });
                 });
             }
@@ -456,7 +456,7 @@ router_add('cadastro_nota', function () {
                 window.onload = () => {
                     pesquisar_cliente_fornecedor();
 
-                    if (CODIGO_NOTA_FISCAL != '') {
+                    if (CODIGO_NOTA_FISCAL != 0) {
                         pesquisar_nota();
                     }
                 }

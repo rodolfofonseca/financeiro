@@ -12,15 +12,15 @@ router_add('salvar_dados', function () {
 router_add('pesquisar_todos', function () {
     $objeto_item_extrato = new ItensExtratos();
 
-    $empresa = (string) (isset($_REQUEST['empresa']) ? (string) $_REQUEST['empresa'] : '');
+    $empresa = (int) (isset($_REQUEST['empresa']) ? (int) intval($_REQUEST['empresa'], 10) : 0);
 
     $filtro_montando = (array) [];
 
     if ($empresa != '') {
-        array_push($filtro_montando, ['empresa', '===', model_id($empresa)]);
+        array_push($filtro_montando, ['codigo_empresa', '=', $empresa]);
     }
 
-    $filtro = (array) ['filtro' => (array) ['and' => $filtro_montando], 'ordenacao' => (array) ['nome_item_extrato' => (bool) true], 'limite' => (int) 100];
+    $filtro = (array) ['filtro' => (array) ['where' => $filtro_montando], 'ordenacao' => (array) [['nome_item_extrato', 'ASC']], 'limite' => (int) 100];
 
     echo json_encode((array) ['dados' => (array) $objeto_item_extrato->pesquisar_todos($filtro)], JSON_UNESCAPED_UNICODE);
 });
@@ -28,21 +28,21 @@ router_add('pesquisar_todos', function () {
 router_add('pesquisar_item_extrato', function () {
     $objeto_item_extrato = new ItensExtratos();
 
-    $codigo_item_extrato = (string) (isset($_REQUEST['codigo_item_extrato']) ? (string) $_REQUEST['codigo_item_extrato'] : '');
-    $empresa = (string) (isset($_REQUEST['empresa']) ? (string) $_REQUEST['empresa'] : '');
+    $codigo_item_extrato = (int) (isset($_REQUEST['codigo_item_extrato']) ? (int) intval($_REQUEST['codigo_item_extrato'], 10) : 0);
+    $empresa = (int) (isset($_REQUEST['empresa']) ? (int) intval($_REQUEST['empresa'], 10) : 0);
 
     $filtro_montando = (array) [];
     $retorno = (array) [];
 
     if ($codigo_item_extrato != '') {
-        array_push($filtro_montando, (array) ['_id', '===', model_id($codigo_item_extrato)]);
+        array_push($filtro_montando, (array) ['codigo_item_extrato', '=', $codigo_item_extrato]);
     }
 
-    if ($empresa != '') {
-        array_push($filtro_montando, ['empresa', '===', model_id($empresa)]);
+    if ($empresa != 0) {
+        array_push($filtro_montando, ['codigo_empresa', '=', $empresa]);
     }
 
-    echo json_encode((array) ['dados' => (array) $objeto_item_extrato->pesquisar((array) ['and' => (array) $filtro_montando])]);
+    echo json_encode((array) ['dados' => (array) $objeto_item_extrato->pesquisar((array) ['where' => (array) $filtro_montando])]);
     exit;
 });
 
@@ -56,9 +56,9 @@ router_add('index', function () {
          * Função responsável por salvar os itens do extratos
          */
         function salvar_dados() {
-            let codigo_item_extrato = document.querySelector('#codigo_item_extrato').value;
-            let nome_item_extrato = document.querySelector("#nome_item_extrato").value;
-            let tipo_item_extrato = document.querySelector('#tipo_item_extrato').value;
+            let codigo_item_extrato = document.querySelector('#codigo_item_extrato_cad').value;
+            let nome_item_extrato = document.querySelector("#nome_item_extrato_cad").value;
+            let tipo_item_extrato = document.querySelector('#tipo_item_extrato_cad').value;
 
             let validacao = true;
 
@@ -72,7 +72,9 @@ router_add('index', function () {
                 validacao = false;
             }
 
-            sistema.request.post('/item_extrato.php', { 'rota': 'salvar_dados', 'codigo_item_extrato': codigo_item_extrato, 'nome_item_extrato': nome_item_extrato, 'tipo_item_extrato': tipo_item_extrato, 'empresa': EMPRESA }, function (retorno) {
+            let dados = { 'rota': 'salvar_dados', 'codigo_item_extrato': codigo_item_extrato, 'nome_item_extrato': nome_item_extrato, 'tipo_item_extrato': tipo_item_extrato, 'empresa': EMPRESA };
+
+            sistema.request.post('/item_extrato.php', dados, function (retorno) {
                 validar_retorno(retorno, '/item_extrato.php');
             });
         }
@@ -122,16 +124,17 @@ router_add('index', function () {
                     let item_extrato = item_extratos[index];
                     let linha = document.createElement('tr');
 
-                    linha.appendChild(sistema.gerar_td(['text-center', 'fw-bold'], item_extrato.nome_item_extrato, 'inner'));
+                    linha.appendChild(sistema.gerar_td(['text-center', 'fw-bold'], item_extrato.codigo_item_extrato, 'inner'));
+                    linha.appendChild(sistema.gerar_td(['text-start', 'fw-bold'], item_extrato.nome_item_extrato, 'inner'));
 
-                    if (item_extrato.tipo_item_extrato == 'DEBITO') {
-                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_item_extrato_' + item_extrato._id.$oid, 'DEBIDO', ['btn', 'btn-outline-danger'], () => { }), 'append'));
+                    if (item_extrato.tipo_item_extrato == false) {
+                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_item_extrato_' + item_extrato.codigo_item_extrato, 'DEBIDO', ['btn', 'btn-outline-danger'], () => { }), 'append'));
                     } else {
-                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_item_extrato_' + item_extrato._id.$oid, 'CREDITO', ['btn', 'btn-outline-success'], () => { }), 'append'));
+                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_item_extrato_' + item_extrato.codigo_item_extrato, 'CREDITO', ['btn', 'btn-outline-success'], () => { }), 'append'));
                     }
 
                     let botao = document.createElement('button');
-                    botao.id = 'botao_editar_item_extrato_' + item_extrato._id.$oid;
+                    botao.id = 'botao_editar_item_extrato_' + item_extrato.codigo_item_extrato;
                     botao.textContent = 'EDITAR';
                     botao.classList.add('btn');
                     botao.classList.add('btn-primary');
@@ -139,7 +142,7 @@ router_add('index', function () {
                     botao.dataset.bsTarget = "#modal_cadastro_item_holerite";
 
                     botao.addEventListener('click', function () {
-                        colocar_dados_editar(item_extrato._id.$oid, item_extrato.nome_item_extrato, item_extrato.tipo_item_extrato);
+                        colocar_dados_editar(item_extrato.codigo_item_extrato, item_extrato.nome_item_extrato, item_extrato.tipo_item_extrato);
                     });
 
                     linha.appendChild(sistema.gerar_td(['text-center'], botao, 'append'));
@@ -163,9 +166,14 @@ router_add('index', function () {
          * @param {*} tipo
          */
         function colocar_dados_editar(codigo, nome, tipo) {
-            document.querySelector('#codigo_item_extrato').value = codigo;
-            document.querySelector('#nome_item_extrato').value = nome;
-            document.querySelector('#tipo_item_extrato').value = tipo;
+            document.querySelector('#codigo_item_extrato_cad').value = codigo;
+            document.querySelector('#nome_item_extrato_cad').value = nome;
+
+            if(tipo == true){
+                ocument.querySelector('#tipo_item_extrato_cad').value = '1';
+            }else{
+                document.querySelector('#tipo_item_extrato_cad').value = '0';
+            }
         }
     </script>
     <div class="page-wrapper">
@@ -198,9 +206,9 @@ router_add('index', function () {
                                     <div class="col-6 text-center">
                                         <label class="text">Tipo Item Extrato</label>
                                         <select class="form-control select2" id="tipo_item_extrato">
-                                            <option value="TODOS">TODOS</option>
-                                            <option value="DEBITO">DEBITO</option>
-                                            <option value="CREDITO">CREDITO</option>
+                                            <option value="">TODOS</option>
+                                            <option value="1">DEBITO</option>
+                                            <option value="0">CREDITO</option>
                                         </select>
                                     </div>
                                 </div>
@@ -219,6 +227,7 @@ router_add('index', function () {
                                                 id="tabela_item_extrato">
                                                 <thead>
                                                     <tr class="text-center">
+                                                        <th scope="col">#</th>
                                                         <th scope="col">NOME</th>
                                                         <th scope="col">TIPO</th>
                                                         <th scope="col">AÇÃO</th>
@@ -249,18 +258,18 @@ router_add('index', function () {
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <input type="hidden" id="codigo_item_extrato">
+                        <input type="hidden" id="codigo_item_extrato_cad">
                         <div class="row">
                             <div class="col-6 text-center">
                                 <label class="text">Nome Item</label>
-                                <input type="text" class="form-control text-uppercase" id="nome_item_extrato">
+                                <input type="text" class="form-control text-uppercase" id="nome_item_extrato_cad">
                             </div>
                             <div class="col-6 text-center">
                                 <label class="text">Tipo Item Holerite</label>
-                                <select id="tipo_item_extrato" class="form-control">
+                                <select id="tipo_item_extrato_cad" class="form-control">
                                     <option value="">Selecione Uma Opção</option>
-                                    <option value="CREDITO">CRÉDITO</option>
-                                    <option value="DEBITO">DEBITO</option>
+                                    <option value="1">CRÉDITO</option>
+                                    <option value="0">DEBITO</option>
                                 </select>
                             </div>
                         </div>

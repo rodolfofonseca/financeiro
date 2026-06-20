@@ -179,29 +179,29 @@ class ContasPagarReceber implements InterfaceModelo
             $objeto_conta_fornecedor = new ContasFornecedores();
 
             foreach ($retorno_pesquisa as $pesquisa) {
-                if(array_key_exists('cliente_fornecedor', $pesquisa) == false){
+                if (array_key_exists('cliente_fornecedor', $pesquisa) == false) {
                     $usuario = (array) $objeto_usuario->pesquisar((array) ['filtro' => (array) ['and' => (array) [(array) ['empresa', '===', $pesquisa['empresa']], (array) ['tipo_usuario', '===', (string) 'CLIENTE'], (array) ['nome_usuario', '===', (string) 'CLIENTE PADRAO']]]]);
 
-                    if(empty($usuario) == false){
+                    if (empty($usuario) == false) {
                         $pesquisa['cliente_fornecedor'] = $usuario['_id'];
                     }
                 }
 
-                if(array_key_exists('conta_fornecedor', $pesquisa) == false){
+                if (array_key_exists('conta_fornecedor', $pesquisa) == false) {
                     $conta = (array) $objeto_conta_fornecedor->pesquisar((array) ['filtro' => (array) ['fornecedor', '===', $pesquisa['cliente_fornecedor']]]);
 
-                    if(empty($conta) == false){
+                    if (empty($conta) == false) {
                         $pesquisa['conta_fornecedor'] = $conta['_id'];
                     }
                 }
 
-                if(array_key_exists('transacao', $pesquisa) == false){
+                if (array_key_exists('transacao', $pesquisa) == false) {
                     $pesquisa['transacao'] = (string) $objeto_codigo_barras->getFullCode();
                 }
 
                 $pesquisa['status_conta'] = (string) 'VENCIDA';
                 $pesquisa['codigo_conta_pagar_receber'] = (string) $pesquisa['_id'];
-                
+
                 $this->salvar_dados($pesquisa);
             }
 
@@ -587,68 +587,68 @@ class ContasPagarReceber implements InterfaceModelo
     {
         $this->nome_conta = (string) (isset($dados['nome_conta']) ? (string) $dados['nome_conta'] : '');
         $this->descricao = (string) (isset($dados['descricao']) ? (string) $dados['descricao'] : '');
-        
+
         $this->status_conta = (string) (isset($dados['status_conta']) ? (string) $dados['status_conta'] : 'TODOS');
         $this->tipo_conta = (string) (isset($dados['tipo_conta']) ? (string) $dados['tipo_conta'] : 'TODOS');
-        
-        $this->data_cadastro = (string) (isset($dados['data_cadastro_inicio']) ? (string) $dados['data_cadastro_inicio']:'');
-        $this->data_cadastro_fim = (string) (isset($dados['data_cadastro_fim']) ?(string) $dados['data_cadastro_fim']:'');
-        $this->data_vencimento = (string) (isset($dados['data_vencimento_inicio']) ? (string) $dados['data_vencimento_inicio']:'');
-        $this->data_vencimento_fim = (string) (isset($dados['data_vencimento_fim']) ? (string) $dados['data_vencimento_fim']:'');
-        $this->data_baixa = (string) (isset($dados['data_baixa_inicio']) ? (string) $dados['data_baixa_inicio']:'');
-        $this->data_baixa_fim = (string) (isset($dados['data_baixa_fim']) ? (string) $dados['data_baixa_fim']:'');
 
-        $this->empresa = (string) (isset($dados['empresa']) ? (string) $dados['empresa']:'');
-        $this->cliente_fornecedor = (string) (isset($dados['cliente_fornecedor']) ? (string) $dados['cliente_fornecedor']:'');
+        $this->data_cadastro = (string) (isset($dados['data_cadastro_inicio']) ? (string) $dados['data_cadastro_inicio'] : '');
+        $this->data_cadastro_fim = (string) (isset($dados['data_cadastro_fim']) ? (string) $dados['data_cadastro_fim'] : '');
+        $this->data_vencimento = (string) (isset($dados['data_vencimento_inicio']) ? (string) $dados['data_vencimento_inicio'] : '');
+        $this->data_vencimento_fim = (string) (isset($dados['data_vencimento_fim']) ? (string) $dados['data_vencimento_fim'] : '');
+        $this->data_baixa = (string) (isset($dados['data_baixa_inicio']) ? (string) $dados['data_baixa_inicio'] : '');
+        $this->data_baixa_fim = (string) (isset($dados['data_baixa_fim']) ? (string) $dados['data_baixa_fim'] : '');
+
+        $this->empresa = (string) (isset($dados['empresa']) ? (string) $dados['empresa'] : '');
+        $this->cliente_fornecedor = (string) (isset($dados['cliente_fornecedor']) ? (string) $dados['cliente_fornecedor'] : '');
 
         $filtro = (array) ['filtro' => (array) [], 'ordenacao' => (array) ['data_vencimento' => (bool) true], 'limite' => (int) 0];
         $filtro_montando = (array) [];
 
-        if($this->nome_conta != ''){
+        if ($this->nome_conta != '') {
             array_push($filtro_montando, ['nome_conta', '=', (string) $this->nome_conta]);
         }
 
-        if($this->descricao != ''){
+        if ($this->descricao != '') {
             array_push($filtro_montando, ['descricao', '=', (string) $this->descricao]);
         }
 
-        if($this->tipo_conta != 'TODOS'){
+        if ($this->tipo_conta != 'TODOS') {
             array_push($filtro_montando, ['tipo_conta', '===', (string) $this->tipo_conta]);
         }
 
-        if($this->status_conta != 'TODOS'){
+        if ($this->status_conta != 'TODOS') {
             array_push($filtro_montando, ['status_conta', '===', (string) $this->status_conta]);
         }
 
-        if($this->empresa != ''){
+        if ($this->empresa != '') {
             array_push($filtro_montando, ['empresa', '===', model_id($this->empresa)]);
         }
 
-        if($this->data_cadastro != ''){
+        if ($this->data_cadastro != '') {
             array_push($filtro_montando, ['data_cadastro', '>=', model_date($this->data_cadastro, '00:00:00')]);
         }
 
-        if($this->data_cadastro_fim != ''){
+        if ($this->data_cadastro_fim != '') {
             array_push($filtro_montando, ['data_cadastro', '<=', model_date($this->data_cadastro_fim, '23:59:59')]);
         }
 
-        if($this->data_vencimento != ''){
+        if ($this->data_vencimento != '') {
             array_push($filtro_montando, ['data_vencimento', '>=', model_date($this->data_vencimento, '00:00:00')]);
         }
 
-        if($this->data_vencimento_fim != ''){
+        if ($this->data_vencimento_fim != '') {
             array_push($filtro_montando, ['data_vencimento', '<=', model_date($this->data_vencimento_fim, '23:59:59')]);
         }
 
-        if($this->data_baixa != ''){
+        if ($this->data_baixa != '') {
             array_push($filtro_montando, ['data_baixa', '>=', model_date($this->data_baixa, '00:00:00')]);
         }
 
-        if($this->data_baixa_fim != ''){
+        if ($this->data_baixa_fim != '') {
             array_push($filtro_montando, ['data_baixa', '<=', model_date($this->data_baixa_fim, '23:59:59')]);
         }
 
-        if($this->cliente_fornecedor != ''){
+        if ($this->cliente_fornecedor != '') {
             array_push($filtro_montando, ['cliente_fornecedor', '===', model_id($this->cliente_fornecedor)]);
         }
 

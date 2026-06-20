@@ -362,21 +362,16 @@ function validarCNPJ(cnpj) {
  * @param {*} diferenca 
  * @returns 
  */
-function diferenca_datas(time_stamp, diferenca) {
-  let timestamp = Number(time_stamp.$date.$numberLong);
-  let data = new Date(timestamp);
+function diferenca_datas(timestamp, diferenca) {
+  const data = new Date(timestamp);
 
-  data.setMinutes(data.getMinutes() + data.getTimezoneOffset());
-
-  let hoje = new Date();
+  const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
 
-  let menosDias = new Date();
-  menosDias.setDate(hoje.getDate() - diferenca);
-  menosDias.setHours(0, 0, 0, 0);
+  const menosDias = new Date(hoje);
+  menosDias.setDate(menosDias.getDate() - diferenca);
 
-  let dentroDosDias = data >= menosDias;
-  return dentroDosDias;
+  return data >= menosDias;
 }
 
 /**

@@ -92,7 +92,7 @@ router_add('imprimir_extrato', function () {
     $total_proventos = (float) 0;
     $total_descontos = (float) 0;
     $total_liquido = (float) 0;
-?>
+    ?>
     <style>
         @media print {
             .no-print {
@@ -148,7 +148,7 @@ router_add('imprimir_extrato', function () {
                     if ($extrato_item['tipo_item_extrato'] == 'CREDITO') {
                         echo '<tr>';
                         echo '<td>' . $extrato_item['nome_item_extrato'] . '</td>';
-                        
+
                         if (array_key_exists('data_lancamento_extrato', $extrato_item) == true) {
                             echo '<td>' . convert_date($extrato_item['data_lancamento_extrato'], 'd/m/Y') . '</td>';
                         } else {
@@ -214,14 +214,14 @@ router_add('imprimir_extrato', function () {
         </table>
 
     </div>
-<?php
+    <?php
     require_once 'includes/footer_sem.php';
     exit;
 });
 
 router_add('index', function () {
     require_once 'includes/head.php';
-?>
+    ?>
     <script>
         const CODIGO_EMPRESA = "<?php echo $codigo_empresa; ?>";
 
@@ -236,7 +236,7 @@ router_add('index', function () {
             sistema.request.post('/extrato.php', {
                 'rota': 'pesquisar_todos_extratos',
                 'empresa': CODIGO_EMPRESA
-            }, function(retorno) {
+            }, function (retorno) {
                 let extratos = retorno.dados;
                 let tamanho_retorno = extratos.length;
 
@@ -249,7 +249,7 @@ router_add('index', function () {
                     linha.appendChild(sistema.gerar_td(['text-center'], 'NENHUM EXTRATO ENCONTRADO!', 'inner', true, 15));
                     tabela.appendChild(linha);
                 } else {
-                    sistema.each(extratos, function(index, extrato) {
+                    sistema.each(extratos, function (index, extrato) {
                         let linha = document.createElement('tr');
 
                         linha.appendChild(sistema.gerar_td(['text-center'], extrato.nome_usuario, 'inner'));
@@ -267,13 +267,13 @@ router_add('index', function () {
                         linha.appendChild(sistema.gerar_td(['text-center'], sistema.number_format(extrato.valor_liquido), 'inner'));
 
                         if (extrato.status == 'AGUARDANDO') {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('bota_extrato_' + extrato._id.$oid, 'AGUARDANDO', ['btn', 'btn-outline-secondary'], function status_extrato() {}), 'append'));
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('bota_extrato_' + extrato._id.$oid, 'AGUARDANDO', ['btn', 'btn-outline-secondary'], function status_extrato() { }), 'append'));
                         } else if (extrato.status == 'PAGO') {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('bota_extrato_' + extrato._id.$oid, 'PAGO', ['btn', 'btn-outline-success'], function status_extrato() {}), 'append'));
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('bota_extrato_' + extrato._id.$oid, 'PAGO', ['btn', 'btn-outline-success'], function status_extrato() { }), 'append'));
                         } else if (extrato.status == 'CANCELADO') {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('bota_extrato_' + extrato._id.$oid, 'CANCELADO', ['btn', 'btn-outline-warning'], function status_extrato() {}), 'append'));
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('bota_extrato_' + extrato._id.$oid, 'CANCELADO', ['btn', 'btn-outline-warning'], function status_extrato() { }), 'append'));
                         } else if (extrato.status == 'VENCIDA') {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('bota_extrato_' + extrato._id.$oid, 'VENCIDA', ['btn', 'btn-outline-danger'], function status_extrato() {}), 'append'));
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('bota_extrato_' + extrato._id.$oid, 'VENCIDA', ['btn', 'btn-outline-danger'], function status_extrato() { }), 'append'));
                         }
 
                         linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('Botao_imprimir_extrato_' + extrato._id.$oid, 'IMPRIMIR', ['btn', 'btn-success'], function model_impressao() {
@@ -317,7 +317,8 @@ router_add('index', function () {
                 </div>
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap gap-2">
                     <div class="dropdown">
-                        <button class="btn btn-primary d-flex align-items-center justify-content-center" onclick="cadastro_extrato('');">
+                        <button class="btn btn-primary d-flex align-items-center justify-content-center"
+                            onclick="cadastro_extrato('');">
                             Gerar extratos
                         </button>
                     </div>
@@ -357,7 +358,8 @@ router_add('index', function () {
                                             </thead>
                                             <tbody>
                                                 <tr>
-                                                    <td colspan="15" class="text-center">NENHUM EXTRATO ENCONTRADO COM OS FILTROS PASSADOS</td>
+                                                    <td colspan="15" class="text-center">NENHUM EXTRATO ENCONTRADO COM OS
+                                                        FILTROS PASSADOS</td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -370,13 +372,13 @@ router_add('index', function () {
             </div>
         </div>
         <script>
-            window.onload = function() {
+            window.onload = function () {
                 pesquisar_extrato();
             }
         </script>
-    <?php
-    require_once 'includes/footer.php';
-    exit;
+        <?php
+        require_once 'includes/footer.php';
+        exit;
 });
 router_add('cadastro_extrato', function () {
     require_once 'includes/head.php';
@@ -393,11 +395,11 @@ router_add('cadastro_extrato', function () {
                     'rota': 'pesquisar_usuarios',
                     'empresa': EMPRESA,
                     'tipo_usuario': 'Administrador'
-                }, function(retorno) {
+                }, function (retorno) {
                     let select = document.querySelector('#usuario');
                     let usuarios = retorno.dados;
 
-                    sistema.each(usuarios, function(index, usuario) {
+                    sistema.each(usuarios, function (index, usuario) {
                         select.appendChild(sistema.gerar_option(usuario._id.$oid, usuario.nome_usuario));
                     });
                 });
@@ -409,7 +411,7 @@ router_add('cadastro_extrato', function () {
                 sistema.request.post('/usuarios.php', {
                     'rota': 'pesquisa_usuario',
                     'codigo_usuario': codigo_usuario
-                }, function(retorno) {
+                }, function (retorno) {
                     let usuario = retorno.dados;
                     document.querySelector('#valor_bruto').value = sistema.number_format(usuario.salario);
                 });
@@ -419,11 +421,11 @@ router_add('cadastro_extrato', function () {
                 sistema.request.post('/item_extrato.php', {
                     'rota': 'pesquisar_todos',
                     'empresa': EMPRESA
-                }, function(retorno) {
+                }, function (retorno) {
                     let select = document.querySelector('#item_extrato');
                     let item_extratos = retorno.dados;
 
-                    sistema.each(item_extratos, function(index, item_extrato) {
+                    sistema.each(item_extratos, function (index, item_extrato) {
                         select.appendChild(sistema.gerar_option(item_extrato._id.$oid, item_extrato.nome_item_extrato));
                     });
                 });
@@ -466,7 +468,7 @@ router_add('cadastro_extrato', function () {
                         'data_extrato': data_extrato,
                         'data_pagamento': data_pagamento,
                         'status_extrato': status_extratro
-                    }, function(retorno) {
+                    }, function (retorno) {
                         document.querySelector('#codigo_extrato').value = retorno.dados._id;
                         this.Swal.fire({
                             title: "SUCESSO NA OPERAÇÃO!",
@@ -487,7 +489,7 @@ router_add('cadastro_extrato', function () {
                     'extrato': codigo_extrato,
                     'item_extrato': item_extrato,
                     'valor_lancamento_extrato': valor_lancamento_extrato
-                }, function(retorno) {
+                }, function (retorno) {
                     let item_extrato = retorno.dados.item_extrato;
                     let extrato_item = retorno.dados.extrato_item;
                     let tabela = document.querySelector('#tabela_extratos_item tbody');
@@ -533,7 +535,7 @@ router_add('cadastro_extrato', function () {
                 sistema.request.post('/extrato.php', {
                     'rota': 'pesquisar_dados_extrato_completo',
                     'codigo_extrato': CODIGO_EXTRATO
-                }, function(retorno) {
+                }, function (retorno) {
                     let extrato = retorno.dados.extrato;
                     let item_extrato = retorno.dados.itens_extrato;
 
@@ -550,7 +552,7 @@ router_add('cadastro_extrato', function () {
 
                     let tabela = document.querySelector('#tabela_extratos_item tbody');
 
-                    sistema.each(item_extrato, function(index, item) {
+                    sistema.each(item_extrato, function (index, item) {
                         let linha = document.createElement('tr');
                         let item_extrato = item.item_extrato;
 
@@ -601,30 +603,36 @@ router_add('cadastro_extrato', function () {
                                     </div>
                                     <div class="col-2 text-center">
                                         <label class="text">Pró Labore</label>
-                                        <input type="text" class="form-control" sistema-mask="moeda" placeholder="Pró Labore" id="valor_bruto">
+                                        <input type="text" class="form-control" sistema-mask="moeda"
+                                            placeholder="Pró Labore" id="valor_bruto">
                                     </div>
                                     <div class="col-2 text-center">
                                         <label class="text">Valor Entrada</label>
-                                        <input type="text" class="form-control" sistema-mask="moeda" placeholder="Valor valor_entrada" id="valor_entrada" value="0">
+                                        <input type="text" class="form-control" sistema-mask="moeda"
+                                            placeholder="Valor valor_entrada" id="valor_entrada" value="0">
                                     </div>
                                     <div class="col-2 text-center">
                                         <label class="text">Valor Desconto</label>
-                                        <input type="text" class="form-control" sistema-mask="moeda" placeholder="Valor Desconto" id="valor_desconto" value="0">
+                                        <input type="text" class="form-control" sistema-mask="moeda"
+                                            placeholder="Valor Desconto" id="valor_desconto" value="0">
                                     </div>
                                     <div class="col-2 text-center">
                                         <label class="text">Valor Líquido</label>
-                                        <input type="text" class="form-control" sistema-mask="moeda" placeholder="Valor Líquido" id="valor_liquido" value="0">
+                                        <input type="text" class="form-control" sistema-mask="moeda"
+                                            placeholder="Valor Líquido" id="valor_liquido" value="0">
                                     </div>
                                 </div>
                                 <br />
                                 <div class="row">
                                     <div class="col-4 text-center">
                                         <label class="text">Data Extrato</label>
-                                        <input type="date" class="form-control" placeholder="Data Extrato" id="data_extrato">
+                                        <input type="date" class="form-control" placeholder="Data Extrato"
+                                            id="data_extrato">
                                     </div>
                                     <div class="col-4 text-center">
                                         <label class="text">Data Pagamento</label>
-                                        <input type="date" class="form-control" placeholder="Data Extrato" id="data_pagamento">
+                                        <input type="date" class="form-control" placeholder="Data Extrato"
+                                            id="data_pagamento">
                                     </div>
                                     <div class="col-4 text-center">
                                         <label class="text">Status Usuário</label>
@@ -641,14 +649,18 @@ router_add('cadastro_extrato', function () {
                                 <br />
                                 <div class="row">
                                     <div class="col-4 push-8">
-                                        <button class="btn btn-primary d-flex align-items-center justify-content-center w-100 btn-lg" data-bs-toggle="modal" data-bs-target="#modal_extrato_item">Adicionar Item Ao Extrato</button>
+                                        <button
+                                            class="btn btn-primary d-flex align-items-center justify-content-center w-100 btn-lg"
+                                            data-bs-toggle="modal" data-bs-target="#modal_extrato_item">Adicionar Item Ao
+                                            Extrato</button>
                                     </div>
                                 </div>
                                 <br />
                                 <div class="row">
                                     <div class="col-12">
                                         <div class="table-responsive">
-                                            <table class="table table-nowrap text-nowrap table-hover" id="tabela_extratos_item">
+                                            <table class="table table-nowrap text-nowrap table-hover"
+                                                id="tabela_extratos_item">
                                                 <thead>
                                                     <tr class="text-center">
                                                         <th scope="col">ITEM</th>
@@ -669,7 +681,8 @@ router_add('cadastro_extrato', function () {
                     </div>
                 </div>
             </div>
-            <div class="modal fade" id="modal_extrato_item" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+            <div class="modal fade" id="modal_extrato_item" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel"
+                aria-hidden="true">
                 <div class="modal-dialog modal-lg modal-dialog-centered">
                     <div class="modal-content">
                         <div class="modal-header">
@@ -686,16 +699,19 @@ router_add('cadastro_extrato', function () {
                                 </div>
                                 <div class="col-6 text-center">
                                     <label class="text">Valor</label>
-                                    <input type="text" class="form-control" id="valor_lancamento_extrato" placeholder="Valor Lançamento">
+                                    <input type="text" class="form-control" id="valor_lancamento_extrato"
+                                        placeholder="Valor Lançamento">
                                 </div>
                             </div>
                             <br />
                             <div class="row">
                                 <div class="col-4 push-4">
-                                    <button type="button" class="btn btn-danger w-100 btn-lg" data-bs-dismiss="modal" aria-label="Close">Fechar</button>
+                                    <button type="button" class="btn btn-danger w-100 btn-lg" data-bs-dismiss="modal"
+                                        aria-label="Close">Fechar</button>
                                 </div>
                                 <div class="col-4">
-                                    <button class="btn btn-success w-100 btn-lg" onclick="adicionar_item_extrato();">Adicionar Ao Extrato</button>
+                                    <button class="btn btn-success w-100 btn-lg"
+                                        onclick="adicionar_item_extrato();">Adicionar Ao Extrato</button>
                                 </div>
                             </div>
                         </div>
@@ -703,7 +719,7 @@ router_add('cadastro_extrato', function () {
                 </div>
             </div>
             <script>
-                window.onload = function() {
+                window.onload = function () {
                     let botao_limpar_dados = document.querySelector('#btn_limpar_dados');
                     document.querySelector('#data_extrato').value = DATA_HOJE;
 
@@ -716,8 +732,8 @@ router_add('cadastro_extrato', function () {
                     }
                 }
             </script>
-        <?php
-        require_once 'includes/footer.php';
-        exit;
-    });
-        ?>
+            <?php
+            require_once 'includes/footer.php';
+            exit;
+});
+?>

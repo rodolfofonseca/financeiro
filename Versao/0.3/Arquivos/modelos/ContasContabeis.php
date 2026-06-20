@@ -163,13 +163,13 @@ class ContasContabeis implements InterfaceModelo
 
             $retorno_temporario = (array) $objeto_produtos->pesquisar_todos((array) ['filtro' => (array) ['and' => $filtro_montando], 'ordenacao' => (array) ['nome_produto' => (bool) true], 'limite' => (int) 0]);
 
-            if(empty($retorno_temporario) == false){
-                foreach($retorno_temporario as $produtos){
+            if (empty($retorno_temporario) == false) {
+                foreach ($retorno_temporario as $produtos) {
                     array_push($retorno_final, $this->montar_array($produtos['_id'], $produtos['nome_produto']));
                     $status = (bool) true;
                 }
             }
-        }else if($this->local_conta_id == 'PATRIMONIO_LIQUIDO' || $this->local_conta_id == 'SERVICOS' || $this->local_conta_id == 'CUSTOS' || $this->local_conta_id == 'RESULTADO'){
+        } else if ($this->local_conta_id == 'PATRIMONIO_LIQUIDO' || $this->local_conta_id == 'SERVICOS' || $this->local_conta_id == 'CUSTOS' || $this->local_conta_id == 'RESULTADO') {
             $status = (bool) true;
         }
 

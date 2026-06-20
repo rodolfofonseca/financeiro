@@ -100,8 +100,8 @@ $anexa_documentos = (bool) $_SESSION['anexa_documentos'];
 			<div class="header">
 				<div class="main-header">
 					<div class="header-left">
-						<a href="index.html" class="logo">
-							<img src="imagens/imagens_sistema/logo_empresa_preto_pequeno.jpg" alt="Logo">
+						<a href="dashboard.php" class="logo">
+							<img src="imagens/imagens_sistema/logo_sem_nome_250.png" alt="Logo">
 						</a>
 					</div>
 					<a id="mobile_btn" class="mobile_btn" href="#sidebar">
@@ -158,7 +158,7 @@ $anexa_documentos = (bool) $_SESSION['anexa_documentos'];
 												id="notification-1">
 												<div class="d-flex">
 													<div class="me-2 position-relative flex-shrink-0">
-														<img src="imagens/avatar/<?php echo $codigo_usuario; ?>.jpg"
+														<img src="imagens/avatar/<?php echo $codigo_usuario; ?>.jpeg"
 															class="avatar-md rounded-circle" alt="User Img">
 													</div>
 													<div class="flex-grow-1">
@@ -200,14 +200,14 @@ $anexa_documentos = (bool) $_SESSION['anexa_documentos'];
 									<a href="javascript:void(0);" class="dropdown-toggle d-flex align-items-center"
 										data-bs-toggle="dropdown" data-bs-auto-close="true">
 										<span class="avatar online">
-											<img src="imagens/avatar/<?php echo $codigo_usuario; ?>.jpg" alt="Img"
+											<img src="imagens/avatar/<?php echo $codigo_usuario; ?>.jpeg" alt="Img"
 												class="img-fluid rounded-circle">
 										</span>
 									</a>
 									<div class="dropdown-menu dropdown-menu-end p-2">
 										<div class="d-flex align-items-center bg-light rounded-1 p-2 mb-2">
 											<span class="avatar avatar-lg me-2">
-												<img src="imagens/avatar/<?php echo $codigo_usuario; ?>.jpg" alt="img"
+												<img src="imagens/avatar/<?php echo $codigo_usuario; ?>.jpeg" alt="img"
 													class="rounded-circle">
 											</span>
 											<div>
@@ -219,7 +219,7 @@ $anexa_documentos = (bool) $_SESSION['anexa_documentos'];
 											<i class="isax isax-profile-circle me-2"></i>Configurações Usuário
 										</a>
 										<?php
-										if ($tipo_usuario == 'Administrador') {
+										if (trim($tipo_usuario) == 'Administrador') {
 											echo "<a class='dropdown-item d-flex align-items-center' href='sistema.php'>";
 											echo "<i class='isax isax-document-text me-2'></i>Configurações Sistema";
 											echo "</a>";
@@ -274,7 +274,7 @@ $anexa_documentos = (bool) $_SESSION['anexa_documentos'];
 												<li><a href="clientes.php">Cadastro de Clientes/Fornecedores</a></li>
 												<li><a href="nota_fiscal.php">Notas Fiscais</a></li>
 												<?php
-												if ($_SESSION['tipo_usuario'] == 'Administrador') {
+												if (trim($_SESSION['tipo_usuario']) == 'Administrador') {
 													echo "<li><a href='contas_pagar_receber.php?rota=contas_fornecedores_pesquisa'>Vincular Fornecedores/Contas Pagar</a></li>";
 												}
 												?>
@@ -292,7 +292,7 @@ $anexa_documentos = (bool) $_SESSION['anexa_documentos'];
 											</ul>
 										</li>
 										<?php
-										if ($_SESSION['tipo_usuario'] == 'Administrador' && $_SESSION['pedidos'] == true) {
+										if (trim($_SESSION['tipo_usuario']) == 'Administrador' && $_SESSION['pedidos'] == true) {
 											?>
 											<li class="submenu">
 												<a href="javascript:void(0);">
@@ -315,9 +315,7 @@ $anexa_documentos = (bool) $_SESSION['anexa_documentos'];
 											</li>
 											<?php
 										}
-										?>
-										<?php
-										if ($_SESSION['tipo_usuario'] == 'Administrador') {
+										if (trim($_SESSION['tipo_usuario']) == 'Administrador') {
 											?>
 											<li class="submenu">
 												<a href="javascript:void(0);">

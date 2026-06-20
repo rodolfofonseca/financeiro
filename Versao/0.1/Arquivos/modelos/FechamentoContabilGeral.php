@@ -37,7 +37,7 @@ class FechamentoContabilGeral implements InterfaceModelo
         $this->ano_referencia = (int) (isset($dados['ano_referencia']) ? (int) intval($dados['ano_referencia'], 10) : 0);
         $this->total_credito = (double) (isset($dados['total_credito']) ? (double) doubleval(str_replace(',', '.', $dados['total_credito'])) : 0);
         $this->total_debito = (double) (isset($dados['total_debito']) ? (double) doubleval(str_replace(',', '.', $dados['total_debito'])) : 0);
-        $this->valor_resultado = (double) (isset($dados['valor_resultado']) ? (double) doubleval(str_replace(',', '.', $dados['valor_resultado'])):0);
+        $this->valor_resultado = (double) (isset($dados['valor_resultado']) ? (double) doubleval(str_replace(',', '.', $dados['valor_resultado'])) : 0);
         $this->resultado = (string) (isset($dados['resultado']) ? (string) $dados['resultado'] : '');
         $this->data_fechamento = (isset($dados['data_fechamento']) ? model_date($dados['data_fechamento']) : model_date());
     }
@@ -51,7 +51,7 @@ class FechamentoContabilGeral implements InterfaceModelo
         if ($this->codigo_fechamento_contabil != null) {
             return (bool) model_update((string) $this->tabela(), ['_id', '===', $this->codigo_fechamento_contabil], (array) ['empresa' => $this->empresa, 'mes_referencia' => (int) $this->mes_referencia, 'ano_referencia' => (int) $this->ano_referencia, 'total_credito' => (float) $this->total_credito, 'total_debito' => (float) $this->total_debito, 'valor_resultado' => (double) $this->valor_resultado, 'resultado' => (string) $this->resultado, 'data_fechamento' => $this->data_fechamento]);
         } else {
-            return (bool) model_insert((string) $this->tabela(), (array) ['empresa' => $this->empresa, 'mes_referencia' => (int) $this->mes_referencia, 'ano_referencia' => (int) $this->ano_referencia, 'total_credito' => (float) $this->total_credito, 'total_debito' => (float) $this->total_debito, 'valor_resultado' => (double) $this->valor_resultado,'resultado' => (string) $this->resultado, 'data_fechamento' => $this->data_fechamento]);
+            return (bool) model_insert((string) $this->tabela(), (array) ['empresa' => $this->empresa, 'mes_referencia' => (int) $this->mes_referencia, 'ano_referencia' => (int) $this->ano_referencia, 'total_credito' => (float) $this->total_credito, 'total_debito' => (float) $this->total_debito, 'valor_resultado' => (double) $this->valor_resultado, 'resultado' => (string) $this->resultado, 'data_fechamento' => $this->data_fechamento]);
         }
     }
 
@@ -72,35 +72,35 @@ class FechamentoContabilGeral implements InterfaceModelo
         $data_inicial = (string) $this->ano_referencia . '-' . $this->mes_referencia . '-01';
         $data_final = (string) '';
 
-        if ($this->mes_referencia == 4 || $this->mes_referencia == 6  || $this->mes_referencia == 9 || $this->mes_referencia == 11) {
+        if ($this->mes_referencia == 4 || $this->mes_referencia == 6 || $this->mes_referencia == 9 || $this->mes_referencia == 11) {
             $data_final = (string) $this->ano_referencia . '-' . $this->mes_referencia . '-30';
         } else if ($this->mes_referencia == 2) {
             $data_final = (string) $this->ano_referencia . '-' . $this->mes_referencia . '-28';
-        }else{
-            $data_final = (string) $this->ano_referencia.'-'.$this->mes_referencia.'-31';
+        } else {
+            $data_final = (string) $this->ano_referencia . '-' . $this->mes_referencia . '-31';
         }
 
         $objeto_movimentacao = new Movimentacao();
 
         $retorno_pesquisa_movimentacao = (array) $objeto_movimentacao->pesquisar_todos(['filtro' => (array) ['and' => [['empresa', '===', $this->empresa], ['data_lancamento', '>=', model_date($data_inicial, '00:00:00')], ['data_lancamento', '<=', model_date($data_final, '23:59:59')]]], 'ordenacao' => (array) ['data_lancamento' => (bool) true], 'limite' => (int) 0]);
 
-        if(empty($retorno_pesquisa_movimentacao) == false){
-            foreach($retorno_pesquisa_movimentacao as $movimentacao){
-                if($movimentacao['tipo_lancamento'] == 'CREDITO'){
+        if (empty($retorno_pesquisa_movimentacao) == false) {
+            foreach ($retorno_pesquisa_movimentacao as $movimentacao) {
+                if ($movimentacao['tipo_lancamento'] == 'CREDITO') {
                     $this->total_credito = (double) arredondar($this->total_credito, '+', $movimentacao['valor_lancamento'], 2);
-                }else{
+                } else {
                     $this->total_debito = (double) arredondar($this->total_debito, '+', $movimentacao['valor_lancamento'], 2);
                 }
             }
         }
 
-        if($this->total_credito > $this->total_debito){
+        if ($this->total_credito > $this->total_debito) {
             $this->resultado = (string) 'POSITIVO';
             $this->valor_resultado = (double) arredondar($this->total_credito, '-', $this->total_debito, 2);
-        }else if($this->total_credito < $this->total_debito){
+        } else if ($this->total_credito < $this->total_debito) {
             $this->resultado = (string) 'NEGATIVO';
             $this->valor_resultado = (double) arredondar($this->total_debito, '-', $this->total_credito, 2);
-        }else{
+        } else {
             $this->resultado = (string) 'NEUTRO';
         }
 
@@ -109,7 +109,8 @@ class FechamentoContabilGeral implements InterfaceModelo
         return $this->salvar_dados($array_fechamento_contabil_geral);
     }
 
-    public function excluir_fechamento($filtro){
-        return (bool) model_delete((string) $this->tabela(), (array) $filtro); 
+    public function excluir_fechamento($filtro)
+    {
+        return (bool) model_delete((string) $this->tabela(), (array) $filtro);
     }
 }

@@ -70,7 +70,7 @@ class ContasPagarReceber implements InterfaceModelo
         $this->colocar_dados($dados);
 
         if ($this->codigo_conta_pagar_receber != null) {
-            return (bool) model_update((string) $this->tabela(), (array)['_id', '===', $this->codigo_conta_pagar_receber], (array) ['empresa' => $this->empresa, 'cliente_fornecedor' => $this->cliente_fornecedor, 'conta_fornecedor' => $this->conta_fornecedor, 'nome_conta' => (string) $this->nome_conta, 'descricao' => (string) $this->descricao, 'valor_conta' => (float) $this->valor_conta, 'valor_pago' => (float) $this->valor_pago, 'valor_juro_desconto' => (float) $this->valor_juro_desconto, 'tipo_juro_desconto' => (string) $this->tipo_juro_desconto, 'tipo_conta' => (string) $this->tipo_conta, 'data_cadastro' => $this->data_cadastro, 'data_vencimento' => $this->data_vencimento, 'data_baixa' => $this->data_baixa, 'status_conta' => (string) $this->status_conta, 'comprovante' => (string) $this->comprovante, 'boleto' => (string) $this->boleto]);
+            return (bool) model_update((string) $this->tabela(), (array) ['_id', '===', $this->codigo_conta_pagar_receber], (array) ['empresa' => $this->empresa, 'cliente_fornecedor' => $this->cliente_fornecedor, 'conta_fornecedor' => $this->conta_fornecedor, 'nome_conta' => (string) $this->nome_conta, 'descricao' => (string) $this->descricao, 'valor_conta' => (float) $this->valor_conta, 'valor_pago' => (float) $this->valor_pago, 'valor_juro_desconto' => (float) $this->valor_juro_desconto, 'tipo_juro_desconto' => (string) $this->tipo_juro_desconto, 'tipo_conta' => (string) $this->tipo_conta, 'data_cadastro' => $this->data_cadastro, 'data_vencimento' => $this->data_vencimento, 'data_baixa' => $this->data_baixa, 'status_conta' => (string) $this->status_conta, 'comprovante' => (string) $this->comprovante, 'boleto' => (string) $this->boleto]);
         } else {
             return (bool) model_insert((string) $this->tabela(), (array) ['empresa' => $this->empresa, 'cliente_fornecedor' => $this->cliente_fornecedor, 'conta_fornecedor' => $this->conta_fornecedor, 'nome_conta' => (string) $this->nome_conta, 'descricao' => (string) $this->descricao, 'valor_conta' => (float) $this->valor_conta, 'valor_pago' => (float) $this->valor_pago, 'valor_juro_desconto' => (float) $this->valor_juro_desconto, 'tipo_juro_desconto' => (string) $this->tipo_juro_desconto, 'tipo_conta' => (string) $this->tipo_conta, 'data_cadastro' => $this->data_cadastro, 'data_vencimento' => $this->data_vencimento, 'data_baixa' => $this->data_baixa, 'status_conta' => (string) $this->status_conta, 'comprovante' => (string) $this->comprovante, 'boleto' => (string) $this->boleto]);
         }
@@ -269,61 +269,61 @@ class ContasPagarReceber implements InterfaceModelo
     {
         $pipeline = [
 
-    [
-        '$match' => [
-            'empresa' => model_id($codigo_empresa),
-            'data_vencimento' => [
-                '$gte' => model_date($data, $hora)
-            ]
-        ]
-    ],
-    [
-        '$addFields' => [
-            'status_normalizado' => [
-                '$switch' => [
-                    'branches' => [
-                        [
-                            'case' => ['$in' => ['$status_conta', ['VENCIDA', 'VENCIDO']]],
-                            'then' => 'VENCIDO'
+            [
+                '$match' => [
+                    'empresa' => model_id($codigo_empresa),
+                    'data_vencimento' => [
+                        '$gte' => model_date($data, $hora)
+                    ]
+                ]
+            ],
+            [
+                '$addFields' => [
+                    'status_normalizado' => [
+                        '$switch' => [
+                            'branches' => [
+                                [
+                                    'case' => ['$in' => ['$status_conta', ['VENCIDA', 'VENCIDO']]],
+                                    'then' => 'VENCIDO'
+                                ]
+                            ],
+                            'default' => '$status_conta'
                         ]
+                    ]
+                ]
+            ],
+            [
+                '$group' => [
+                    '_id' => [
+                        'ano' => ['$year' => '$data_vencimento'],
+                        'mes' => ['$month' => '$data_vencimento'],
+                        'tipo_conta' => '$tipo_conta',
+                        'status_conta' => '$status_normalizado'
                     ],
-                    'default' => '$status_conta'
+                    'total_contas' => ['$sum' => 1],
+                    'total_valor' => ['$sum' => '$valor_conta']
+                ]
+            ],
+            [
+                '$project' => [
+                    '_id' => 0,
+                    'ano' => '$_id.ano',
+                    'mes' => '$_id.mes',
+                    'status_conta' => '$_id.status_conta',
+                    'tipo_conta' => '$_id.tipo_conta',
+                    'total_contas' => 1,
+                    'total_valor' => 1
+                ]
+            ],
+            [
+                '$sort' => [
+                    'ano' => 1,
+                    'mes' => 1,
+                    'tipo_conta' => 1,
+                    'status_conta' => 1
                 ]
             ]
-        ]
-    ],
-    [
-        '$group' => [
-            '_id' => [
-                'ano' => ['$year' => '$data_vencimento'],
-                'mes' => ['$month' => '$data_vencimento'],
-                'tipo_conta' => '$tipo_conta',
-                'status_conta' => '$status_normalizado'
-            ],
-            'total_contas' => ['$sum' => 1],
-            'total_valor' => ['$sum' => '$valor_conta']
-        ]
-    ],
-    [
-    '$project' => [
-        '_id' => 0,
-        'ano' => '$_id.ano',
-        'mes' => '$_id.mes',
-        'status_conta' => '$_id.status_conta',
-        'tipo_conta' => '$_id.tipo_conta',
-        'total_contas' => 1,
-        'total_valor' => 1
-    ]
-],
-    [
-        '$sort' => [
-            'ano' => 1,
-            'mes' => 1,
-            'tipo_conta' => 1,
-            'status_conta' => 1
-        ]
-    ]
-];
+        ];
 
 
         $cursor = pesquisa_banco_aggregate((string) $this->tabela(), $pipeline);

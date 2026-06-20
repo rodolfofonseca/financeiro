@@ -12,25 +12,25 @@ router_add('cadastro_fechamento', function () {
 router_add('pesquisar_fechamento', function () {
     $objeto_fechamento_contabil_geral = new FechamentoContabilGeral();
 
-    $empresa = (string) (isset($_REQUEST['empresa']) ? (string) $_REQUEST['empresa'] : '');
+    $empresa = (int) (isset($_REQUEST['empresa']) ? (int) $_REQUEST['empresa'] : 0);
     $mes_referencia = (int) (isset($_REQUEST['mes_referencia']) ? (int) intval($_REQUEST['mes_referencia'], 10) : 0);
     $ano_referencia = (int) (isset($_REQUEST['ano_referencia']) ? (int) intval($_REQUEST['ano_referencia'], 10) : 0);
 
     $filtro_montando = (array) [];
 
     if ($empresa != '') {
-        array_push($filtro_montando, ['empresa', '===', model_id($empresa)]);
+        array_push($filtro_montando, ['codigo_empresa', '=', $empresa]);
     }
 
     if ($ano_referencia != 0) {
-        array_push($filtro_montando, ['ano_referencia', '===', (int) $ano_referencia]);
+        array_push($filtro_montando, ['ano_referencia', '=', (int) $ano_referencia]);
     }
 
     if ($mes_referencia != 0) {
-        array_push($filtro_montando, ['mes_referencia', '===', (int) $mes_referencia]);
+        array_push($filtro_montando, ['mes_referencia', '=', (int) $mes_referencia]);
     }
 
-    $filtro = (array) ['filtro' => (array) ['and' => $filtro_montando], 'ordenacao' => (array) ['data_fechamento' => (bool) false], 'limite' => (int) 12];
+    $filtro = (array) ['filtro' => (array) ['where' => $filtro_montando], 'ordenacao' => (array) [['data_fechamento', 'DESC']], 'limite' => (int) 12];
 
     echo json_encode(['dados' => (array) $objeto_fechamento_contabil_geral->pesquisar_todos($filtro)], JSON_UNESCAPED_UNICODE);
 });
@@ -38,13 +38,13 @@ router_add('pesquisar_fechamento', function () {
 router_add('excluir_fechamento_contabil', function () {
     $objeto_fechamento_contabil_geral = new FechamentoContabilGeral();
 
-    $codigo_fechamento = (string) (isset($_REQUEST['codigo_fechamento']) ? (string) $_REQUEST['codigo_fechamento'] : '');
+    $codigo_fechamento = (int) (isset($_REQUEST['codigo_fechamento']) ? (int) $_REQUEST['codigo_fechamento'] : 0);
 
     $filtro = (array) [];
     $retorno_exclusao = (bool) false;
 
-    if ($codigo_fechamento != '') {
-        $filtro = (array) ['_id', '===', model_id($codigo_fechamento)];
+    if ($codigo_fechamento != 0) {
+        $filtro = (array) ['where' => [['codigo_fechamento_contabil_geral', '=', $codigo_fechamento]]];
     }
 
     if (empty($filtro) == false) {
@@ -76,8 +76,12 @@ router_add('index', function () {
                 validacao = false;
             }
 
+
+            let dados = { 'rota': 'cadastro_fechamento', 'empresa': EMPRESA, 'mes_referencia': mes_referencia, 'ano_referencia': ano_referencia };
+
+            // console.log(dados);
             if (validacao == true) {
-                sistema.request.post('/fechamento_contabil_geral.php', { 'rota': 'cadastro_fechamento', 'empresa': EMPRESA, 'mes_referencia': mes_referencia, 'ano_referencia': ano_referencia }, function (retorno) {
+                sistema.request.post('/fechamento_contabil_geral.php', dados, function (retorno) {
                     validar_retorno(retorno, '/fechamento_contabil_geral.php');
                 });
             }
@@ -101,7 +105,7 @@ router_add('index', function () {
                     let linha = document.createElement('tr');
                     linha.appendChild(sistema.gerar_td(['text-center'], 'NENHUM FECHAMENTO ENCONTRADO COM O FILTRO PASSADO!', 'inner', true, 8));
                     tabela.appendChild(linha);
-                    Swal.fire({ icon: 'warning', title: 'Nenhuma conta encontrada!' });
+                    Swal.fire({ icon: 'warning', title: 'Nenhuma fechamento encontrado!' });
                     return;
                 }
 
@@ -120,9 +124,9 @@ router_add('index', function () {
 
                     if (fechamento.total_credito > fechamento.total_debito) {
                         linha.appendChild(sistema.gerar_td(['text-center', 'fw-bold', 'text-success'], sistema.number_format(fechamento.total_credito), 'inner'));
-                    } else if (fechamento.total_credito == fechamento.total_debito){
+                    } else if (fechamento.total_credito == fechamento.total_debito) {
                         linha.appendChild(sistema.gerar_td(['text-center', 'fw-bold', 'text-warning'], sistema.number_format(fechamento.total_credito), 'inner'));
-                    }else {
+                    } else {
                         linha.appendChild(sistema.gerar_td(['text-center', 'fw-bold', 'text-danger'], sistema.number_format(fechamento.total_credito), 'inner'));
                     }
 
@@ -152,7 +156,7 @@ router_add('index', function () {
                     }
 
                     linha.appendChild(sistema.gerar_td(['text-center', 'fw-bold'], sistema.retornar_data(fechamento.data_fechamento), 'inner'));
-                    linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_excluir_fechamento_' + fechamento._id.$oid, 'EXCLUIR', ['btn', 'btn-danger'], function excluir_fechamento_botao() { excluir_fechamento(fechamento._id.$oid); }), 'append'));
+                    linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_excluir_fechamento_' + fechamento.codigo_fechamento_contabil_geral, 'EXCLUIR', ['btn', 'btn-danger'], function excluir_fechamento_botao() { excluir_fechamento(fechamento.codigo_fechamento_contabil_geral); }), 'append'));
 
                     tabela.appendChild(linha);
 
@@ -257,8 +261,7 @@ router_add('index', function () {
                 </div>
             </div>
         </div>
-        <div class="modal fade" id="modal_baixar_conta" aria-labelledby="myLargeModalLabel"
-            aria-hidden="true">
+        <div class="modal fade" id="modal_baixar_conta" aria-labelledby="myLargeModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header">

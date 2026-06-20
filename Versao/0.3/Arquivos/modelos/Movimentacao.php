@@ -44,7 +44,7 @@ class Movimentacao implements InterfaceModelo
         $this->descricao = (string) (isset($dados['descricao']) ? (string) strtoupper($dados['descricao']) : '');
         $this->tipo_lancamento = (string) (isset($dados['tipo_lancamento']) ? (string) $dados['tipo_lancamento'] : 'CREDITO');
         $this->conta_destino = (isset($dados['conta_destino']) ? model_id($dados['conta_destino']) : '');
-        $this->comprovante = (bool) (isset($dados['comprovante']) ? (bool) $dados['comprovante']:false);
+        $this->comprovante = (bool) (isset($dados['comprovante']) ? (bool) $dados['comprovante'] : false);
     }
 
     public function salvar_dados($dados)
@@ -129,7 +129,8 @@ class Movimentacao implements InterfaceModelo
      * @param (string) $codigo_movimentacao - Código da movimentação a ser alterada.
      * @return (bool) Retorna true se a movimentação for alterada com sucesso, ou false caso contrário.
      */
-    public function alterar_comprovante($codigo_movimentacao){
+    public function alterar_comprovante($codigo_movimentacao)
+    {
         $this->codigo_movimentacao = model_id($codigo_movimentacao);
         $retorno_movimentacao = (bool) false;
 

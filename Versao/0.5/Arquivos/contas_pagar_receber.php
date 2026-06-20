@@ -1573,18 +1573,18 @@ router_add('cadastro_contas', function () {
                         let conta_fornecedor = document.querySelector('#conta_fornecedor').value;
                         let transacao = document.querySelector('#transacao').value;
 
-                        if(cliente_fornecedor == ''){
-                            Swal.fire({'title':'Falha de validacao', 'text':'Nome do cliente/fornecedor não pode ser vazio!', 'icon':'error'});
+                        if (cliente_fornecedor == '') {
+                            Swal.fire({ 'title': 'Falha de validacao', 'text': 'Nome do cliente/fornecedor não pode ser vazio!', 'icon': 'error' });
                             return;
                         }
-                        
-                        if(nome_conta == ''){
-                            Swal.fire({'title':'Falha de validacao', 'text':'Nome da conta não pode ser vazio!', 'icon':'error'});
+
+                        if (nome_conta == '') {
+                            Swal.fire({ 'title': 'Falha de validacao', 'text': 'Nome da conta não pode ser vazio!', 'icon': 'error' });
                             return;
                         }
-                        
-                        if(vlaor_conta == ''){
-                            Swal.fire({'title':'Falha de validacao', 'text':'Valor da conta não pode ser vazio!', 'icon':'error'});
+
+                        if (vlaor_conta == '') {
+                            Swal.fire({ 'title': 'Falha de validacao', 'text': 'Valor da conta não pode ser vazio!', 'icon': 'error' });
                             return;
                         }
 

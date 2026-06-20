@@ -58,7 +58,7 @@ class ContasPagarReceber implements InterfaceModelo
         $this->colocar_dados($dados);
 
         if ($this->codigo_conta_pagar_receber != null) {
-            return (bool) model_update((string) $this->tabela(), (array)['_id', '===', $this->codigo_conta_pagar_receber], (array) ['empresa' => $this->empresa, 'nome_conta' => (string) $this->nome_conta, 'descricao' => (string) $this->descricao, 'valor_conta' => (float) $this->valor_conta, 'valor_pago' => (float) $this->valor_pago, 'valor_juro_desconto' => (float) $this->valor_juro_desconto, 'tipo_juro_desconto' => (string) $this->tipo_juro_desconto, 'tipo_conta' => (string) $this->tipo_conta, 'data_cadastro' => $this->data_cadastro, 'data_vencimento' => $this->data_vencimento, 'data_baixa' => $this->data_baixa, 'status_conta' => (string) $this->status_conta]);
+            return (bool) model_update((string) $this->tabela(), (array) ['_id', '===', $this->codigo_conta_pagar_receber], (array) ['empresa' => $this->empresa, 'nome_conta' => (string) $this->nome_conta, 'descricao' => (string) $this->descricao, 'valor_conta' => (float) $this->valor_conta, 'valor_pago' => (float) $this->valor_pago, 'valor_juro_desconto' => (float) $this->valor_juro_desconto, 'tipo_juro_desconto' => (string) $this->tipo_juro_desconto, 'tipo_conta' => (string) $this->tipo_conta, 'data_cadastro' => $this->data_cadastro, 'data_vencimento' => $this->data_vencimento, 'data_baixa' => $this->data_baixa, 'status_conta' => (string) $this->status_conta]);
         } else {
             return (bool) model_insert((string) $this->tabela(), (array) ['empresa' => $this->empresa, 'nome_conta' => (string) $this->nome_conta, 'descricao' => (string) $this->descricao, 'valor_conta' => (float) $this->valor_conta, 'valor_pago' => (float) $this->valor_pago, 'valor_juro_desconto' => (float) $this->valor_juro_desconto, 'tipo_juro_desconto' => (string) $this->tipo_juro_desconto, 'tipo_conta' => (string) $this->tipo_conta, 'data_cadastro' => $this->data_cadastro, 'data_vencimento' => $this->data_vencimento, 'data_baixa' => $this->data_baixa, 'status_conta' => (string) $this->status_conta]);
         }
@@ -123,7 +123,7 @@ class ContasPagarReceber implements InterfaceModelo
 
     public function relatorio_contas_pagar($codigo_empresa)
     {
-        $pipeline = [['$match' => ['$or' => [['$and' => [['empresa' => model_id($codigo_empresa)], ['tipo_conta' => 'PAGAR'], ['status_conta' => 'AGUARDANDO']]], ['status_conta' => 'VENCIDA' ], ['tipo_conta' => 'RECEBER']]]], ['$group' => ['_id' => ['status_conta' => '$status_conta'], 'COUNT(*)' => ['$sum' => 1], 'SUM(valor_conta)' => ['$sum' => '$valor_conta']]], ['$project' => ['status_conta' => '$_id.status_conta', 'COUNT(*)' => '$COUNT(*)', 'SUM(valor_conta)' => '$SUM(valor_conta)', '_id' => 0]]];
+        $pipeline = [['$match' => ['$or' => [['$and' => [['empresa' => model_id($codigo_empresa)], ['tipo_conta' => 'PAGAR'], ['status_conta' => 'AGUARDANDO']]], ['status_conta' => 'VENCIDA'], ['tipo_conta' => 'RECEBER']]]], ['$group' => ['_id' => ['status_conta' => '$status_conta'], 'COUNT(*)' => ['$sum' => 1], 'SUM(valor_conta)' => ['$sum' => '$valor_conta']]], ['$project' => ['status_conta' => '$_id.status_conta', 'COUNT(*)' => '$COUNT(*)', 'SUM(valor_conta)' => '$SUM(valor_conta)', '_id' => 0]]];
 
         $cursor = pesquisa_banco_aggregate((string) $this->tabela(), $pipeline);
 

@@ -120,9 +120,9 @@ router_add('index', function () {
 
                     if (fechamento.total_credito > fechamento.total_debito) {
                         linha.appendChild(sistema.gerar_td(['text-center', 'fw-bold', 'text-success'], sistema.number_format(fechamento.total_credito), 'inner'));
-                    } else if (fechamento.total_credito == fechamento.total_debito){
+                    } else if (fechamento.total_credito == fechamento.total_debito) {
                         linha.appendChild(sistema.gerar_td(['text-center', 'fw-bold', 'text-warning'], sistema.number_format(fechamento.total_credito), 'inner'));
-                    }else {
+                    } else {
                         linha.appendChild(sistema.gerar_td(['text-center', 'fw-bold', 'text-danger'], sistema.number_format(fechamento.total_credito), 'inner'));
                     }
 
@@ -257,8 +257,7 @@ router_add('index', function () {
                 </div>
             </div>
         </div>
-        <div class="modal fade" id="modal_baixar_conta" aria-labelledby="myLargeModalLabel"
-            aria-hidden="true">
+        <div class="modal fade" id="modal_baixar_conta" aria-labelledby="myLargeModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header">

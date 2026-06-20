@@ -131,11 +131,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 router_add('pesquisar_conta', function () {
     $objeto_contas_pagar_receber = new ContasPagarReceber();
 
-    $codigo_conta = (string) (isset($_REQUEST['codigo_conta_pagar_receber']) ? (string) $_REQUEST['codigo_conta_pagar_receber'] : '');
+    $codigo_conta = (int) (isset($_REQUEST['codigo_conta_pagar_receber']) ? (int) intval($_REQUEST['codigo_conta_pagar_receber'], 10) : 0);
     $filtro = (array) ['filtro' => (array) []];
 
-    if ($codigo_conta != '') {
-        $filtro['filtro'] = (array) ['_id', '===', model_id($codigo_conta)];
+    if ($codigo_conta != 0) {
+        $filtro['filtro'] = (array) ['where' => [['codigo_conta_pagar_receber', '=', $codigo_conta]]];
     }
 
     echo json_encode((array) ['dados' => (array) $objeto_contas_pagar_receber->pesquisar($filtro)], JSON_UNESCAPED_UNICODE);
@@ -382,12 +382,12 @@ router_add('salvar_dados_conta_fornecedor', function () {
 router_add('pesquisar_conta_fornecedor', function () {
     $objeto_conta_fornecedores = new ContasFornecedores();
 
-    $codigo_conta = (string) (isset($_REQUEST['codigo_conta']) ? (string) $_REQUEST['codigo_conta'] : '');
+    $codigo_conta = (int) (isset($_REQUEST['codigo_conta']) ? (int) intval($_REQUEST['codigo_conta'], 10)  : 0);
     $filtro = (array) ['filtro' => (array) []];
     $retorno = (array) [];
 
     if ($codigo_conta != '') {
-        $filtro['filtro'] = (array) ['_id', '===', model_id($codigo_conta)];
+        $filtro['filtro'] = (array) ['where' => [['codigo_conta_fornecedor', '=', $codigo_conta]]];
 
         $retorno = (array) $objeto_conta_fornecedores->pesquisar($filtro);
     }
@@ -402,23 +402,23 @@ router_add('pesquisar_conta_fornecedor', function () {
 router_add('pesquisar_contas_fornecedores', function () {
     $objeto_conta_fornecedores = new ContasFornecedores();
 
-    $empresa = (string) (isset($_REQUEST['empresa']) ? (string) $_REQUEST['empresa'] : '');
-    $fornecedor = (string) (isset($_REQUEST['fornecedor']) ? (string) $_REQUEST['fornecedor'] : '');
+    $empresa = (int) (isset($_REQUEST['empresa']) ? (int) $_REQUEST['empresa'] : 0);
+    $fornecedor = (int) (isset($_REQUEST['fornecedor']) ? (int) $_REQUEST['fornecedor'] : 0);
     $nome_conta = (string) (isset($_REQUEST['nome_conta']) ? (string) strtoupper($_REQUEST['nome_conta']) : '');
     $status_conta_string = (string) (isset($_REQUEST['status_conta']) ? (string) $_REQUEST['status_conta'] : 'TODOS');
     $data_cadastro = (string) (isset($_REQUEST['data_cadastro']) ? (string) $_REQUEST['data_cadastro'] : '');
 
-    $filtro = (array) ['filtro' => (array) [], 'ordenacao' => (array) ['nome_conta' => (bool) true], 'limite' => (int) 100];
+    $filtro = (array) ['filtro' => (array) [], 'ordenacao' => (array) [['nome_conta','ASC']], 'limite' => (int) 100];
     $filtro_montando = (array) [];
     $retorno = (array) [];
     $retorno_final = (array) [];
 
-    if ($empresa != '') {
-        array_push($filtro_montando, ['empresa', '===', model_id($empresa)]);
+    if ($empresa != 0) {
+        array_push($filtro_montando, ['codigo_empresa', '=', $empresa]);
     }
 
-    if ($fornecedor != '') {
-        array_push($filtro_montando, ['fornecedor', '===', model_id($fornecedor)]);
+    if ($fornecedor != 0) {
+        array_push($filtro_montando, ['codigo_usuario', '=', $fornecedor]);
     }
 
     if ($nome_conta != '') {
@@ -426,9 +426,9 @@ router_add('pesquisar_contas_fornecedores', function () {
     }
 
     if ($status_conta_string == 'ATIVO') {
-        array_push($filtro_montando, ['status_conta', '===', (bool) true]);
+        array_push($filtro_montando, ['status_conta', '=', (bool) true]);
     } else if ($status_conta_string == 'INATIVO') {
-        array_push($filtro_montando, ['status_conta', '===', (bool) false]);
+        array_push($filtro_montando, ['status_conta', '=', (bool) false]);
     }
 
     if ($data_cadastro != '') {
@@ -436,7 +436,7 @@ router_add('pesquisar_contas_fornecedores', function () {
         array_push($filtro_montando, ['data_cadastro', '<=', model_date($data_cadastro, '23:59:59')]);
     }
 
-    $filtro['filtro'] = (array) ['and' => $filtro_montando];
+    $filtro['filtro'] = (array) ['where' => $filtro_montando];
 
     $retorno = (array) $objeto_conta_fornecedores->pesquisar_todos($filtro);
 
@@ -444,7 +444,7 @@ router_add('pesquisar_contas_fornecedores', function () {
         $objeto_fornecedor = new Usuario();
 
         foreach ($retorno as $contas_clientes_fornecedor) {
-            $filtro_fornecedor = (array) ['filtro' => (array) ['_id', '===', $contas_clientes_fornecedor['fornecedor']]];
+            $filtro_fornecedor = (array) ['filtro' => (array) ['where' => [['codigo_usuario', '=', $contas_clientes_fornecedor['codigo_usuario']]]]];
             $fornecedor_array = ['nome_fornecedor' => (string) ''];
 
             $retorno_fornecedor = (array) $objeto_fornecedor->pesquisar($filtro_fornecedor);
@@ -734,6 +734,8 @@ router_add('index', function () {
                     function processar_item() {
                         if (index >= tamanho_retorno) {
                             let linha = document.createElement('tr');
+                            
+                            linha.appendChild(sistema.gerar_td(['text-center']), '', 'inner');
 
                             linha.appendChild(sistema.gerar_td(['text-start', 'text-info'], 'PG. AGUAR.: R$: <strong>' + sistema.number_format(total_contas_pagar_aguardando, 2, ',') + '</strong>', 'inner'));
                             linha.appendChild(sistema.gerar_td(['text-start', 'text-warning'], 'PG. CANCE.: R$: <strong>' + sistema.number_format(total_contas_pagar_canceladas, 2, ',') + '</strong>', 'inner'));
@@ -749,9 +751,6 @@ router_add('index', function () {
 
                             linha.appendChild(sistema.gerar_td(['text-start'], '', 'inner'));
                             linha.appendChild(sistema.gerar_td(['text-start'], '', 'inner'));
-                            linha.appendChild(sistema.gerar_td(['text-start'], '', 'inner'));
-                            linha.appendChild(sistema.gerar_td(['text-start'], '', 'inner'));
-                            linha.appendChild(sistema.gerar_td(['text-start'], '', 'inner'));
 
                             tabela_contas.appendChild(linha);
 
@@ -763,15 +762,14 @@ router_add('index', function () {
 
                         let linha = document.createElement('tr');
                         let nome_usuario = '';
+                        
+                        linha.appendChild(sistema.gerar_td(['text-center', 'fw-bold'], conta.codigo_conta_pagar_receber, 'inner', false, '', conta.codigo_conta_pagar_receber));
 
                         if (conta.hasOwnProperty('pessoa') == true) {
                             nome_usuario = conta.pessoa.nome_usuario;
-                            linha.appendChild(sistema.gerar_td(['text-left'], '<strong>' + sistema.cortar_string(conta.pessoa.nome_usuario, 15) + '</strong>', 'inner', false, '', conta.pessoa.nome_usuario));
-                        } else {
-                            linha.appendChild(sistema.gerar_td(['text-center'], '', 'inner'));
                         }
 
-                        linha.appendChild(sistema.gerar_td(['text-let'], sistema.cortar_string(conta.nome_conta, 15), 'inner', false, '', conta.nome_conta));
+                        linha.appendChild(sistema.gerar_td(['text-left'], sistema.cortar_string(conta.nome_conta, 15), 'inner', false, '', 'CLIENTE/FORNECEDOR('+nome_usuario+')'));
                         linha.appendChild(sistema.gerar_td(['text-left'], sistema.cortar_string(conta.descricao, 30), 'inner', false, '', conta.descricao));
 
                         if (conta.hasOwnProperty('transacao') == true) {
@@ -780,7 +778,7 @@ router_add('index', function () {
                             linha.appendChild(sistema.gerar_td(['text-left'], '', 'inner', false, '', ''));
                         }
 
-                        if (conta.tipo_conta == 'PAGAR') {
+                        if (conta.tipo_conta == false) {
                             linha.appendChild(sistema.gerar_td(['text-center', 'fw-bold', 'text-danger'], sistema.number_format(conta.valor_conta), 'inner'));
                         } else {
                             linha.appendChild(sistema.gerar_td(['text-center', 'fw-bold', 'text-success'], sistema.number_format(conta.valor_conta), 'inner'));
@@ -795,24 +793,34 @@ router_add('index', function () {
                             linha.appendChild(sistema.gerar_td(['text-center'], sistema.retornar_data(conta.data_baixa), 'inner'));
                         }
 
-                        if (conta.tipo_conta == 'PAGAR') {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_conta_' + conta._id.$oid, 'PAGAR', ['btn', 'btn-outline-danger'], function tipo_conta() { }), 'append'));
+                        if (conta.tipo_conta == false) {
+                            if(conta.status_conta == 'AGUARDANDO'){
+                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_conta_' + conta.codigo_conta_pagar_receber, 'PAGAR | AGUARDANDO', ['btn', 'btn-outline-secondary'], function tipo_conta() { }), 'append'));
+                            }else if(conta.status_conta == 'PAGO'){
+                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_conta_' + conta.codigo_conta_pagar_receber, 'PAGAR | PAGO', ['btn', 'btn-outline-success'], function tipo_conta() { }),  'append'));
+                            }else if(conta.status_conta == 'CANCELADO'){
+                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_conta_' + conta.codigo_conta_pagar_receber, 'PAGAR | CANCELADO', ['btn', 'btn-outline-warning'], function tipo_conta() { }),  'append'));
+                            }else if(conta.status_conta == 'VENCIDA' || conta.status_conta == 'VENCIDO'){
+                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_conta_' + conta.codigo_conta_pagar_receber, 'PAGAR | VENCIDA', ['btn', 'btn-outline-danger'], function tipo_conta() { }),  'append'));
+                            }
                         } else {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_conta_' + conta._id.$oid, 'RECEBER', ['btn', 'btn-outline-success'], function tipo_conta() { }), 'append'));
-                        }
-
-                        if (conta.status_conta == 'AGUARDANDO') {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_conta_' + conta._id.$oid, 'AGUARDANDO', ['btn', 'btn-outline-secondary'], function status_conta() { }), 'append'));
-                        } else if (conta.status_conta == 'PAGO') {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_conta_' + conta._id.$oid, 'PAGO', ['btn', 'btn-outline-success'], function status_conta() { }), 'append'));
-                        } else if (conta.status_conta == 'CANCELADO') {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_conta_' + conta._id.$oid, 'CANCELADO', ['btn', 'btn-outline-warning'], function status_conta() { }), 'append'));
-                        } else if (conta.status_conta == 'VENCIDA' || conta.status_conta == 'VENCIDO') {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_conta_' + conta._id.$oid, 'VENCIDA', ['btn', 'btn-outline-danger'], function status_conta() { }), 'append'));
+                            if(conta.status_conta == 'AGUARDANDO'){
+                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_conta_' + conta.codigo_conta_pagar_receber, 'RECEBER | AGUARDANDO', ['btn', 'btn-outline-secondary'], function imprimir_conta_botao() {
+                                    abrir_modal_impressao_promissoria(conta.codigo_conta_pagar_receber);
+                                }), 'append'));
+                            }else if(conta.status_conta == 'PAGO'){
+                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_conta_' + conta.codigo_conta_pagar_receber, 'RECEBER | PAGO', ['btn', 'btn-outline-success'], function tipo_conta() { }),  'append'));
+                            }else if(conta.status_conta == 'CANCELADO'){
+                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_conta_' + conta.codigo_conta_pagar_receber, 'RECEBER | CANCELADO', ['btn', 'btn-outline-warning'], function tipo_conta() { }),  'append'));
+                            }else if(conta.status_conta == 'VENCIDA' || conta.status_conta == 'VENCIDO'){
+                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_conta_' + conta.codigo_conta_pagar_receber, 'RECEBER | VENCIDA', ['btn', 'btn-outline-danger'], function imprimir_conta_botao() {
+                                    abrir_modal_impressao_promissoria(conta.codigo_conta_pagar_receber);
+                                }),  'append'));
+                            }
                         }
 
                         let botao = document.createElement('button');
-                        botao.id = 'botao_baixar_conta_' + conta._id.$oid;
+                        botao.id = 'botao_baixar_conta_' + conta.codigo_conta_pagar_receber;
                         botao.textContent = 'BAIXAR';
                         botao.classList.add('btn');
                         botao.classList.add('btn-primary');
@@ -828,8 +836,8 @@ router_add('index', function () {
                                 botao.dataset.bsToggle = "modal";
                                 botao.dataset.bsTarget = "#modal_baixar_conta";
                                 document.querySelector('#valor_conta').value = sistema.number_format(conta.valor_conta);
-                                document.querySelector('#data_vencimento').value = sistema.retornar_data(conta.data_vencimento, 'AMERICANO');
-                                document.querySelector('#codigo_conta_pagar_receber').value = conta._id.$oid;
+                                document.querySelector('#data_vencimento').value = sistema.retornar_data(conta.data_vencimento, false, 'us');
+                                document.querySelector('#codigo_conta_pagar_receber').value = conta.codigo_conta_pagar_receber;
                                 document.querySelector('#tipo_conta_input').value = conta.tipo_conta;
                                 document.querySelector('#nome_conta_input').value = conta.nome_conta;
                             }
@@ -839,7 +847,7 @@ router_add('index', function () {
                             if (conta.hasOwnProperty('boleto') == true) {
                                 if (conta.boleto == 'NAO') {
                                     let botao_boleto = document.createElement('button');
-                                    botao_boleto.id = 'botao_anexar_boleto_' + conta._id.$oid;
+                                    botao_boleto.id = 'botao_anexar_boleto_' + conta.codigo_conta_pagar_receber;
                                     botao_boleto.textContent = 'ANEXAR CONTA';
                                     botao_boleto.classList.add('btn');
                                     botao_boleto.classList.add('btn-success');
@@ -847,7 +855,7 @@ router_add('index', function () {
                                     botao_boleto.dataset.bsTarget = '#modal_anexar_documentos';
 
                                     botao_boleto.addEventListener('click', function () {
-                                        document.querySelector('#codigo_local').value = conta._id.$oid;
+                                        document.querySelector('#codigo_local').value = conta.codigo_conta_pagar_receber;
                                         document.querySelector('#nome_conta_anexo_documentos').value = conta.nome_conta;
                                         document.querySelector('#empresa_anexo_documento').value = EMPRESA;
                                     });
@@ -855,20 +863,20 @@ router_add('index', function () {
                                     linha.appendChild(sistema.gerar_td(['text-center'], botao_boleto, 'append'));
                                 } else if (conta.boleto == 'SIM') {
                                     let botao_baixar_arquivo = document.createElement('button');
-                                    botao_baixar_arquivo.id = 'botao_baixar_comprovante_boleto_' + conta._id.$oid;
+                                    botao_baixar_arquivo.id = 'botao_baixar_comprovante_boleto_' + conta.codigo_conta_pagar_receber;
                                     botao_baixar_arquivo.textContent = 'BAIXAR BOLETO';
                                     botao_baixar_arquivo.classList.add('btn');
                                     botao_baixar_arquivo.classList.add('btn-info');
 
                                     botao_baixar_arquivo.onclick = function () {
-                                        abrir_modal_download_arquivo(conta._id.$oid, 'CONTAS_PAGAR_RECEBER_BOLETOS');
+                                        abrir_modal_download_arquivo(conta.codigo_conta_pagar_receber, 'CONTAS_PAGAR_RECEBER_BOLETOS');
                                     }
 
                                     linha.appendChild(sistema.gerar_td(['text-center'], botao_baixar_arquivo, 'append'));
                                 }
                             } else {
                                 let botao_boleto = document.createElement('button');
-                                botao_boleto.id = 'botao_anexar_boleto_' + conta._id.$oid;
+                                botao_boleto.id = 'botao_anexar_boleto_' + conta.codigo_conta_pagar_receber;
                                 botao_boleto.textContent = 'ANEXAR CONTA';
                                 botao_boleto.classList.add('btn');
                                 botao_boleto.classList.add('btn-success');
@@ -876,7 +884,7 @@ router_add('index', function () {
                                 botao_boleto.dataset.bsTarget = '#modal_anexar_documentos';
 
                                 botao_boleto.addEventListener('click', function () {
-                                    document.querySelector('#codigo_local').value = conta._id.$oid;
+                                    document.querySelector('#codigo_local').value = conta.codigo_conta_pagar_receber;
                                     document.querySelector('#nome_conta_anexo_documentos').value = conta.nome_conta;
                                     document.querySelector('#empresa_anexo_documento').value = EMPRESA;
                                 });
@@ -891,14 +899,14 @@ router_add('index', function () {
                             if (ANEXA_DOCUMENTOS == 1) {
                                 if (conta.comprovante == 'NAO') {
                                     let botao_documentos = document.createElement('button');
-                                    botao_documentos.id = 'botao_anexo_documentos_' + conta._id.$oid;
+                                    botao_documentos.id = 'botao_anexo_documentos_' + conta.codigo_conta_pagar_receber;
                                     botao_documentos.textContent = 'COMPROVANTE';
                                     botao_documentos.classList.add('btn');
                                     botao_documentos.classList.add('btn-success');
                                     botao_documentos.dataset.bsToggle = 'modal';
                                     botao_documentos.dataset.bsTarget = '#modal_anexar_documentos';
                                     botao_documentos.addEventListener('click', function () {
-                                        document.querySelector('#codigo_local').value = conta._id.$oid;
+                                        document.querySelector('#codigo_local').value = conta.codigo_conta_pagar_receber;
                                         document.querySelector('#nome_conta_anexo_documentos').value = conta.nome_conta;
                                         document.querySelector('#empresa_anexo_documento').value = EMPRESA;
                                     });
@@ -906,13 +914,13 @@ router_add('index', function () {
                                     linha.appendChild(sistema.gerar_td(['text-center'], botao_documentos, 'append'));
                                 } else {
                                     let botao_baixar_arquivo = document.createElement('button');
-                                    botao_baixar_arquivo.id = 'botao_baixar_comprovante_' + conta._id.$oid;
+                                    botao_baixar_arquivo.id = 'botao_baixar_comprovante_' + conta.codigo_conta_pagar_receber;
                                     botao_baixar_arquivo.textContent = 'BAIXAR COMPROVANTE';
                                     botao_baixar_arquivo.classList.add('btn');
                                     botao_baixar_arquivo.classList.add('btn-info');
 
                                     botao_baixar_arquivo.onclick = function () {
-                                        abrir_modal_download_arquivo(conta._id.$oid, 'CONTAS_PAGAR_RECEBER');
+                                        abrir_modal_download_arquivo(conta.codigo_conta_pagar_receber, 'CONTAS_PAGAR_RECEBER');
                                     }
 
                                     linha.appendChild(sistema.gerar_td(['text-center'], botao_baixar_arquivo, 'append'));
@@ -920,63 +928,13 @@ router_add('index', function () {
                             }
 
                             linha.appendChild(sistema.gerar_td(['text-center'], botao, 'append'));
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_imprimir_conta_' + conta._id.$oid, 'IMPRIMIR', ['btn', 'btn-secondary', 'disabled'], function imprimir_conta_botao() { }), 'append'));
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_excluir_conta_' + conta._id.$oid, 'EXCLUIR', ['btn', 'btn-danger', 'disabled'], function imprimir_conta_botao() { }), 'append'));
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_editar_conta_' + conta._id.$oid, 'EDITAR', ['btn', 'btn-primary', 'disabled'], function baixar_conta_botao() { }), 'append'));
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_editar_conta_' + conta.codigo_conta_pagar_receber, 'EDITAR', ['btn', 'btn-secondary', 'disabled'], function baixar_conta_botao() { }), 'append'));
                         } else {
                             linha.appendChild(sistema.gerar_td(['text-center'], '', 'inner'));
                             linha.appendChild(sistema.gerar_td(['text-center'], botao, 'append'));
 
-                            if (conta.tipo_conta == 'RECEBER') {
-                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_imprimir_conta_' + conta._id.$oid, 'IMPRIMIR', ['btn', 'btn-secondary'], function imprimir_conta_botao() {
-                                    abrir_modal_impressao_promissoria(conta._id.$oid);
-                                }), 'append'));
-                            } else {
-                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_imprimir_conta_' + conta._id.$oid, 'IMPRIMIR', ['btn', 'btn-secondary', 'disabled'], function imprimir_conta_botao() { }), 'append'));
-                            }
-
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_excluir_conta_' + conta._id.$oid, 'EXCLUIR', ['btn', 'btn-danger'], function excluir_conta_botao() {
-                                Swal.fire({
-                                    title: "Quer mesmo deletar?",
-                                    text: "Essa operação é irreversível!",
-                                    icon: "warning",
-                                    showCancelButton: true,
-                                    confirmButtonColor: "#3085d6",
-                                    cancelButtonColor: "#d33",
-                                    confirmButtonText: "Sim, Deletar agora!"
-                                }).then((result) => {
-                                    if (result.isConfirmed) {
-                                        sistema.request.post('/contas_pagar_receber.php', {
-                                            'rota': 'excluir_conta',
-                                            'codigo_conta': conta._id.$oid
-                                        }, function (retorno) {
-                                            if (retorno.status == true) {
-                                                Swal.fire({
-                                                    title: "Deletado!",
-                                                    text: "A conta foi deletetada.",
-                                                    icon: "success"
-                                                });
-                                            } else {
-                                                Swal.fire({
-                                                    title: "ERRO!",
-                                                    text: "Erro durante o processo de exclusão.",
-                                                    icon: "error"
-                                                });
-                                            }
-
-                                            setTimeout(() => {
-                                                window.location.href = sistema.url('/contas_pagar_receber.php', {
-                                                    'rota': 'index'
-                                                });
-                                            }), 3000;
-                                        });
-                                    }
-
-                                });
-                            }), 'append'));
-
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_editar_conta_' + conta._id.$oid, 'EDITAR', ['btn', 'btn-primary'], function baixar_conta_botao() {
-                                cadastro_contas(conta._id.$oid);
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_editar_conta_' + conta.codigo_conta_pagar_receber, 'EDITAR', ['btn', 'btn-secondary'], function baixar_conta_botao() {
+                                cadastro_contas(conta.codigo_conta_pagar_receber);
                             }), 'append'));
                         }
 
@@ -1075,10 +1033,10 @@ router_add('index', function () {
                 valor_pago = valor_pago.replace(',', '.');
 
                 if (valor_conta > valor_pago) {
-                    document.querySelector('#tipo_juro_desconto').value = 'DESCONTO';
+                    document.querySelector('#tipo_juro_desconto').value = '0';
                     resultado = valor_conta - valor_pago;
                 } else if (valor_conta < valor_pago) {
-                    document.querySelector('#tipo_juro_desconto').value = 'JURO';
+                    document.querySelector('#tipo_juro_desconto').value = '1';
                     resultado = valor_pago - valor_conta;
                 } else {
                     document.querySelector('#tipo_juro_desconto').value = '';
@@ -1105,7 +1063,7 @@ router_add('index', function () {
                         let select_conta = document.querySelector('#conta');
 
                         sistema.each(contas, function (index, conta) {
-                            select_conta.appendChild(sistema.gerar_option(conta._id.$oid, conta.nome_conta + " | " + sistema.number_format(conta.saldo_conta)));
+                            select_conta.appendChild(sistema.gerar_option(conta.codigo_conta, conta.nome_conta + " | " + sistema.number_format(conta.saldo_conta)));
                         });
                     }
                 });
@@ -1123,6 +1081,11 @@ router_add('index', function () {
                 let codigo_conta_bancaria = document.querySelector('#conta').value;
                 let tipo_conta = document.querySelector('#tipo_conta_input').value;
                 let nome_conta = document.querySelector('#nome_conta_input').value;
+
+                if(tipo_juro_desconto == ''){
+                    tipo_juro_desconto = false;
+                }
+
                 let objeto_json = {
                     'rota': 'baixar_conta',
                     'codigo_conta_pagar_receber': codigo_conta_pagar_receber,
@@ -1139,6 +1102,7 @@ router_add('index', function () {
 
                 sistema.request.post('/contas_pagar_receber.php', objeto_json, function (retorno) {
                     validar_retorno(retorno, '/contas_pagar_receber.php');
+                    console.log(retorno);
                 });
 
             }
@@ -1170,7 +1134,7 @@ router_add('index', function () {
                     let cliente_fornecedor = retorno.dados;
 
                     sistema.each(cliente_fornecedor, function (index, cliente) {
-                        select.appendChild(sistema.gerar_option(cliente._id.$oid, cliente.nome_usuario));
+                        select.appendChild(sistema.gerar_option(cliente.codigo_usuario, cliente.nome_usuario));
                     });
                 });
             }
@@ -1303,20 +1267,17 @@ router_add('index', function () {
                                             <table class="table table-nowrap text-nowrap table-hover" id="tabela_contas">
                                                 <thead>
                                                     <tr class="text-center">
-                                                        <th scope="col">Cliente/Fornecedor</th>
+                                                        <th scope="col">#</th>
                                                         <th scope="col">Nome Conta</th>
                                                         <th scope="col">Descrição</th>
                                                         <th scope="col">Transação</th>
                                                         <th scope="col">Valor</th>
                                                         <th scope="col">Vencimento</th>
                                                         <th scope="col">baixa</th>
-                                                        <th scope="col">Tipo</th>
-                                                        <th scope="col">Status</th>
+                                                        <th scope="col">Tipo/Status</th>
                                                         <th scope="col">Boleto</th>
                                                         <th scope="col">Comprovante</th>
                                                         <th scope="col">Baixar</th>
-                                                        <th scope="col">Primissória</th>
-                                                        <th scope="col">Excluir</th>
                                                         <th scope="col">Editar</th>
                                                     </tr>
                                                 </thead>
@@ -1335,7 +1296,7 @@ router_add('index', function () {
                     </div>
                 </div>
             </div>
-            <div class="modal fade" id="modal_baixar_conta" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel"
+            <div class="modal fade" id="modal_baixar_conta" aria-labelledby="myLargeModalLabel"
                 aria-hidden="true">
                 <div class="modal-dialog modal-lg modal-dialog-centered">
                     <div class="modal-content">
@@ -1374,8 +1335,8 @@ router_add('index', function () {
                                     <label class="text">Tipo Juro/Desconto</label>
                                     <select class="form-control" id="tipo_juro_desconto">
                                         <option value="">Selecione uma opção</option>
-                                        <option value="JURO">JURO</option>
-                                        <option value="DESCONTO">DESCONTO</option>
+                                        <option value="1">JURO</option>
+                                        <option value="0">DESCONTO</option>
                                     </select>
                                 </div>
                                 <div class="col-3 text-center">
@@ -1406,7 +1367,7 @@ router_add('index', function () {
                     </div>
                 </div>
             </div>
-            <div class="modal fade" id="modal_anexar_documentos" tabindex="-1" role="dialog"
+            <div class="modal fade" id="modal_anexar_documentos"
                 aria-labelledby="myLargeModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-lg modal-dialog-centered">
                     <div class="modal-content">
@@ -1428,7 +1389,7 @@ router_add('index', function () {
                                     </div>
                                     <div class="col-6">
                                         <label class="text">Tipo</label>
-                                        <select class="form-control select2" name="local_documento" id="local_documento">
+                                        <select class="form-control" name="local_documento" id="local_documento">
                                             <option value="CONTAS_PAGAR_RECEBER">CONTAS PAGAR RECEBER</option>
                                             <option value="CONTAS_PAGAR_RECEBER_BOLETOS">BOLETOS</option>
                                         </select>
@@ -1542,7 +1503,7 @@ router_add('cadastro_contas', function () {
     $data->add(new DateInterval('P30D'));
     $data_vencimento = $data->format('Y-m-d');
 
-    $codigo_conta_pagar_receber = (string) (isset($_REQUEST['codigo_conta_pagar_receber']) ? (string) $_REQUEST['codigo_conta_pagar_receber'] : '');
+    $codigo_conta_pagar_receber = (int) (isset($_REQUEST['codigo_conta_pagar_receber']) ? (int) (intval($_REQUEST['codigo_conta_pagar_receber'], 10)) : 0);
     ?>
             <script>
                 const HOJE = "<?php echo $data_hoje; ?>";
@@ -1573,19 +1534,23 @@ router_add('cadastro_contas', function () {
                         let conta_fornecedor = document.querySelector('#conta_fornecedor').value;
                         let transacao = document.querySelector('#transacao').value;
 
-                        if(cliente_fornecedor == ''){
-                            Swal.fire({'title':'Falha de validacao', 'text':'Nome do cliente/fornecedor não pode ser vazio!', 'icon':'error'});
+                        if (cliente_fornecedor == '') {
+                            Swal.fire({ 'title': 'Falha de validacao', 'text': 'Nome do cliente/fornecedor não pode ser vazio!', 'icon': 'error' });
                             return;
                         }
-                        
-                        if(nome_conta == ''){
-                            Swal.fire({'title':'Falha de validacao', 'text':'Nome da conta não pode ser vazio!', 'icon':'error'});
+
+                        if (nome_conta == '') {
+                            Swal.fire({ 'title': 'Falha de validacao', 'text': 'Nome da conta não pode ser vazio!', 'icon': 'error' });
                             return;
                         }
-                        
-                        if(vlaor_conta == ''){
-                            Swal.fire({'title':'Falha de validacao', 'text':'Valor da conta não pode ser vazio!', 'icon':'error'});
+
+                        if (valor_conta == '') {
+                            Swal.fire({ 'title': 'Falha de validacao', 'text': 'Valor da conta não pode ser vazio!', 'icon': 'error' });
                             return;
+                        }
+
+                        if(tipo_juro_desconto == ''){
+                            tipo_juro_desconto = false;
                         }
 
                         let dados = {
@@ -1737,7 +1702,7 @@ router_add('cadastro_contas', function () {
                         let cliente_fornecedor = retorno.dados;
 
                         sistema.each(cliente_fornecedor, function (index, cliente) {
-                            select.appendChild(sistema.gerar_option(cliente._id.$oid, cliente.nome_usuario));
+                            select.appendChild(sistema.gerar_option(cliente.codigo_usuario, cliente.nome_usuario));
                         });
                     });
                 }
@@ -1775,7 +1740,7 @@ router_add('cadastro_contas', function () {
                             conta_fornecedor_select = sistema.remover_option(conta_fornecedor_select);
 
                             sistema.each(contas, (index, conta) => {
-                                conta_fornecedor_select.appendChild(sistema.gerar_option(conta._id.$oid, conta.nome_conta));
+                                conta_fornecedor_select.appendChild(sistema.gerar_option(conta.codigo_conta_fornecedor, conta.nome_conta));
                             });
                         }
                     });
@@ -1840,8 +1805,8 @@ router_add('cadastro_contas', function () {
                                             <label class="text">Tipo Juro/Desconto</label>
                                             <select class="form-control select2" id="tipo_juro_desconto">
                                                 <option value="">Selecione uma opção</option>
-                                                <option value="JURO">JURO</option>
-                                                <option value="DESCONTO">DESCONTO</option>
+                                                <option value="1">JURO</option>
+                                                <option value="0">DESCONTO</option>
                                             </select>
                                         </div>
                                     </div>
@@ -1865,8 +1830,8 @@ router_add('cadastro_contas', function () {
                                         <div class="col-4 text-center">
                                             <label class="text">Tipo Conta</label>
                                             <select class="form-control select2" id="tipo_conta">
-                                                <option value="PAGAR">PAGAR</option>
-                                                <option value="RECEBER">RECEBER</option>
+                                                <option value="0">PAGAR</option>
+                                                <option value="1">RECEBER</option>
                                             </select>
                                         </div>
                                         <div class="col-4 text-center">
@@ -1940,7 +1905,7 @@ router_add('cadastro_contas', function () {
 
                         pesquisar_cliente_fornecedor();
 
-                        if (CODIGO_CONTA_PAGAR_RECEBER != '') {
+                        if (CODIGO_CONTA_PAGAR_RECEBER != 0) {
                             sistema.request.post('/contas_pagar_receber.php', {
                                 'rota': 'pesquisar_conta',
                                 'codigo_conta_pagar_receber': CODIGO_CONTA_PAGAR_RECEBER
@@ -1951,8 +1916,8 @@ router_add('cadastro_contas', function () {
                                 document.querySelector('#descricao').value = conta.descricao;
                                 document.querySelector('#tipo_juro_desconto').value = conta.tipo_juro_desconto;
                                 document.querySelector('#tipo_conta').value = conta.tipo_conta;
-                                document.querySelector('#data_cadastro').value = sistema.retornar_data(conta.data_cadastro, 'AMERICANO');
-                                document.querySelector('#data_vencimento').value = sistema.retornar_data(conta.data_vencimento, 'AMERICANO');
+                                document.querySelector('#data_cadastro').value = sistema.retornar_data(conta.data_cadastro, false, 'us');
+                                document.querySelector('#data_vencimento').value = sistema.retornar_data(conta.data_vencimento, false, 'us');
                                 document.querySelector('#status_conta').value = conta.status_conta;
 
                                 if (conta.valor_conta != 0) {
@@ -1968,11 +1933,11 @@ router_add('cadastro_contas', function () {
                                 }
 
                                 if (conta.status_conta != 'AGUARDANDO' && conta.status_conta != 'VENCIDO') {
-                                    document.querySelector('#data_baixa').value = sistema.retornar_data(conta.data_baixa, 'AMERICANO');
+                                    document.querySelector('#data_baixa').value = sistema.retornar_data(conta.data_baixa, false, 'us');
                                 }
 
                                 if (conta.hasOwnProperty('cliente_fornecedor') == true) {
-                                    document.querySelector('#cliente_fornecedor').value = conta.cliente_fornecedor.$oid;
+                                    document.querySelector('#cliente_fornecedor').value = conta.cliente_fornecedor.codigo_usuario;
                                 }
 
                                 if (conta.hasOwnProperty('transacao') == true) {
@@ -1991,7 +1956,7 @@ router_add('cadastro_contas', function () {
  */
 router_add('contas_fornecedores', function () {
     include_once 'includes/head.php';
-    $codigo_conta = (string) (isset($_REQUEST['codigo_conta']) ? (string) $_REQUEST['codigo_conta'] : '');
+    $codigo_conta = (int) (isset($_REQUEST['codigo_conta']) ? (int) $_REQUEST['codigo_conta'] : 0);
     ?>
                 <script>
                     const DATA_HOJE = "<?php echo DATA_HOJE; ?>";
@@ -2004,18 +1969,19 @@ router_add('contas_fornecedores', function () {
                             'codigo_conta': CODIGO_CONTA
                         }, (retorno) => {
                             let conta = retorno.dados;
+                            console.log(conta);
 
-                            document.querySelector('#fornecedor').value = conta.fornecedor.$oid;
                             document.querySelector('#nome_conta').value = conta.nome_conta;
                             document.querySelector('#descricao_conta').value = conta.descricao_conta;
-
+                            
                             if (conta.status_conta == true) {
                                 document.querySelector('#status_conta').value = 1;
                             } else {
                                 document.querySelector('#status_conta').value = 0;
                             }
-
-                            document.querySelector('#data_cadastro').value = sistema.retornar_data(conta.data_cadastro, 'AMERICANO');
+                            
+                            document.querySelector('#data_cadastro').value = sistema.retornar_data(conta.data_cadastro, false,'us');
+                            document.querySelector('#fornecedor').value = conta.codigo_usuario;
                         });
                     }
 
@@ -2032,7 +1998,7 @@ router_add('contas_fornecedores', function () {
                                 let select = document.querySelector('#fornecedor');
 
                                 sistema.each(fornecedores, (index, fornecedor) => {
-                                    select.appendChild(sistema.gerar_option(fornecedor._id.$oid, fornecedor.nome_usuario));
+                                    select.appendChild(sistema.gerar_option(fornecedor.codigo_usuario, fornecedor.nome_usuario));
                                 });
                             }
                         });
@@ -2148,7 +2114,7 @@ router_add('contas_fornecedores', function () {
 
                             document.querySelector('#data_cadastro').value = DATA_HOJE;
 
-                            if (CODIGO_CONTA != '') {
+                            if (CODIGO_CONTA != 0) {
                                 pesquisar_conta();
                             }
                         }
@@ -2190,7 +2156,7 @@ router_add('contas_fornecedores_pesquisa', function () {
                                     let select = document.querySelector('#fornecedor');
 
                                     sistema.each(fornecedores, (index, fornecedor) => {
-                                        select.appendChild(sistema.gerar_option(fornecedor._id.$oid, fornecedor.nome_usuario));
+                                        select.appendChild(sistema.gerar_option(fornecedor.codigo_usuario, fornecedor.nome_usuario));
                                     });
                                 }
                             });
@@ -2241,19 +2207,20 @@ router_add('contas_fornecedores_pesquisa', function () {
 
                                     let linha = document.createElement('tr');
 
+                                    linha.appendChild(sistema.gerar_td(['text-center', 'fw-bold'], conta.codigo_conta_fornecedor, 'inner'));
                                     linha.appendChild(sistema.gerar_td(['text-start', 'fw-bold'], conta.fornecedor.nome_fornecedor, 'inner'));
                                     linha.appendChild(sistema.gerar_td(['text-start', 'fw-bold'], conta.nome_conta, 'inner'));
-                                    linha.appendChild(sistema.gerar_td(['text-start', 'fw-bold'], conta.descricao_conta, 'inner'));
+                                    linha.appendChild(sistema.gerar_td(['text-start', 'fw-bold'], sistema.cortar_string(conta.descricao_conta, 30), 'inner', false, '', conta.descricao_conta));
 
                                     if (conta.status_conta == true) {
-                                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_conta_' + conta._id.$oid, 'ATIVO', ['btn', 'btn-outline-success'], () => { }), 'append'));
+                                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_conta_' + conta.codigo_conta_fornecedor, 'ATIVO', ['btn', 'btn-outline-success'], () => { }), 'append'));
                                     } else {
-                                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_conta_' + conta._id.$oid, 'INATIVO', ['btn', 'btn-outline-danger'], () => { }), 'append'));
+                                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_conta_' + conta.codigo_conta_fornecedor, 'INATIVO', ['btn', 'btn-outline-danger'], () => { }), 'append'));
                                     }
 
                                     linha.appendChild(sistema.gerar_td(['text-center', 'fw-bold'], sistema.retornar_data(conta.data_cadastro), 'inner'));
-                                    linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_editar_conta_' + conta._id.$oid, 'EDITAR', ['btn', 'btn-secondary'], () => {
-                                        cadastro_contas(conta._id.$oid);
+                                    linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_editar_conta_' + conta.codigo_conta_fornecedor, 'EDITAR', ['btn', 'btn-secondary'], () => {
+                                        cadastro_contas(conta.codigo_conta_fornecedor);
                                     }), 'append'));
 
                                     tabela.appendChild(linha);
@@ -2329,6 +2296,7 @@ router_add('contas_fornecedores_pesquisa', function () {
                                                             id="tabela_fornecedor_conta">
                                                             <thead>
                                                                 <tr class="text-center text-uppercase">
+                                                                    <th scope="col">#</th>
                                                                     <th scope="col">Nome Cliente/Fornecedor</th>
                                                                     <th scope="col">Nome conta</th>
                                                                     <th scope="col">Descrição</th>

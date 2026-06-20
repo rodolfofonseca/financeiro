@@ -2,23 +2,24 @@
 require_once 'classes/bancoDeDados.php';
 require_once 'modelos/Interface.php';
 
-class ContasFornecedores implements InterfaceModelo{
-    private mixed $codigo_conta_fornecedor;
-    private mixed $empresa;
-    private mixed $fornecedor;
+class ContasFornecedores implements InterfaceModelo
+{
+    private int $codigo_conta_fornecedor;
+    private int $empresa;
+    private int $fornecedor;
     private string $nome_conta;
     private string $descricao_conta;
     private bool $status_conta;
-    private mixed $data_cadastro;    
+    private mixed $data_cadastro;
 
     public function tabela()
     {
-        return (string) 'contas_fornecedores';
+        return (string) 'conta_fornecedor';
     }
 
     public function modelo()
     {
-        return (array) ['empresa' => 'objectId', 'fornecedor' => 'objectId', 'nome_conta' => (string) '', 'descricao_conta' => (string) '', 'status_conta' => 'bool', 'data_cadastro' => 'date'];
+        return (array) [];
     }
 
     /**
@@ -28,22 +29,22 @@ class ContasFornecedores implements InterfaceModelo{
      */
     public function colocar_dados($dados)
     {
-        if(array_key_exists('codigo_conta_fornecedor', $dados) == true){
-            if($dados['codigo_conta_fornecedor'] != ''){
-                $this->codigo_conta_fornecedor = (isset($dados['codigo_conta_fornecedor']) ? model_id($dados['codigo_conta_fornecedor']):'');
-            }else{
-                $this->codigo_conta_fornecedor = null;
+        if (array_key_exists('codigo_conta_fornecedor', $dados) == true) {
+            if ($dados['codigo_conta_fornecedor'] != 0) {
+                $this->codigo_conta_fornecedor = (isset($dados['codigo_conta_fornecedor']) ? (int) intval($dados['codigo_conta_fornecedor'], 10) : 0);
+            } else {
+                $this->codigo_conta_fornecedor = 0;
             }
-        }else{
-            $this->codigo_conta_fornecedor = null;
+        } else {
+            $this->codigo_conta_fornecedor = 0;
         }
 
-        $this->empresa = (isset($dados['empresa']) ? model_id($dados['empresa']):'');
-        $this->fornecedor = (isset($dados['fornecedor']) ? model_id($dados['fornecedor']):'');
-        $this->nome_conta = (string) (isset($dados['nome_conta']) ? (string) strtoupper($dados['nome_conta']):'');
-        $this->descricao_conta = (string) (isset($dados['descricao_conta']) ? (string) strtoupper($dados['descricao_conta']):'');
-        $this->status_conta = (bool) (isset($dados['status_conta']) ? (bool) filter_var($dados['status_conta'], FILTER_VALIDATE_BOOLEAN):false);
-        $this->data_cadastro = (isset($dados['data_cadastro']) ? model_date($dados['data_cadastro']): model_date());
+        $this->empresa = (isset($dados['empresa']) ? (int) intval($dados['empresa']) : 0);
+        $this->fornecedor = (isset($dados['fornecedor']) ? (int) intval($dados['fornecedor']) : 0);
+        $this->nome_conta = (string) (isset($dados['nome_conta']) ? (string) strtoupper($dados['nome_conta']) : '');
+        $this->descricao_conta = (string) (isset($dados['descricao_conta']) ? (string) strtoupper($dados['descricao_conta']) : '');
+        $this->status_conta = (bool) (isset($dados['status_conta']) ? (bool) filter_var($dados['status_conta'], FILTER_VALIDATE_BOOLEAN) : false);
+        $this->data_cadastro = (isset($dados['data_cadastro']) ? model_date($dados['data_cadastro']) : model_date());
     }
 
     /**
@@ -55,10 +56,10 @@ class ContasFornecedores implements InterfaceModelo{
     {
         $this->colocar_dados($dados);
 
-        if($this->codigo_conta_fornecedor == null){
-            return (bool) model_insert((string) $this->tabela(), (array) ['empresa' => $this->empresa, 'fornecedor' => $this->fornecedor, 'nome_conta' => (string) $this->nome_conta, 'descricao_conta' => (string) $this->descricao_conta, 'status_conta' => (bool) $this->status_conta, 'data_cadastro' => $this->data_cadastro]);
-        }else{
-            return (bool) model_update((string) $this->tabela(), (array) ['_id', '===', $this->codigo_conta_fornecedor], (array) ['empresa' => $this->empresa, 'fornecedor' => $this->fornecedor, 'nome_conta' => (string) $this->nome_conta, 'descricao_conta' => (string) $this->descricao_conta, 'status_conta' => (bool) $this->status_conta]);
+        if ($this->codigo_conta_fornecedor == 0) {
+            return (bool) model_insert((string) $this->tabela(), (array) $this->montar_array());
+        } else {
+            return (bool) model_update((string) $this->tabela(), (array) ['where' => [['codigo_conta_fornecedor', '=', $this->codigo_conta_fornecedor]]], (array) $this->montar_array());
         }
     }
 
@@ -87,14 +88,44 @@ class ContasFornecedores implements InterfaceModelo{
      * @param mixed $dados
      * @return void
      */
-    public function inativar_conta_fornecedor($dados){
+    public function inativar_conta_fornecedor($dados)
+    {
         $filtro = (array) [];
         $filtro_montando = (array) [];
 
-        array_push($filtro_montando, ['empresa', '===', model_id($dados['empresa'])]);
-        array_push($filtro_montando, ['fornecedor', '===', model_id($dados['fornecedor'])]);
+        array_push($filtro_montando, ['codigo_empresa', '=', (int) intval($dados['empresa'], 10)]);
+        array_push($filtro_montando, ['codigo_usuario', '=', (int) intval($dados['fornecedor'], 10)]);
 
-        $retorno = (bool) model_update((string) $this->tabela(), (array) ['and' => (array) $filtro_montando], (array) ['status_conta' => (bool) $dados['status']]);
+        $retorno = (bool) model_update((string) $this->tabela(), (array) ['where' => (array) $filtro_montando], (array) ['status_conta' => (bool) $dados['status']]);
+
+    }
+
+    public function montar_array(){
+        $dados = (array) [];
+
+        if($this->empresa != 0){
+            $dados['codigo_empresa'] = (int) $this->empresa;
+        }
+
+        if($this->fornecedor != 0){
+            $dados['codigo_usuario'] = (int) $this->fornecedor;
+        }
+
+        if($this->nome_conta != ''){
+            $dados['nome_conta'] = (string) $this->nome_conta;
+        }
+
+        if($this->descricao_conta != ''){
+            $dados['descricao_conta'] = (string) $this->descricao_conta;
+        }
+
+        if($this->data_cadastro != ''){
+            $dados['data_cadastro'] = (string) $this->data_cadastro;
+        }
+
+        $dados['status_conta'] = (bool) $this->status_conta;
+
+        return (array) $dados;
     }
 }
 ?>

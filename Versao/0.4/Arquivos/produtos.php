@@ -448,7 +448,7 @@ router_add('cadastro_produtos', function () {
                     let produto = retorno.dados;
                     let tipo = 1;
 
-                    if(produto.tipo_produto == false){
+                    if (produto.tipo_produto == false) {
                         tipo = 0;
                     }
 

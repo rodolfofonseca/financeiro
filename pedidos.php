@@ -9,7 +9,7 @@ require_once 'modelos/ContasPagarReceber.php';
 require_once 'modelos/ItensPedidos.php';
 require_once 'modelos/Produtos.php';
 
-router_add('cancelar_pedido', function(){
+router_add('cancelar_pedido', function () {
     $objeto_pedido = new Pedidos();
 
     echo json_encode(['status' => (bool) $objeto_pedido->cancelar_pedido($_REQUEST)], JSON_UNESCAPED_UNICODE);
@@ -17,7 +17,7 @@ router_add('cancelar_pedido', function(){
 
 /** 
  * Rota responsável por chamar a rota de salvar as informações do pedido
-*/
+ */
 router_add('salvar_pedidos', function () {
     $objeto_pedidos = new Pedidos();
 
@@ -1940,8 +1940,8 @@ router_add('saida', function () {
                                 linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_' + pedido._id.$oid, 'PEDIDO CONTA', ['btn', 'btn-outline-info'], function alterar_status_pedido_botao() { alterar_status_pedido(pedido._id.$oid, pedido.status); }), 'append'));
                             } else if (pedido.status == 'PEDIDO_COMPLETO') {
                                 linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_' + pedido._id.$oid, 'PEDIDO COMPLETO', ['btn', 'btn-outline-success'], function alterar_status_pedido_botao() { alterar_status_pedido(pedido._id.$oid, pedido.status); }), 'append'));
-                            }else if(pedido.status == 'CANCELADO'){
-                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_' + pedido._id.$oid, 'CANCELADO', ['btn', 'btn-outline-danger'], function alterar_status_pedido_botao() {}), 'append'));
+                            } else if (pedido.status == 'CANCELADO') {
+                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_' + pedido._id.$oid, 'CANCELADO', ['btn', 'btn-outline-danger'], function alterar_status_pedido_botao() { }), 'append'));
                             }
 
                             linha.appendChild(sistema.gerar_td(['text-center', 'fw-bold'], sistema.gerar_botao('botao_cancelar_pedido_' + pedido._id.$oid, pedido.transacao, ['btn', 'btn-light'], function botao_cancelar_venda_botao() { cancelar_venda(pedido._id.$oid, pedido.transacao); }), 'append'));
@@ -1976,17 +1976,17 @@ router_add('saida', function () {
                         confirmButtonColor: "#3085d6",
                         cancelButtonColor: "#d33",
                         confirmButtonText: "Sim, Cancelar!",
-                        cancelButtonText:'Cancelar'
+                        cancelButtonText: 'Cancelar'
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            sistema.request.post('/pedidos.php', {'rota':'cancelar_pedido', 'codigo_pedido':codigo_pedido, 'transacao':transacao}, function(retorno){
-                                if(retorno.status == true){
+                            sistema.request.post('/pedidos.php', { 'rota': 'cancelar_pedido', 'codigo_pedido': codigo_pedido, 'transacao': transacao }, function (retorno) {
+                                if (retorno.status == true) {
                                     Swal.fire({
                                         title: "Cancelado!",
                                         text: "Pedido cancelado com sucesso!",
                                         icon: "success"
                                     });
-                                }else{
+                                } else {
                                     Swal.fire({
                                         title: "Erro!",
                                         text: "Erro durante o processo de cancelar o pedido!",

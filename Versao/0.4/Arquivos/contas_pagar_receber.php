@@ -244,8 +244,8 @@ router_add('gerar_excell', function () {
         $sheet->setCellValue('L' . $linha, 'STATUS CONTA');
 
         if ($vencimento_anterior == true) {
-            if(empty($retorno_vencimento_anteriores) == false){
-                foreach($retorno_vencimento_anteriores as $contas){
+            if (empty($retorno_vencimento_anteriores) == false) {
+                foreach ($retorno_vencimento_anteriores as $contas) {
                     $linha++;
                     $sheet = montar_corpo_excell_contas($sheet, $contas, $linha);
                 }

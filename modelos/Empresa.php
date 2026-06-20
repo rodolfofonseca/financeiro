@@ -3,15 +3,16 @@ require_once 'classes/bancoDeDados.php';
 
 class Empresa implements InterfaceModelo
 {
-    private mixed $codigo_empresa;
+    private int $codigo_empresa;
     private string $nome_empresa;
     private string $nome_fantasia;
     private string $cnpj;
     private string $endereco;
-    private mixed $data_cadastro;
+    private string $data_cadastro;
     private string $logo;
     private string $telefone;
-    
+    private bool $status_empresa;
+
     public function tabela()
     {
         return (string) 'empresa';
@@ -19,7 +20,7 @@ class Empresa implements InterfaceModelo
 
     public function modelo()
     {
-          return (array) ['nome_empresa' => (string) '', 'nome_fantasia' => (string) '', 'cnpj' => (string) '', 'endereco' => (string) '', 'data_cadastro' => 'date', 'cidade' => (string) '', 'logo' => (string) '', 'telefone' => (string) ''];
+        return (array) [];
     }
 
     /**
@@ -30,13 +31,13 @@ class Empresa implements InterfaceModelo
     public function colocar_dados($dados)
     {
         if (array_key_exists('codigo_empresa', $dados) == true) {
-            if ($dados['codigo_empresa'] != '') {
-                $this->codigo_empresa = model_id($dados['codigo_empresa']);
+            if ($dados['codigo_empresa'] != 0) {
+                $this->codigo_empresa = (int) intval($dados['codigo_empresa'], 10);
             } else {
-                $this->codigo_empresa = null;
+                $this->codigo_empresa = (int) 0;
             }
         } else {
-            $this->codigo_empresa = null;
+            $this->codigo_empresa = (int) 0;
         }
 
         $this->nome_empresa = (string) (isset($dados['nome_empresa']) ? (string) strtoupper($dados['nome_empresa']) : '');
@@ -44,30 +45,24 @@ class Empresa implements InterfaceModelo
         $this->cnpj = (string) (isset($dados['cnpj']) ? (string) $dados['cnpj'] : '');
         $this->endereco = (string) (isset($dados['endereco']) ? (string) $dados['endereco'] : '');
         $this->data_cadastro = (isset($dados['data_cadastro']) ? model_date($dados['data_cadastro']) : model_date());
-        $this->logo = (string) (isset($dados['logo']) ? (string) $dados['logo']:'');
-        $this->telefone = (string) (isset($dados['telefone']) ? (string) $dados['telefone']:'');
+        $this->logo = (string) (isset($dados['logo']) ? (string) $dados['logo'] : '');
+        $this->telefone = (string) (isset($dados['telefone']) ? (string) $dados['telefone'] : '');
+        $this->status_empresa = (bool) (isset($dados['status_empresa']) ? (bool) filter_var($dados['status_empresa'] ,FILTER_VALIDATE_BOOLEAN):false);
     }
 
     /**
      * Função responsável pro salvar os dados no banco dados
      * @param array $dados
-     * @return bool
+     * @return array
      */
     public function salvar_dados($dados)
     {
         $this->colocar_dados($dados);
 
-
-        if ($this->codigo_empresa == null) {
-            $retorno_checagem = (bool) model_check((string) $this->tabela(), (array) ['cnpj', '===', (string) $this->cnpj]);
-
-            if ($retorno_checagem == false) {
-                return (bool) model_insert((string) $this->tabela(), (array) ['nome_empresa' => (string) $this->nome_empresa, 'nome_fantasia' => (string) $this->nome_fantasia, 'cnpj' => (string) $this->cnpj, 'endereco' => (string) $this->endereco, 'data_cadastro' => $this->data_cadastro, 'telefone' => (string) $this->telefone, 'logo' => (string) $this->logo]);
-            } else {
-                return (bool) false;
-            }
-        } else {
-            return (bool) model_update((string) $this->tabela(), (array) ['_id', '===', $this->codigo_empresa], (array) ['nome_empresa' => (string) $this->nome_empresa, 'nome_fantasia' => (string) $this->nome_fantasia, 'cnpj' => (string) $this->cnpj, 'endereco' => (string) $this->endereco, 'data_cadastro' => $this->data_cadastro, 'telefone' => (string) $this->telefone, 'logo' => (string) $this->logo]);
+        if($this->codigo_empresa != 0){
+            return (array) model_update((string) $this->tabela(), (array) ['where' => (array) ['codigo_empresa', '==', (int) $this->codigo_empresa]], (array) $this->montar_array(), false);
+        }else{
+            return (array) model_insert((string) $this->tabela(), (array) $this->montar_array(), false);
         }
     }
 
@@ -88,7 +83,8 @@ class Empresa implements InterfaceModelo
      */
     public function pesquisar_todos($filtro)
     {
-        return (array) model_all((string) $this->tabela(), (array) $filtro['filtro'], (array) $filtro['ordenacao'], (int) $filtro['limite']);
+        // return (array) model_all((string) $this->tabela(), (array) $filtro['filtro'], (array) $filtro['ordenacao'], (int) $filtro['limite']);
+        return (array) [];
     }
 
     /**
@@ -99,5 +95,41 @@ class Empresa implements InterfaceModelo
     public function checar_empresa($filtro)
     {
         return (bool) model_check((string) $this->tabela(), (array) $filtro['filtro']);
+    }
+
+    public function montar_array(){
+        $dados = (array) [];
+
+        if($this->nome_empresa != ''){
+            $dados['nome_empresa'] = (string) $this->nome_empresa;
+        }
+
+        if($this->cnpj != ''){
+            $dados['cpf_cnpj'] = (string) $this->cnpj;
+        }
+
+        if($this->data_cadastro != ''){
+            $dados['data_cadastro'] = (string) $this->data_cadastro;
+        }
+
+        if($this->cidade != ''){
+            $dados['cidade'] = (string) $this->cidade;
+        }
+
+        if($this->logo != ''){
+            $dados['logo'] = (string) $this->logo;
+        }
+
+        if($this->telefone != ''){
+            $dados['telefone'] = (string) $this->telefone;
+        }
+
+        if($this->endereco != ''){
+            $dados['endereco'] = (string) $this->endereco;
+        }
+
+        $dados['status_empresa'] = (bool) $this->status_empresa;
+
+        return (array) $dados;
     }
 }

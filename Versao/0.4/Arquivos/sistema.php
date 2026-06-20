@@ -83,12 +83,12 @@ router_add('salvar_dados', function () {
  */
 router_add('index', function () {
     require_once 'includes/head.php';
-?>
+    ?>
     <script>
         const EMPRESA = "<?php echo $codigo_empresa; ?>";
         let SISTEMA = '';
         const DATA_HOJE = "<?php echo DATA_HOJE; ?>";
-        const MODULO_CONTABIL = "<?php echo $_SESSION['modulo_contabil'] ? 'true':'false'; ?>";
+        const MODULO_CONTABIL = "<?php echo $_SESSION['modulo_contabil'] ? 'true' : 'false'; ?>";
 
         /** 
          * Função responsável por pesquisar as informações  do sistema e adicioanr aos campos correspondenttes
@@ -97,7 +97,7 @@ router_add('index', function () {
             sistema.request.post('/sistema.php', {
                 'rota': 'pesquisar_sistema',
                 'empresa': EMPRESA
-            }, function(retorno) {
+            }, function (retorno) {
                 let sistema_usuario = retorno.dados;
                 let usuarios = retorno.usuarios;
 
@@ -117,67 +117,67 @@ router_add('index', function () {
                 let conta_vendas_a_vista = "";
                 let endereco_json_google = "";
 
-                if(sistema_usuario.hasOwnProperty('modulo_contabil') == true){
-                    if(sistema_usuario.modulo_contabil == true){
+                if (sistema_usuario.hasOwnProperty('modulo_contabil') == true) {
+                    if (sistema_usuario.modulo_contabil == true) {
                         modulo_contabil = 1;
                     }
                 }
-                
-                if(sistema_usuario.hasOwnProperty('pedidos') == true){
-                    if(sistema_usuario.pedidos == true){
+
+                if (sistema_usuario.hasOwnProperty('pedidos') == true) {
+                    if (sistema_usuario.pedidos == true) {
                         pedidos = 1;
                     }
                 }
 
-                if(sistema_usuario.hasOwnProperty('cloudinary') == true){
-                    if(sistema_usuario.cloudinary == true){
+                if (sistema_usuario.hasOwnProperty('cloudinary') == true) {
+                    if (sistema_usuario.cloudinary == true) {
                         cloudinary = 1;
                     }
                 }
 
-                if(sistema_usuario.hasOwnProperty('google_agenda') == true){
-                    if(sistema_usuario.google_agenda == true){
+                if (sistema_usuario.hasOwnProperty('google_agenda') == true) {
+                    if (sistema_usuario.google_agenda == true) {
                         google_agenda = 1;
                     }
                 }
 
-                if(sistema_usuario.hasOwnProperty('conta_apuracao_resultado') == true) {
+                if (sistema_usuario.hasOwnProperty('conta_apuracao_resultado') == true) {
                     conta_apuracao_resultado = sistema_usuario.conta_apuracao_resultado;
                 }
 
-                if(sistema_usuario.hasOwnProperty('conta_capital_social') == true) {
+                if (sistema_usuario.hasOwnProperty('conta_capital_social') == true) {
                     conta_capital_social = sistema_usuario.conta_capital_social;
                 }
 
-                if(sistema_usuario.hasOwnProperty('conta_custo_mercadorias_vendidas') == true) {
+                if (sistema_usuario.hasOwnProperty('conta_custo_mercadorias_vendidas') == true) {
                     conta_custo_mercadorias_vendidas = sistema_usuario.conta_custo_mercadorias_vendidas;
                 }
 
-                if(sistema_usuario.hasOwnProperty('conta_custo_servicos_prestados') == true) {
+                if (sistema_usuario.hasOwnProperty('conta_custo_servicos_prestados') == true) {
                     conta_custo_servicos_prestados = sistema_usuario.conta_custo_servicos_prestados;
                 }
 
-                if(sistema_usuario.hasOwnProperty('conta_lucros_apropriar') == true) {
+                if (sistema_usuario.hasOwnProperty('conta_lucros_apropriar') == true) {
                     conta_lucros_apropriar = sistema_usuario.conta_lucros_apropriar;
                 }
 
-                if(sistema_usuario.hasOwnProperty('conta_prejuizos_acumulados') == true) {
+                if (sistema_usuario.hasOwnProperty('conta_prejuizos_acumulados') == true) {
                     conta_prejuizos_acumulados = sistema_usuario.conta_prejuizos_acumulados;
                 }
 
-                if(sistema_usuario.hasOwnProperty('conta_servicos_a_prazo') == true) {
+                if (sistema_usuario.hasOwnProperty('conta_servicos_a_prazo') == true) {
                     conta_servicos_a_prazo = sistema_usuario.conta_servicos_a_prazo;
                 }
 
-                if(sistema_usuario.hasOwnProperty('conta_servicos_a_vista') == true) {
+                if (sistema_usuario.hasOwnProperty('conta_servicos_a_vista') == true) {
                     conta_servicos_a_vista = sistema_usuario.conta_servicos_a_vista;
                 }
 
-                if(sistema_usuario.hasOwnProperty('conta_vendas_a_prazo') == true) {
+                if (sistema_usuario.hasOwnProperty('conta_vendas_a_prazo') == true) {
                     conta_vendas_a_prazo = sistema_usuario.conta_vendas_a_prazo;
                 }
 
-                if(sistema_usuario.hasOwnProperty('conta_vendas_a_vista') == true) {
+                if (sistema_usuario.hasOwnProperty('conta_vendas_a_vista') == true) {
                     conta_vendas_a_vista = sistema_usuario.conta_vendas_a_vista;
                 }
 
@@ -203,21 +203,21 @@ router_add('index', function () {
                 let cliente_padrao = document.querySelector('#cliente_padrao');
                 let fornecedor_padrao = document.querySelector('#fornecedor_padrao');
 
-                sistema.each(usuarios, function(index, usuario){
-                let option = sistema.gerar_option(usuario._id.$oid, usuario.nome_usuario);    
-                
-                if(usuario.tipo_usuario == 'CLIENTE'){
+                sistema.each(usuarios, function (index, usuario) {
+                    let option = sistema.gerar_option(usuario._id.$oid, usuario.nome_usuario);
+
+                    if (usuario.tipo_usuario == 'CLIENTE') {
                         cliente_padrao.appendChild(option);
-                    }else{
+                    } else {
                         fornecedor_padrao.appendChild(option);
                     }
                 });
 
-                if(sistema_usuario.hasOwnProperty('cliente_padrao') == true){
+                if (sistema_usuario.hasOwnProperty('cliente_padrao') == true) {
                     document.querySelector('#cliente_padrao').value = sistema_usuario.cliente_padrao.$oid;
                 }
 
-                if(sistema_usuario.hasOwnProperty('fornecedor_padrao') == true){
+                if (sistema_usuario.hasOwnProperty('fornecedor_padrao') == true) {
                     document.querySelector('#fornecedor_padrao').value = sistema_usuario.fornecedor_padrao.$oid;
                 }
             });
@@ -252,25 +252,25 @@ router_add('index', function () {
                 'versao_sistema': versao_sistema,
                 'anexa_documentos': anexar_documentos,
                 'codigo_sistema': SISTEMA,
-                'modulo_contabil':modulo_contabil,
-                'pedidos':pedidos,
-                'cloudinary':cloudinary,
-                'google_agenda':google_agenda,
-                'conta_capital_social':conta_capital_social,
-                'conta_lucros_apropriar':conta_lucros_apropriar,
-                'conta_prejuizos_acumulados':conta_prejuizos_acumulados,
-                'conta_vendas_a_vista':conta_vendas_a_vista,
-                'conta_vendas_a_prazo':conta_vendas_a_prazo,
-                'conta_servicos_a_vista':conta_servicos_a_vista,
-                'conta_servicos_a_prazo':conta_servicos_a_prazo,
-                'conta_custo_mercadorias_vendidas':conta_custo_mercadorias_vendidas,
-                'conta_custo_servicos_prestados':conta_custo_servicos_prestados,
-                'conta_apuracao_resultado':conta_apuracao_resultado,
-                'cliente_padrao':cliente_padrao,
-                'fornecedor_padrao':fornecedor_padrao
+                'modulo_contabil': modulo_contabil,
+                'pedidos': pedidos,
+                'cloudinary': cloudinary,
+                'google_agenda': google_agenda,
+                'conta_capital_social': conta_capital_social,
+                'conta_lucros_apropriar': conta_lucros_apropriar,
+                'conta_prejuizos_acumulados': conta_prejuizos_acumulados,
+                'conta_vendas_a_vista': conta_vendas_a_vista,
+                'conta_vendas_a_prazo': conta_vendas_a_prazo,
+                'conta_servicos_a_vista': conta_servicos_a_vista,
+                'conta_servicos_a_prazo': conta_servicos_a_prazo,
+                'conta_custo_mercadorias_vendidas': conta_custo_mercadorias_vendidas,
+                'conta_custo_servicos_prestados': conta_custo_servicos_prestados,
+                'conta_apuracao_resultado': conta_apuracao_resultado,
+                'cliente_padrao': cliente_padrao,
+                'fornecedor_padrao': fornecedor_padrao
             };
-            
-            sistema.request.post('/sistema.php', dados, function(retorno) {
+
+            sistema.request.post('/sistema.php', dados, function (retorno) {
                 validar_retorno(retorno, '/sistema.php');
             });
         }
@@ -285,20 +285,20 @@ router_add('index', function () {
                 'rota': 'pesquisar_informacoes_conta',
                 'empresa': EMPRESA,
                 'local_conta_id': local_conta_id
-            }, function(retorno) {
+            }, function (retorno) {
                 if (retorno.status == true) {
                     let codigo_local = document.querySelector('#codigo_local');
 
                     codigo_local = sistema.remover_option(codigo_local);
 
-                    sistema.each(retorno.dados, function(index, objeto) {
+                    sistema.each(retorno.dados, function (index, objeto) {
                         let option = sistema.gerar_option(objeto.codigo.$oid, objeto.descricao);
 
                         codigo_local.appendChild(option);
                     });
                 } else {
-                    if(local_conta_id != 'PATRIMONIO_LIQUIDO' || local_conta_id != 'SERVICOS' || local_conta_id != 'CUSTOS' || local_conta_id != 'RESULTADO'){
-                        this.Swal.fire({title: "ERRO!", text: "Erro durante o processo de pesquisa. Não foi possível retornar nenhum resultado!", icon: "error"});
+                    if (local_conta_id != 'PATRIMONIO_LIQUIDO' || local_conta_id != 'SERVICOS' || local_conta_id != 'CUSTOS' || local_conta_id != 'RESULTADO') {
+                        this.Swal.fire({ title: "ERRO!", text: "Erro durante o processo de pesquisa. Não foi possível retornar nenhum resultado!", icon: "error" });
                     }
                 }
             }, false);
@@ -370,7 +370,7 @@ router_add('index', function () {
                 'conta_tipo': conta_tipo
             }
 
-            sistema.request.post('/sistema.php', dados, function(retorno) {
+            sistema.request.post('/sistema.php', dados, function (retorno) {
                 validar_retorno(retorno, '/sistema.php');
             });
         }
@@ -382,7 +382,7 @@ router_add('index', function () {
             sistema.request.post('/sistema.php', {
                 'rota': 'pesquisar_conta_contabil',
                 'empresa': EMPRESA
-            }, function(retorno) {
+            }, function (retorno) {
                 let contas_contabeis = retorno.dados;
                 let tamanho_contas = contas_contabeis.length;
                 let tabela = document.querySelector('#tabela_conta_contabil tbody');
@@ -394,48 +394,48 @@ router_add('index', function () {
                     linha.appendChild(sistema.gerar_td(['text-center'], 'NENHUMA CONTA ENCONTRADA! CADASTRE CONSTAS E ELAS APARECERAM AQUI!', 'inner', true, 10));
                     tabela.appendChild(linha);
                 } else {
-                    sistema.each(contas_contabeis, function(index, conta) {
+                    sistema.each(contas_contabeis, function (index, conta) {
                         let linha = document.createElement('tr');
 
                         linha.appendChild(sistema.gerar_td(['text-start'], validar_grau_conta(conta.grau_conta, conta.nome_conta), 'inner'));
                         linha.appendChild(sistema.gerar_td(['text-center'], validar_grau_conta(conta.grau_conta, conta.conta_contabil), 'inner'));
 
                         if (conta.grau_conta == 1) {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_grau_' + conta._id.$oid, conta.grau_conta, ['btn', 'btn-soft-primary'], () => {}), 'append'));
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_grau_' + conta._id.$oid, conta.grau_conta, ['btn', 'btn-soft-primary'], () => { }), 'append'));
                         } else if (conta.grau_conta == 2) {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_grau_' + conta._id.$oid, conta.grau_conta, ['btn', 'btn-soft-secondary'], () => {}), 'append'));
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_grau_' + conta._id.$oid, conta.grau_conta, ['btn', 'btn-soft-secondary'], () => { }), 'append'));
                         } else if (conta.grau_conta == 3) {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_grau_' + conta._id.$oid, conta.grau_conta, ['btn', 'btn-soft-success'], () => {}), 'append'));
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_grau_' + conta._id.$oid, conta.grau_conta, ['btn', 'btn-soft-success'], () => { }), 'append'));
                         } else if (conta.grau_conta == 4) {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_grau_' + conta._id.$oid, conta.grau_conta, ['btn', 'btn-soft-info'], () => {}), 'append'));
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_grau_' + conta._id.$oid, conta.grau_conta, ['btn', 'btn-soft-info'], () => { }), 'append'));
                         } else if (conta.grau_conta == 5) {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_grau_' + conta._id.$oid, conta.grau_conta, ['btn', 'btn-soft-light'], () => {}), 'append'));
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_grau_' + conta._id.$oid, conta.grau_conta, ['btn', 'btn-soft-light'], () => { }), 'append'));
                         } else if (conta.grau_conta == 6) {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_grau_' + conta._id.$oid, conta.grau_conta, ['btn', 'btn-soft-dark'], () => {}), 'append'));
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_grau_' + conta._id.$oid, conta.grau_conta, ['btn', 'btn-soft-dark'], () => { }), 'append'));
                         }
 
                         if (conta.local_conta == 'ATIVO') {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('conta_local_conta_' + conta._id.$oid, conta.local_conta, ['btn', 'btn-white'], () => {}), 'append'));
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('conta_local_conta_' + conta._id.$oid, conta.local_conta, ['btn', 'btn-white'], () => { }), 'append'));
 
                             if (conta.tipo_conta == false) {
-                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_conta_' + conta._id.$oid, 'DÉBITO', ['btn', 'btn-soft-success'], () => {}), 'append'));
+                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_conta_' + conta._id.$oid, 'DÉBITO', ['btn', 'btn-soft-success'], () => { }), 'append'));
                             } else {
-                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_conta_' + conta._id.$oid, 'CRÉDITO', ['btn', 'btn-soft-danger'], () => {}), 'append'));
+                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_conta_' + conta._id.$oid, 'CRÉDITO', ['btn', 'btn-soft-danger'], () => { }), 'append'));
                             }
                         } else {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('conta_local_conta_' + conta._id.$oid, conta.local_conta, ['btn', 'btn-outline-dark'], () => {}), 'append'));
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('conta_local_conta_' + conta._id.$oid, conta.local_conta, ['btn', 'btn-outline-dark'], () => { }), 'append'));
 
                             if (conta.tipo_conta == false) {
-                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_conta_' + conta._id.$oid, 'DÉBITO', ['btn', 'btn-soft-danger'], () => {}), 'append'));
+                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_conta_' + conta._id.$oid, 'DÉBITO', ['btn', 'btn-soft-danger'], () => { }), 'append'));
                             } else {
-                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_conta_' + conta._id.$oid, 'CRÉDITO', ['btn', 'btn-soft-success'], () => {}), 'append'));
+                                linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_tipo_conta_' + conta._id.$oid, 'CRÉDITO', ['btn', 'btn-soft-success'], () => { }), 'append'));
                             }
                         }
 
                         if (conta.conta_tipo == false) {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_conta_tipo_' + conta._id.$oid, 'SINTÉTICA', ['btn', 'btn-white'], () => {}), 'append'));
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_conta_tipo_' + conta._id.$oid, 'SINTÉTICA', ['btn', 'btn-white'], () => { }), 'append'));
                         } else {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_conta_tipo_' + conta._id.$oid, 'ANALÍTICA', ['btn', 'btn-dark'], () => {}), 'append'));
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_conta_tipo_' + conta._id.$oid, 'ANALÍTICA', ['btn', 'btn-dark'], () => { }), 'append'));
                         }
 
                         linha.appendChild(sistema.gerar_td(['text-center'], sistema.retornar_data(conta.data_cadastro), 'inner'));
@@ -468,7 +468,7 @@ router_add('index', function () {
                     sistema.request.post('/sistema.php', {
                         'rota': 'excluir_conta_contabil',
                         'codigo_conta_contabil': codigo_conta
-                    }, function(retorno) {
+                    }, function (retorno) {
                         if (retorno.status == true) {
                             Swal.fire({
                                 title: "Deletado!",
@@ -542,7 +542,7 @@ router_add('index', function () {
                                     </select>
                                 </div>
                             </div>
-                            <br/>
+                            <br />
                             <div class="row">
                                 <div class="col-3 text-center">
                                     <label class="text">Cliente Padrão</label>
@@ -557,59 +557,70 @@ router_add('index', function () {
                                     </select>
                                 </div>
                             </div>
-                            <br/>
+                            <br />
                             <div class="row">
                                 <div class="col-3 text-center">
                                     <label class="text">Capital Social</label>
-                                    <input type="text" class="form-control" id="conta_capital_social" sistema-mask="conta-contabil">
+                                    <input type="text" class="form-control" id="conta_capital_social"
+                                        sistema-mask="conta-contabil">
                                 </div>
                                 <div class="col-3 text-center">
                                     <label class="text">Lucros a apropriar</label>
-                                    <input type="text" class="form-control" id="conta_lucros_apropriar" sistema-mask="conta-contabil">
+                                    <input type="text" class="form-control" id="conta_lucros_apropriar"
+                                        sistema-mask="conta-contabil">
                                 </div>
                                 <div class="col-3 text-center">
                                     <label class="text">Projuízos Acumulados</label>
-                                    <input type="text" class="form-control" id="conta_prejuizos_acumulados" sistema-mask="conta-contabil">
+                                    <input type="text" class="form-control" id="conta_prejuizos_acumulados"
+                                        sistema-mask="conta-contabil">
                                 </div>
                                 <div class="col-3 text-center">
                                     <label class="text">Vendas a Vista</label>
-                                    <input type="text" class="form-control" id="conta_vendas_a_vista" sistema-mask="conta-contabil">
+                                    <input type="text" class="form-control" id="conta_vendas_a_vista"
+                                        sistema-mask="conta-contabil">
                                 </div>
                             </div>
-                            <br/>
+                            <br />
                             <div class="row">
                                 <div class="col-3 text-center">
                                     <label class="text">Vendas a Prazo</label>
-                                    <input type="text" class="form-control" id="conta_vendas_a_prazo" sistema-mask="conta-contabil">
+                                    <input type="text" class="form-control" id="conta_vendas_a_prazo"
+                                        sistema-mask="conta-contabil">
                                 </div>
                                 <div class="col-3 text-center">
                                     <label class="text">Serviços Prestados a Vidas</label>
-                                    <input type="text" class="form-control" id="conta_servicos_a_vista" sistema-mask="conta-contabil">
+                                    <input type="text" class="form-control" id="conta_servicos_a_vista"
+                                        sistema-mask="conta-contabil">
                                 </div>
                                 <div class="col-3 text-center">
                                     <label class="text">Serviços Prestados a Prazo</label>
-                                    <input type="text" class="form-control" id="conta_servicos_a_prazo" sistema-mask="conta-contabil">
+                                    <input type="text" class="form-control" id="conta_servicos_a_prazo"
+                                        sistema-mask="conta-contabil">
                                 </div>
                                 <div class="col-3 text-center">
                                     <label class="text">Custo das Mercadorias Vendidas</label>
-                                    <input type="text" class="form-control" id="conta_custo_mercadorias_vendidas" sistema-mask="conta-contabil">  
+                                    <input type="text" class="form-control" id="conta_custo_mercadorias_vendidas"
+                                        sistema-mask="conta-contabil">
                                 </div>
                             </div>
-                            <br/>
+                            <br />
                             <div class="row">
                                 <div class="col-3 text-center">
                                     <label class="text">Custo dos Serviços Prestados</label>
-                                    <input type="text" class="form-control" id="conta_custo_servicos_prestados" sistema-mask="conta-contabil">
+                                    <input type="text" class="form-control" id="conta_custo_servicos_prestados"
+                                        sistema-mask="conta-contabil">
                                 </div>
                                 <div class="col-3 text-center">
                                     <label class="text">Apuração do Resultado</label>
-                                    <input type="text" class="form-control" id="conta_apuracao_resultado" sistema-mask="conta-contabil">
+                                    <input type="text" class="form-control" id="conta_apuracao_resultado"
+                                        sistema-mask="conta-contabil">
                                 </div>
                             </div>
-                            <br/>
+                            <br />
                             <div class="row">
                                 <div class="col-3 push-9">
-                                    <button class="btn btn-success w-100 btn-lg" id="btn_salvar_sados" onclick="salvar_dados_comprovantes();">SALVAR DADOS</button>
+                                    <button class="btn btn-success w-100 btn-lg" id="btn_salvar_sados"
+                                        onclick="salvar_dados_comprovantes();">SALVAR DADOS</button>
                                 </div>
                             </div>
                         </div>
@@ -618,7 +629,7 @@ router_add('index', function () {
             </div>
             <?php
             if ($_SESSION['modulo_contabil'] == true) {
-            ?>
+                ?>
                 <br />
                 <div class="row">
                     <div class="col-xl-12">
@@ -632,7 +643,8 @@ router_add('index', function () {
                                 <div class="row">
                                     <div class="col-xl-12">
                                         <p>
-                                            O nosso sistema, trabalha com o plano de constas conforme configurado pelo usuário do sistema.
+                                            O nosso sistema, trabalha com o plano de constas conforme configurado pelo usuário
+                                            do sistema.
                                         </p>
                                         <p>
                                             Todas as contas tem que ser previamente configurada.
@@ -647,14 +659,16 @@ router_add('index', function () {
                                 </div>
                                 <div class="row">
                                     <div class="col-3 push-9 tex-center">
-                                        <button class="btn btn-info text-uppercase w-100 btn-lg" data-bs-toggle="modal" data-bs-target="#modal_cadastro_conta_contabil">Cadastrar Conta Contábil</button>
+                                        <button class="btn btn-info text-uppercase w-100 btn-lg" data-bs-toggle="modal"
+                                            data-bs-target="#modal_cadastro_conta_contabil">Cadastrar Conta Contábil</button>
                                     </div>
                                 </div>
                                 <br />
                                 <div class="row">
                                     <div class="col-xl-12">
                                         <div class="table-responsive">
-                                            <table class="table table-nowrap text-nowrap table-hover" id="tabela_conta_contabil">
+                                            <table class="table table-nowrap text-nowrap table-hover"
+                                                id="tabela_conta_contabil">
                                                 <thead>
                                                     <tr class="text-center">
                                                         <th scope="col">NOME</th>
@@ -669,7 +683,8 @@ router_add('index', function () {
                                                 </thead>
                                                 <tbody>
                                                     <tr>
-                                                        <td colspan="10" class="text-center">NENHUMA CONTA ENCONTRADA! CADASTRE CONSTAS E ELAS APARECERAM AQUI!</td>
+                                                        <td colspan="10" class="text-center">NENHUMA CONTA ENCONTRADA! CADASTRE
+                                                            CONSTAS E ELAS APARECERAM AQUI!</td>
                                                     </tr>
                                                 </tbody>
                                             </table>
@@ -680,11 +695,12 @@ router_add('index', function () {
                         </div>
                     </div>
                 </div>
-            <?php
+                <?php
             }
             ?>
         </div>
-        <div class="modal fade" id="modal_cadastro_conta_contabil" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+        <div class="modal fade" id="modal_cadastro_conta_contabil" tabindex="-1" role="dialog"
+            aria-labelledby="myLargeModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -703,7 +719,8 @@ router_add('index', function () {
                                     <option value="ATIVO_NAO_CIRCULANTE_CLIENTE">ATIVO NÃO CIRCULANTE CLIENTE</option>
                                     <option value="PASSIVO_CIRCULANTE_FORNECEDOR">PASSIVO CIRCULANTE FORNECEDOR</option>
                                     <option value="PASSIVO_CIRCULANTE_CONTAS">PASSIVO CIRCULANTE CONTAS</option>
-                                    <option value="PASSIVO_NAO_CIRCULANTE_FORNECEDOR">PASSIVO NÃO CIRCULANTE FORNECEDOR</option>
+                                    <option value="PASSIVO_NAO_CIRCULANTE_FORNECEDOR">PASSIVO NÃO CIRCULANTE FORNECEDOR
+                                    </option>
                                     <option value="PATRIMONIO_LIQUIDO">PATRIMONIO_LIQUIDO</option>
                                     <option value="SERVICOS">SERVIÇOS</option>
                                     <option value="CUSTOS">CUSTOS</option>
@@ -785,13 +802,13 @@ router_add('index', function () {
             window.onload = () => {
                 pesquisar_sistema();
 
-                if(MODULO_CONTABIL == 'true'){
+                if (MODULO_CONTABIL == 'true') {
                     pesquisar_contas_contabeis();
                 }
             }
         </script>
-    <?php
-    require_once 'includes/footer.php';
-    exit;
+        <?php
+        require_once 'includes/footer.php';
+        exit;
 });
-    ?>
+?>

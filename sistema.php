@@ -60,9 +60,9 @@ router_add('pesquisar_sistema', function () {
     $retorno = (array) [];
     $retorno_usuario = (array) [];
 
-    if ($empresa != '') {
-        $retorno = (array) $objeto_sistema->pesquisar((array) ['filtro' => (array) ['empresa', '===', model_id($empresa)]]);
-        $retorno_usuario = (array) $objeto_usuario->pesquisar_todos((array) ['filtro' => (array) ['empresa', '===', model_id($empresa)], 'ordenacao' => (array) ['nome_usuario' => (bool) true], 'limite' => (int) 0]);
+    if ($empresa != 0) {
+        $retorno = (array) $objeto_sistema->pesquisar((array) ['filtro' => (array) ['codigo_empresa', '=', $empresa]]);
+        $retorno_usuario = (array) $objeto_usuario->pesquisar_todos((array) ['filtro' => (array) ['where' => [['codigo_empresa', '=', $empresa]]], 'ordenacao' => [['nome_usuario', 'ASC']]]);
     }
 
     echo json_encode((array) ['dados' => (array) $retorno, 'usuarios' => (array) $retorno_usuario], JSON_UNESCAPED_UNICODE);
@@ -78,17 +78,17 @@ router_add('salvar_dados', function () {
     exit;
 });
 
-if($_SERVER['REQUEST_METHOD'] == 'POST'){
-    if(!empty($_POST)){
-        if($_POST['rota'] == 'SALVAR_DADOS_GOOGLE_AGENDA'){
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    if (!empty($_POST)) {
+        if ($_POST['rota'] == 'SALVAR_DADOS_GOOGLE_AGENDA') {
             $objeto_sistema = new Sistema();
 
-            $retorno  =  (array) $objeto_sistema->salvar_dados_google_agenda($_POST, $_FILES);
+            $retorno = (array) $objeto_sistema->salvar_dados_google_agenda($_POST, $_FILES);
 
-            if($retorno['sucesso'] == true){
+            if ($retorno['sucesso'] == true) {
                 header('Location:sistema.php?status=sucesso');
-                }else{
-                    header('Location:sistema.php?status=erro');
+            } else {
+                header('Location:sistema.php?status=erro');
             }
         }
     }
@@ -100,11 +100,11 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 router_add('index', function () {
     require_once 'includes/head.php';
 
-    $retorno = (string) (isset($_GET['status']) ? (string) $_GET['status']:'erro');
+    $retorno = (string) (isset($_GET['status']) ? (string) $_GET['status'] : 'erro');
 
     $status = (int) 0;
 
-    if($retorno == 'sucesso'){
+    if ($retorno == 'sucesso') {
         $status = 1;
     }
     ?>
@@ -123,6 +123,7 @@ router_add('index', function () {
                 'rota': 'pesquisar_sistema',
                 'empresa': EMPRESA
             }, function (retorno) {
+
                 let sistema_usuario = retorno.dados;
                 let usuarios = retorno.usuarios;
 
@@ -223,13 +224,13 @@ router_add('index', function () {
                 document.querySelector('#conta_vendas_a_prazo').value = conta_vendas_a_prazo;
                 document.querySelector('#conta_vendas_a_vista').value = conta_vendas_a_vista;
 
-                SISTEMA = sistema_usuario._id;
+                SISTEMA = sistema_usuario.codigo_sistema;
 
                 let cliente_padrao = document.querySelector('#cliente_padrao');
                 let fornecedor_padrao = document.querySelector('#fornecedor_padrao');
 
                 sistema.each(usuarios, function (index, usuario) {
-                    let option = sistema.gerar_option(usuario._id.$oid, usuario.nome_usuario);
+                    let option = sistema.gerar_option(usuario.codigo_usuario, usuario.nome_usuario);
 
                     if (usuario.tipo_usuario == 'CLIENTE') {
                         cliente_padrao.appendChild(option);
@@ -239,11 +240,11 @@ router_add('index', function () {
                 });
 
                 if (sistema_usuario.hasOwnProperty('cliente_padrao') == true) {
-                    document.querySelector('#cliente_padrao').value = sistema_usuario.cliente_padrao.$oid;
+                    document.querySelector('#cliente_padrao').value = sistema_usuario.cliente_padrao;
                 }
 
                 if (sistema_usuario.hasOwnProperty('fornecedor_padrao') == true) {
-                    document.querySelector('#fornecedor_padrao').value = sistema_usuario.fornecedor_padrao.$oid;
+                    document.querySelector('#fornecedor_padrao').value = sistema_usuario.fornecedor_padrao;
                 }
             });
         }
@@ -294,7 +295,7 @@ router_add('index', function () {
                 'conta_apuracao_resultado': conta_apuracao_resultado,
                 'cliente_padrao': cliente_padrao,
                 'fornecedor_padrao': fornecedor_padrao,
-                'cnpj':cnpj
+                'cnpj': cnpj
             };
 
             console.log(dados);
@@ -522,8 +523,8 @@ router_add('index', function () {
         /** 
          * Função responsável por recarregar a página do sistema, para limpar os campos e voltar para a tela inicial do sistema.
         */
-        function voltar(){
-            window.location.href = sistema.url('/sistema.php', {'rota':'index'});
+        function voltar() {
+            window.location.href = sistema.url('/sistema.php', { 'rota': 'index' });
         }
     </script>
     <div class="page-wrapper">
@@ -551,7 +552,7 @@ router_add('index', function () {
                                 </div>
                                 <div class="col-1 text-center">
                                     <label class="text">Pedidos</label>
-                                    <select class="form-control" id="pedidos" disabled="true">
+                                    <select class="form-control" id="pedidos">
                                         <option value="0">NÃO</option>
                                         <option value="1">SIM</option>
                                     </select>
@@ -878,8 +879,8 @@ router_add('index', function () {
                     pesquisar_contas_contabeis();
                 }
 
-                if(STATUS == 1){
-                    Swal.fire({title: "Sucesso!", text: "Google configurado com sucesso!", icon: "success"});
+                if (STATUS == 1) {
+                    Swal.fire({ title: "Sucesso!", text: "Google configurado com sucesso!", icon: "success" });
                 }
             }
         </script>

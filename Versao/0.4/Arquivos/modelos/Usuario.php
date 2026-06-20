@@ -1,5 +1,5 @@
 <?php
-require_once 'Classes/bancoDeDados.php';
+require_once 'classes/bancoDeDados.php';
 require_once 'Interface.php';
 require_once 'Sistema.php';
 require_once 'ContasContabeis.php';
@@ -64,13 +64,13 @@ class Usuario implements InterfaceModelo
 
         if (array_key_exists('senha_usuario', $dados) == true) {
             $this->senha_usuario = (string) password_hash($dados['senha_usuario'], PASSWORD_DEFAULT, $this->opcao);
-        }else{
+        } else {
             $this->senha_usuario = (string) password_hash('', PASSWORD_DEFAULT, $this->opcao);
         }
 
         if (array_key_exists('salario', $dados) == true) {
             $this->salario = (float) floatval($dados['salario']);
-        }else{
+        } else {
             $this->salario = (float) 0;
         }
 
@@ -98,7 +98,7 @@ class Usuario implements InterfaceModelo
         $retorno_checagem = (bool) false;
 
         $retorno_checagem = (bool) model_check((string) $this->tabela(), (array) ['email_usuario', '===', (string) $this->email_usuario]);
-        
+
         // if ($this->tipo_usuario != 'CLIENTE' && $this->tipo_usuario != 'FORNECEDOR') {
         //     $retorno_checagem = (bool) model_check((string) $this->tabela(), (array) ['email_usuario', '===', (string) $this->email_usuario]);
         // } else if ($this->tipo_usuario == 'CLIENTE' && $this->id_usuario != null) {

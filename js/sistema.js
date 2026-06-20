@@ -286,19 +286,15 @@ var sistema = (function (window) {
 
             return coluna;
         }),
-        cortar_string: (function (string, tamanho, pontuacao = true) {
-            let tamanho_string = string.length;
-
-            if (tamanho_string <= tamanho) {
-                return string;
-            } else {
-                if(pontuacao == true){
-                    return string.substr(0, tamanho) + '...';
-                }else{
-                    return string.substr(0, tamanho);
-                }
+        cortar_string: function (texto, tamanho) {
+            texto = (texto ?? '').toString().trim();
+        
+            if (texto.length <= tamanho) {
+                return texto;
             }
-        }),
+        
+            return texto.slice(0, tamanho) + '...';
+        },
         gerar_botao: (function (id_botao, texto, classe, funcao = '') {
             let button = document.createElement('button');
 
@@ -388,11 +384,12 @@ var sistema = (function (window) {
             if (valor == undefined || valor == null) {
                 valor = 0;
             }
-            
+
+            // transforma a quantidade para float verificando se é maior que 0 para realizar calculos
             valor = parseFloat(valor);
             if (quantidade != null && operacao != '') {
                 quantidade = parseFloat(quantidade);
-                
+                // a partir da operação passada pelo usuário é realizado o cálculo
                 if (operacao == '*') {
                     valor = valor * quantidade;
                 } else if (operacao == '+') {
@@ -404,10 +401,11 @@ var sistema = (function (window) {
                 }
             }
             if (valor != 0 && valor != undefined) {
-                
+                // após os calculos (opcionais) é iniciado a rotina de arredondamento
                 let auxiliar_precisao = 2;
                 let auxiliar_comparacao = 5 * Math.pow(10, auxiliar_precisao - 1);
-                
+
+                // recupera o valor em string
                 let numero_string = valor.toFixed((casas_decimais + auxiliar_precisao));
                 let numero_inteiro = parseInt(numero_string.replace('.', ''));
 
@@ -508,24 +506,48 @@ var sistema = (function (window) {
                 }
             }
         }),
-        retornar_data: (function (time_stamp, padrao = '', hora = false) {
-            let timestamp = Number(time_stamp.$date.$numberLong);
-            let data = new Date(timestamp);
-            
-            data.setMinutes(data.getMinutes() + data.getTimezoneOffset());
+        retornar_data: (function (dataHora, hora = false, formato = 'br') {
 
-            if (padrao == '' || padrao == 'BRAZIL' || padrao == 'BRASIL') {
-                if (hora == false) {
-                    return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short"}).format(data);
-                } else {
-                    return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "medium" }).format(data);
-                }
+            if (!dataHora) {
+                return '';
+            }
+        
+            const data = new Date(dataHora.replace(' ', 'T'));
+        
+            const dia = String(data.getDate()).padStart(2, '0');
+            const mes = String(data.getMonth() + 1).padStart(2, '0');
+            const ano = data.getFullYear();
+        
+            let dataFormatada = '';
+        
+            if (formato.toLowerCase() === 'us') {
+                dataFormatada = `${ano}-${mes}-${dia}`;
             } else {
-                if (hora == false) {
-                    return new Intl.DateTimeFormat("en-CA", { dateStyle: "short" }).format(data);
-                } else {
-                    return new Intl.DateTimeFormat("en-CA", { dateStyle: "short", timeStyle: "medium" }).format(data);
+                dataFormatada = `${dia}/${mes}/${ano}`;
+            }
+        
+            if (!hora) {
+                return dataFormatada;
+            }
+        
+            const h = String(data.getHours()).padStart(2, '0');
+            const m = String(data.getMinutes()).padStart(2, '0');
+            const s = String(data.getSeconds()).padStart(2, '0');
+        
+            return `${dataFormatada} ${h}:${m}:${s}`;
+        }),
+        download:(function(nome_arquivo = 'nome_arquivo', link_arquivo = ''){
+            if(link_arquivo == ''){
+                return false;
+            }else{
+                if(nome_arquivo == ''){
+                    nome_arquivo = Date.now();
                 }
+                
+                let link = document.createElement('a');
+                link.href = link_arquivo;
+                link.download = nome_arquivo;
+                link.click();
             }
         }),
         listeners: {
@@ -736,9 +758,11 @@ var sistema = (function (window) {
                 if (e.key == 'Backspace' || e.key == 'Delete') {
                     value = value.slice(0, -1);
                 }
-                
+
+                // Limite total de números: 1+1+2+3+4+6 = 17
                 value = value.substr(0, 17);
-                
+
+                // Aplicar máscara
                 let partes = [];
                 if (value.length > 0) partes.push(value.substr(0, 1));
                 if (value.length > 1) partes.push(value.substr(1, 1));
@@ -749,35 +773,6 @@ var sistema = (function (window) {
 
                 this.value = partes.join('.');
 
-                if ((e.key != 'Tab') && (e.key != 'Enter')) {
-                    e.preventDefault();
-                }
-            },
-            telefone: function (e) {
-                let sltd = window.getSelection().toString();
-            
-                if ((sltd == this.value) && ((e.key != 'Tab') && (e.key != 'Enter'))) {
-                    this.value = '';
-                }
-                
-                let value = (this.value + e.key).replace(/\D/g, '');
-                
-                if (e.key == 'Backspace' || e.key == 'Delete') {
-                    value = value.slice(0, -1);
-                }
-                
-                value = value.substr(0, 11);
-                
-                if (value.length > 0) {
-                    value = value.replace(/^(\d{2})(\d)/g, '($1)$2');
-                }
-            
-                if (value.length > 7) {
-                    value = value.replace(/(\d{5})(\d)/, '$1-$2');
-                }
-            
-                this.value = value;
-            
                 if ((e.key != 'Tab') && (e.key != 'Enter')) {
                     e.preventDefault();
                 }
@@ -1018,8 +1013,6 @@ var sistema = (function (window) {
                     element.addEventListener('blur', sistema.validation.cpf_cnpj, true);
                 }
                 else if (element.getAttribute('sistema-mask') == 'telefone') {
-                    element.removeEventListener('keydown', sistema.listeners.telefone, true);
-                    element.addEventListener('keydown', sistema.listeners.telefone, true);
                     element.removeEventListener('blur', sistema.validation.telefone, true);
                     element.addEventListener('blur', sistema.validation.telefone, true);
                 }else if (element.getAttribute('sistema-mask') == 'conta-contabil') {
@@ -1290,42 +1283,6 @@ var sistema = (function (window) {
                 });
             })
         },
-        download: (function (endereco, params, tempo_remover) {
-            if (tempo_remover === void 0) { tempo_remover = 5000; }
-            var fr = document.createElement('iframe');
-            fr.setAttribute('id', 'download-iframe-' + sistema.date('u'));
-            fr.setAttribute('style', 'display: none');
-            fr.setAttribute('src', sistema.url(endereco, params));
-            sistema.element('body').appendChild(fr);
-            window.setTimeout(function () {
-                sistema.remove(fr);
-            }, tempo_remover);
-        }),
-        paginate: (function (lista, numero_pagina, quantidade_por_pagina) {
-            if (quantidade_por_pagina === void 0) { quantidade_por_pagina = 50; }
-            var inicio = 0;
-            var fim = 0;
-            var pagina = [];
-            var total = 0;
-            inicio = (numero_pagina - 1) * quantidade_por_pagina;
-            fim = inicio + quantidade_por_pagina;
-            sistema.each(lista, function (item) {
-                if ((total >= inicio) && (total < fim)) {
-                    pagina.push(item);
-                }
-                total = total + 1;
-            });
-            if (total > 0) {
-                total = Math.ceil(total / quantidade_por_pagina);
-            }
-            if (total == 0) {
-                total = 1;
-            }
-            return {
-                pagina: pagina,
-                total: total
-            };
-        }),
         tab: (function () {
             window.document.addEventListener('click', function (event) {
                 var element = event.target;

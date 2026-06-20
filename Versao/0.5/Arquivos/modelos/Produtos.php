@@ -42,10 +42,10 @@ class Produtos implements InterfaceModelo
         if (array_key_exists('codigo_produto', $dados)) {
             if ($dados['codigo_produto'] != null) {
                 $this->codigo_produto = model_id($dados['codigo_produto']);
-            }else{
+            } else {
                 $this->codigo_produto = null;
             }
-        }else{
+        } else {
             $this->codigo_produto = null;
         }
 
@@ -62,7 +62,7 @@ class Produtos implements InterfaceModelo
         $this->unidade_medida = (string) (isset($dados['unidade_medida']) ? (string) $dados['unidade_medida'] : '');
         $this->status = (bool) (isset($dados['status_produto']) ? (bool) filter_var($dados['status_produto'], FILTER_VALIDATE_BOOLEAN) : false);
         $this->tipo_produto = (bool) (isset($dados['tipo_produto']) ? (bool) filter_var($dados['tipo_produto'], FILTER_VALIDATE_BOOLEAN) : false);
-        $this->sku_produto = (string) (isset($dados['sku_produto']) ? (string) $dados['sku_produto']:'');
+        $this->sku_produto = (string) (isset($dados['sku_produto']) ? (string) $dados['sku_produto'] : '');
     }
 
     /**
@@ -151,7 +151,8 @@ class Produtos implements InterfaceModelo
      * @param mixed $dados
      * @return int
      */
-    public function contar_quantidade_produtos($dados){
+    public function contar_quantidade_produtos($dados)
+    {
         $pipeline = [
             [
                 '$match' => [
@@ -190,30 +191,31 @@ class Produtos implements InterfaceModelo
      * @param array $filtro
      * @return array
      */
-    public function filtro_pesquisar_produto($filtro){
+    public function filtro_pesquisar_produto($filtro)
+    {
         $filtro_montando = (array) [];
 
-        if(array_key_exists('nome_produto', $filtro) == true){
+        if (array_key_exists('nome_produto', $filtro) == true) {
             array_push($filtro_montando, ['nome_produto', '=', $filtro['nome_produto']]);
         }
 
-        if(array_key_exists('empresa', $filtro) == true){
+        if (array_key_exists('empresa', $filtro) == true) {
             array_push($filtro_montando, ['empresa', '===', model_id($filtro['empresa'])]);
         }
 
-        if(array_key_exists('status_produto', $filtro) == true){
+        if (array_key_exists('status_produto', $filtro) == true) {
             array_push($filtro_montando, ['status', '===', (bool) filter_var($filtro['status_produto'], FILTER_VALIDATE_BOOLEAN)]);
         }
 
-        if(array_key_exists('tipo_produto', $filtro) == true){
+        if (array_key_exists('tipo_produto', $filtro) == true) {
             array_push($filtro_montando, ['tipo_produto', '===', (bool) filter_var($filtro['tipo_produto'], FILTER_VALIDATE_BOOLEAN)]);
         }
 
-        if(array_key_exists('unidade_medida', $filtro) == true){
+        if (array_key_exists('unidade_medida', $filtro) == true) {
             array_push($filtro_montando, ['unidade_medida', '===', (string) $filtro['unidade_medida']]);
         }
 
-        if(array_key_exists('data_cadastro', $filtro) == true){
+        if (array_key_exists('data_cadastro', $filtro) == true) {
             array_push($filtro_montando, ['data_cadastro', '>=', model_date($filtro['data_cadastro'], '00:00:00')]);
             array_push($filtro_montando, ['data_cadastro', '<=', model_date($filtro['data_cadastro'], '23:59:59')]);
         }
@@ -226,17 +228,18 @@ class Produtos implements InterfaceModelo
      * @param array $filtro_parametro
      * @return array
      */
-    function pesquisar_produtos_estoque($filtro_parametro){
+    function pesquisar_produtos_estoque($filtro_parametro)
+    {
         $filtro = $this->filtro_pesquisar_produto($filtro_parametro);
 
         $retorno_produto = (array) $this->pesquisar_todos($filtro);
 
-        if(empty($retorno_produto) == false){
+        if (empty($retorno_produto) == false) {
             // foreach($retorno_produto as $produto){
 
             // }
             return (array) ['dados' => (array) $retorno_produto];
-        }else{
+        } else {
             return (array) ['dados' => (array) []];
         }
     }

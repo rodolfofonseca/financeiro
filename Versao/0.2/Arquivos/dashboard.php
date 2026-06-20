@@ -18,10 +18,10 @@ router_add('index', function () {
 
     $retorno_conta = (array) $objeto_conta->pesquisar_todos((array) ['filtro' => (array) ['empresa', '===', model_id($codigo_empresa)], 'ordenacao' => ['nome_conta' => (bool) true], 'limite' => 0]);
     $retorno_contas_pagar = (array) $objeto_contas_pagar_receber->relatorio_contas_pagar($codigo_empresa);
-    $retorno_contas_futuras = (array) $objeto_contas_pagar_receber->relatorio_contas_pagar_mensal($codigo_empresa, $ano_conta_futura.'-01-01', '00:00:00');
+    $retorno_contas_futuras = (array) $objeto_contas_pagar_receber->relatorio_contas_pagar_mensal($codigo_empresa, $ano_conta_futura . '-01-01', '00:00:00');
 
     $retorno_fechamento_contabil = (array) $objeto_fechamento_contabil_geral->pesquisar_todos(['filtro' => (array) ['and' => (array) [['ano_referencia', '===', (int) $ano_atual], ['empresa', '===', model_id($codigo_empresa)]]], 'ordenacao' => (array) ['mes_referencia' => (bool) true], 'limite' => (int) 12]);
-?>
+    ?>
     <script>
         const CORES = {
             data1: '#664dc9',
@@ -85,7 +85,7 @@ router_add('index', function () {
             let saldo_contas = [];
             let nomes = {};
 
-            sistema.each(CONTAS, function(contador, conta) {
+            sistema.each(CONTAS, function (contador, conta) {
                 let soma_contador = (contador + 1);
 
                 if (conta.saldo_conta == 0) {
@@ -122,7 +122,7 @@ router_add('index', function () {
             let valor_contas = [];
             let nomes = {};
 
-            sistema.each(CONTAS_PAGAR_RECEBER, function(contador, conta) {
+            sistema.each(CONTAS_PAGAR_RECEBER, function (contador, conta) {
                 let soma_contador = (contador + 1);
 
                 nomes['data' + soma_contador] = conta['status_conta'] + '-' + sistema.number_format(conta['SUM(valor_conta)']);
@@ -158,7 +158,7 @@ router_add('index', function () {
                 'data3': 'RESULTADO'
             };
 
-            sistema.each(FECHAMENTO_CONTABIL, function(contador, fechamento) {
+            sistema.each(FECHAMENTO_CONTABIL, function (contador, fechamento) {
                 debito.push(fechamento.total_debito);
                 credito.push(fechamento.total_credito);
                 resultado.push(fechamento.valor_resultado);
@@ -209,7 +209,7 @@ router_add('index', function () {
             let categories = [];
             let dados = {};
 
-            sistema.each(CONTAS_FUTURAS, function(contador, contas) {
+            sistema.each(CONTAS_FUTURAS, function (contador, contas) {
 
                 let chave = contas.ano + '-' + ('0' + contas.mes).slice(-2);
 
@@ -235,7 +235,7 @@ router_add('index', function () {
 
             });
 
-            sistema.each(dados, function(mes, valores) {
+            sistema.each(dados, function (mes, valores) {
 
                 categories.push(mes);
 
@@ -326,14 +326,14 @@ router_add('index', function () {
             </div>
         </div>
         <script>
-            window.onload = function() {
+            window.onload = function () {
                 montar_relatorio_contas();
                 montar_relatorio_contas_pagar();
                 relatorio_fechamento_contabil();
                 historico_contas();
             }
         </script>
-    <?php
-    require_once 'includes/footer.php';
+        <?php
+        require_once 'includes/footer.php';
 });
-    ?>
+?>

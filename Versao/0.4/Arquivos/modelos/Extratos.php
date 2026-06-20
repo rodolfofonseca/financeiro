@@ -146,12 +146,12 @@ class Extratos implements InterfaceModelo
 
                 $array_cadastro_conta_pagar_receber = (array) ['empresa' => $extrato['empresa'], 'cliente_fornecedor' => $usuario['_id'], 'conta_fornecedor' => $conta_fornecedor['_id'], 'nome_conta' => (string) 'EXTRATO ' . $usuario['nome_usuario'], 'descricao' => (string) 'CONTA GERADA AUTOMÁTICAMENTE ATRAVÉS DO EXTRATO', 'valor_conta' => (float) $extrato['valor_liquido'], 'valor_pago' => (float) 0, 'valor_juro_desconto' => (float) 0, 'tipo_juro_desconto' => (string) '', 'tipo_conta' => (string) 'PAGAR', 'data_cadastro' => model_date(), 'data_vencimento' => $extrato['data_extrato'], 'data_baixa' => model_date(), 'status_conta' => (string) 'AGUARDANDO', 'comprovante' => (string) 'NAO', 'boleto' => (string) 'NAO', 'transacao' => (string) $transacao];
 
-                $retorno_conta_pagar_receber =  (bool) $objeto_conta_pagar_receber->salvar_dados($array_cadastro_conta_pagar_receber);
+                $retorno_conta_pagar_receber = (bool) $objeto_conta_pagar_receber->salvar_dados($array_cadastro_conta_pagar_receber);
 
-                if($retorno_conta_pagar_receber == true){
+                if ($retorno_conta_pagar_receber == true) {
                     $array_udpate_extrato = (array) ['status' => (string) 'PAGO'];
                     return (array) ['status' => (bool) model_update((string) $this->tabela(), ['_id', '===', $this->codigo_extrato], (array) $array_udpate_extrato)];
-                }else{
+                } else {
                     return (array) ['status' => (bool) false];
                 }
             } else {

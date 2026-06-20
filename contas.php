@@ -38,7 +38,7 @@ router_add('pesquisa_conta', function () {
     $retorno = (array) [];
 
     if ($codigo_conta != '') {
-        $retorno = (array) $objeto_conta->pesquisar((array) ['filtro' => (array) ['_id', '===', model_id($codigo_conta)]]);
+        $retorno = (array) $objeto_conta->pesquisar((array) ['filtro' => (array) ['where' => [['codigo_conta', '=', $codigo_conta]]]]);
     }
 
     echo json_encode((array) ['dados' => (array) $retorno], JSON_UNESCAPED_UNICODE);
@@ -219,7 +219,7 @@ router_add('relatorio_download', function () {
     $objeto_conta = new Contas();
     $objeto_movimentacao = new Movimentacao();
 
-    $codigo_conta = (string) (isset($_REQUEST['codigo_conta']) ? (string) $_REQUEST['codigo_conta'] : '');
+    $codigo_conta = (int) (isset($_REQUEST['codigo_conta']) ? (int) $_REQUEST['codigo_conta'] : 0);
     $nome_conta = (string) '';
     $saldo_conta = (string) '';
     $saldo_boolean = (bool) false;
@@ -227,7 +227,7 @@ router_add('relatorio_download', function () {
     $retorno_lancamentos = (array) [];
 
     if ($codigo_conta != '') {
-        $retorno_conta = (array) $objeto_conta->pesquisar((array) ['filtro' => (array) ['_id', '===', model_id($codigo_conta)]]);
+        $retorno_conta = (array) $objeto_conta->pesquisar((array) ['filtro' => (array) ['where' => [['codigo_conta', '=', $codigo_conta]]]]);
 
         if (empty($retorno_conta) == false) {
             if (array_key_exists('nome_conta', $retorno_conta) == true) {
@@ -245,7 +245,7 @@ router_add('relatorio_download', function () {
             }
         }
 
-        $filtro = (array) ['filtro' => (array) ['conta', '===', model_id($codigo_conta)], 'ordenacao' => (array) ['data_lancamento' => (bool) true], 'limite' => (int) 0];
+        $filtro = (array) ['filtro' => (array) ['where' => [['codigo_conta', '=', $codigo_conta]]], 'ordenacao' => (array) [['data_lancamento', 'DESC']], 'limite' => (int) 0];
 
         $retorno_lancamentos = (array) $objeto_movimentacao->pesquisar_todos((array) $filtro);
     }
@@ -380,6 +380,7 @@ router_add('index', function () {
                     let conta = contas[index];
                     let linha = document.createElement('tr');
 
+                    linha.appendChild(sistema.gerar_td(['text-start', 'fw-bold'], conta.codigo_conta, 'inner'));
                     linha.appendChild(sistema.gerar_td(['text-start', 'fw-bold'], conta.nome_conta, 'inner'));
                     linha.appendChild(sistema.gerar_td(['text-start', 'fw-bold'], conta.descricao, 'inner'));
 
@@ -393,20 +394,20 @@ router_add('index', function () {
                         linha.appendChild(sistema.gerar_td(['text-center'], conta.modulo_contabil.conta_contabil, 'inner'));
                     }
 
-                    if (conta.status == 'ATIVO') {
-                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_' + conta._id.$oid, 'ATIVO', ['btn', 'btn-outline-success'], function visualizar() { }), 'append'));
+                    if (conta.status == true) {
+                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_' + conta.codigo_conta, 'ATIVO', ['btn', 'btn-outline-success'], function visualizar() { }), 'append'));
                     } else {
-                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_' + conta._id.$oid, 'INATIVO', ['btn', 'btn-outline-danger'], function visualizar() { }), 'append'));
+                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_' + conta.codigo_conta, 'INATIVO', ['btn', 'btn-outline-danger'], function visualizar() { }), 'append'));
                     }
 
-                    linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_downlaods_' + conta._id.$oid, 'DOWNLOAD', ['btn', 'btn-primary'], () => {
-                        abrir_modal_download(conta._id.$oid);
+                    linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_downlaods_' + conta.codigo_conta, 'DOWNLOAD', ['btn', 'btn-primary'], () => {
+                        abrir_modal_download(conta.codigo_conta);
                     }), 'append'));
-                    linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_excluir_conta_' + conta._id.$oid, 'EXCLUIR', ['btn', 'btn-danger'], () => {
-                        deletar_conta(conta._id.$oid);
-                    }), 'append'));
-                    linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_visualizar_' + conta._id.$oid, 'EDITAR', ['btn', 'btn-secondary'], () => {
-                        cadastro_contas(conta._id.$oid);
+                    // linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_excluir_conta_' + conta.codigo_conta, 'EXCLUIR', ['btn', 'btn-danger'], () => {
+                    //     deletar_conta(conta.codigo_conta);
+                    // }), 'append'));
+                    linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_visualizar_' + conta.codigo_conta, 'EDITAR', ['btn', 'btn-secondary'], () => {
+                        cadastro_contas(conta.codigo_conta);
                     }), 'append'));
 
                     tabela.appendChild(linha);
@@ -533,9 +534,9 @@ router_add('index', function () {
                                 <div class="col-6 text-center">
                                     <label class="text">Status</label>
                                     <select class="form-control" id="status_conta">
-                                        <option value="TODOS">TODOS</option>
-                                        <option value="ATIVO">ATIVO</option>
-                                        <option value="INATIVO">INATIVO</option>
+                                        <option value="1">TODOS</option>
+                                        <option value="1">ATIVO</option>
+                                        <option value="0">INATIVO</option>
                                     </select>
                                 </div>
                             </div>
@@ -572,6 +573,7 @@ router_add('index', function () {
                                         <table class="table table-nowrap text-nowrap table-hover" id="tabela_contas">
                                             <thead>
                                                 <tr class="text-uppercase">
+                                                    <th scope="col" class="text-center">#</th>
                                                     <th scope="col" class="text-center">Nome Conta</th>
                                                     <th scope="col" class="text-center">Descrição</th>
                                                     <th scope="col" class="text-center">Saldo</th>
@@ -582,7 +584,7 @@ router_add('index', function () {
                                                     ?>
                                                     <th scope="col" class="text-center">Status</th>
                                                     <th scope="col" class="text-center">Download</th>
-                                                    <th scope="col" class="text-center">Excluir</th>
+                                                    <!-- <th scope="col" class="text-center">Excluir</th> -->
                                                     <th scope="col" class="text-center">Editar</th>
                                                 </tr>
                                             </thead>
@@ -702,8 +704,8 @@ router_add('cadastro_contas', function () {
                                         <label class="text">Status</label>
                                         <select class="form-control" id="status_conta">
                                             <option value="">Selecione uma opção</option>
-                                            <option value="ATIVO">ATIVO</option>
-                                            <option value="INATIVO">INATIVO</option>
+                                            <option value="1">ATIVO</option>
+                                            <option value="0">INATIVO</option>
                                         </select>
                                     </div>
                                 </div>
@@ -730,9 +732,15 @@ router_add('cadastro_contas', function () {
                         }, function (retorno) {
                             let conta = retorno.dados;
 
+                            if(conta.status == true){
+                                document.querySelector('#status_conta').value = 1;
+                            }else{
+                                document.querySelector('#status_conta').value = 0;
+                            }
+
                             document.querySelector('#nome_conta').value = conta.nome_conta;
                             document.querySelector('#saldo_conta').value = conta.saldo_conta;
-                            document.querySelector('#status_conta').value = conta.status;
+                            
                             document.querySelector('#descricao').value = conta.descricao;
                         });
                     }

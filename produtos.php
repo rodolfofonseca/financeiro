@@ -22,27 +22,27 @@ router_add('pesquisar_produtos', function () {
     $objeto_usuario = new Usuario();
     $objeto_movimentacao_estoque = new MovimentacaoEstoque();
 
-    $empresa = (string) (isset($_REQUEST['empresa']) ? (string) $_REQUEST['empresa'] : '');
+    $empresa = (int) (isset($_REQUEST['empresa']) ? (int) $_REQUEST['empresa'] : 0);
     $nome_produto = (string) (isset($_REQUEST['nome_produto']) ? (string) strtoupper($_REQUEST['nome_produto']) : '');
-    $fornecedor = (string) (isset($_REQUEST['fornecedor']) ? (string) $_REQUEST['fornecedor'] : '');
+    $fornecedor = (int) (isset($_REQUEST['fornecedor']) ? (int) $_REQUEST['fornecedor'] : 0);
     $status_produto = (bool) (isset($_REQUEST['status_produto']) ? (bool) filter_var($_REQUEST['status_produto'], FILTER_VALIDATE_BOOLEAN) : false);
     $tipo_produto = (bool) (isset($_REQUEST['tipo_produto']) ? (bool) filter_var($_REQUEST['tipo_produto'], FILTER_VALIDATE_BOOLEAN) : false);
     $unidade_medida = (string) (isset($_REQUEST['unidade_medida']) ? (string) $_REQUEST['unidade_medida'] : '');
     $data_cadastro = (string) (isset($_REQUEST['data_cadastro']) ? (string) $_REQUEST['data_cadastro'] : '');
     $codigo_barras = (string) (isset($_REQUEST['codigo_barras']) ? (string) $_REQUEST['codigo_barras'] : '');
 
-    $filtro = (array) ['filtro' => (array) [], 'ordenacao' => (array) ['data_cadastro' => (bool) false], 'limite' => (int) 100];
+    $filtro = (array) ['filtro' => (array) [], 'ordenacao' => (array) [['data_cadastro','ASC']], 'limite' => (int) 100];
     $array_push = (array) [];
 
     $produtos = (array) [];
     $produtos_final = (array) [];
 
-    if ($empresa != '') {
-        array_push($array_push, (array) ['empresa', '===', model_id($empresa)]);
+    if ($empresa != 0) {
+        array_push($array_push, (array) ['codigo_empresa', '=', (int) intval($empresa, 10)]);
     }
 
-    if ($fornecedor != '') {
-        array_push($array_push, (array) ['fornecedor', '===', model_id($fornecedor)]);
+    if ($fornecedor != 0) {
+        array_push($array_push, (array) ['codigo_usuario', '=', (int) intval($fornecedor, 10)]);
     }
 
     if ($nome_produto != '') {
@@ -65,24 +65,24 @@ router_add('pesquisar_produtos', function () {
     array_push($array_push, (array) ['status', '===', (bool) $status_produto]);
     array_push($array_push, (array) ['tipo_produto', '===', (bool) $tipo_produto]);
 
-    $filtro['filtro'] = (array) ['and' => $array_push];
+    $filtro['filtro'] = (array) ['where' => $array_push];
 
     $produtos = (array) $objeto_produto->pesquisar_todos($filtro);
 
     if (empty($produtos) == false) {
         foreach ($produtos as $produto) {
-            $fornecedor = (array) $objeto_usuario->pesquisar((array) ['filtro' => (array) ['_id', '===', $produto['fornecedor']]]);
-            $estoque = (array) $objeto_movimentacao_estoque->retornar_estoque((array) ['produto' => $produto['_id']]);
+            $fornecedor = (array) $objeto_usuario->pesquisar((array) ['filtro' => (array) ['where' => [['codigo_usuario', '=', $produto['codigo_usuario']]]]]);
+            // $estoque = (array) $objeto_movimentacao_estoque->retornar_estoque((array) ['where' => [['codigo_produto' , '=', $produto['codigo_produto']]]]);
 
             $produto['fornecedor'] = $fornecedor;
-            $produto['estoque'] = $estoque;
+            $produto['estoque'] = 0;
             array_push($produtos_final, $produto);
         }
     }
 
     ob_clean();
 
-    echo json_encode(['dados' => (array) $produtos_final, 'filtro' => (array) $filtro], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['dados' => (array) $produtos_final], JSON_UNESCAPED_UNICODE);
     exit;
 });
 
@@ -101,9 +101,9 @@ router_add('pesquisar_produto_estoque', function () {
 router_add('pesquisar_produto', function () {
     $objeto_produto = new Produtos();
 
-    $codigo_produto = (string) (isset($_REQUEST['codigo_produto']) ? $_REQUEST['codigo_produto'] : '');
+    $codigo_produto = (int) (isset($_REQUEST['codigo_produto']) ? $_REQUEST['codigo_produto'] : 0);
 
-    $produto = (array) $objeto_produto->pesquisar((array) ['filtro' => (array) ['_id', '===', model_id($codigo_produto)]]);
+    $produto = (array) $objeto_produto->pesquisar((array) ['filtro' => (array) ['where' => [['codigo_produto', '=', $codigo_produto]]]]);
 
     ob_clean();
 
@@ -164,7 +164,7 @@ router_add('index', function () {
                 let select_fornecedores = document.querySelector('#fornecedor');
 
                 sistema.each(fornecedores, function (index, fornecedor) {
-                    select_fornecedores.appendChild(sistema.gerar_option(fornecedor._id.$oid, fornecedor.nome_usuario));
+                    select_fornecedores.appendChild(sistema.gerar_option(fornecedor.codigo_usuario, fornecedor.nome_usuario));
                 });
             });
         }
@@ -179,6 +179,7 @@ router_add('index', function () {
             let tipo_produto = document.querySelector('#tipo_produto').value;
             let unidade_medida = document.querySelector('#unidade_medida').value;
             let data_cadastro = document.querySelector('#data_cadastro').value;
+            
             let dados = {
                 'rota': 'pesquisar_produtos',
                 'empresa': CODIGO_EMPRESA
@@ -217,6 +218,8 @@ router_add('index', function () {
                         let produto = produtos[index];
                         let linha = document.createElement('tr');
 
+                        console.log(produto);
+
                         let estoque = produto.estoque;
                         let saldo_atual = estoque?.[0]?.saldo ?? 0;
 
@@ -227,10 +230,10 @@ router_add('index', function () {
                         img.classList.add('rounded-circle');
                         img.setAttribute('alt', 'img');
 
-                        if (produto.imagem != '') {
+                        if (produto.imagem != null) {
                             img.setAttribute('src', produto.imagem);
                         } else {
-                            img.setAttribute('src', 'imagens/imagens_sistema/logo_empresa_preto.jpg');
+                            img.setAttribute('src', 'imagens/imagens_sistema/logo_sem_nome_250.png');
                         }
 
                         a.appendChild(img);
@@ -246,37 +249,37 @@ router_add('index', function () {
                         div.appendChild(div_text);
                         linha.appendChild(sistema.gerar_td(['text-center'], div, 'append'));
 
-                        linha.appendChild(sistema.gerar_td(['text-start', 'fw-bold'], produto.nome_produto, 'inner'));
-                        linha.appendChild(sistema.gerar_td(['text-start', 'fw-bold'], produto.fornecedor.nome_usuario, 'inner'));
+                        linha.appendChild(sistema.gerar_td(['text-start', 'fw-bold'], sistema.cortar_string(produto.nome_produto, 20), 'inner', false, '', produto.nome_produto));
+                        linha.appendChild(sistema.gerar_td(['text-start', 'fw-bold'], sistema.cortar_string(produto.fornecedor.nome_usuario, 30), 'inner', false, '', produto.fornecedor.nome_usuario));
 
-                        if(saldo_atual == 0){
+                        if (saldo_atual == 0) {
                             linha.appendChild(sistema.gerar_td(['text-end', 'fw-bold', 'text-danger'], saldo_atual));
-                        }else{
+                        } else {
                             linha.appendChild(sistema.gerar_td(['text-end', 'fw-bold'], saldo_atual));
                         }
 
-                        if(produto.valor_venda < produto.valor_custo){
+                        if (produto.valor_venda < produto.valor_custo) {
                             linha.appendChild(sistema.gerar_td(['text-end', 'fw-bold', 'text-danger'], sistema.number_format(produto.valor_venda, 2, ',', '.')));
-                        }else if(produto.valor_venda == produto.valor_custo){
+                        } else if (produto.valor_venda == produto.valor_custo) {
                             linha.appendChild(sistema.gerar_td(['text-end', 'fw-bold', 'text-warning'], sistema.number_format(produto.valor_venda, 2, ',', '.')));
-                        }else{
+                        } else {
                             linha.appendChild(sistema.gerar_td(['text-end', 'fw-bold', 'text-success'], sistema.number_format(produto.valor_venda, 2, ',', '.')));
                         }
 
                         linha.appendChild(sistema.gerar_td(['text-end', 'fw-bold'], sistema.number_format(produto.valor_custo, 2, ',', '.')));
 
                         if (produto.status == true) {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_' + produto._id.$oid, 'ATIVO', ['btn', 'btn-outline-success'], () => { }), 'append'));
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_' + produto.codigo_produto, 'ATIVO', ['btn', 'btn-outline-success'], () => { }), 'append'));
                         } else {
-                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_' + produto._id.$oid, 'INATIVO', ['btn', 'btn-outline-danger'], () => { }), 'append'));
+                            linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_status_' + produto.codigo_produto, 'INATIVO', ['btn', 'btn-outline-danger'], () => { }), 'append'));
                         }
 
-                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_cadastrar_imagem_' + produto._id.$oid, 'CADASTRAR IMAGEM', ['btn', 'btn-secondary'], function () {
-                            cadastrar_imagem(produto._id.$oid);
+                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_cadastrar_imagem_' + produto.codigo_produto, 'CADASTRAR IMAGEM', ['btn', 'btn-secondary'], function () {
+                            cadastrar_imagem(produto.codigo_produto);
                         }), 'append'));
 
-                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_editar_produto_' + produto._id.$oid, 'EDITAR', ['btn', 'btn-primary'], function () {
-                            cadastro_produtos(produto._id.$oid);
+                        linha.appendChild(sistema.gerar_td(['text-center'], sistema.gerar_botao('botao_editar_produto_' + produto.codigo_produto, 'EDITAR', ['btn', 'btn-primary'], function () {
+                            cadastro_produtos(produto.codigo_produto);
                         }), 'append'));
 
                         tabela.appendChild(linha);
@@ -311,7 +314,7 @@ router_add('index', function () {
                 <div class="d-flex my-xl-auto right-content align-items-center flex-wrap gap-2">
                     <div class="dropdown">
                         <button class="btn btn-primary d-flex align-items-center justify-content-center"
-                            onclick="cadastro_produtos('');">Cadastro Produtos</button>
+                            onclick="cadastro_produtos(0);">Cadastro Produtos</button>
                     </div>
                 </div>
             </div>
@@ -419,7 +422,7 @@ router_add('cadastro_produtos', function () {
     $data_hoje = $data->format('Y-m-d');
     $objeto_produto = new Produtos();
 
-    $codigo_produto = (string) (isset($_REQUEST['codigo_produto']) ? $_REQUEST['codigo_produto'] : '');
+    $codigo_produto = (int) (isset($_REQUEST['codigo_produto']) ? (int) intval($_REQUEST['codigo_produto'], 10) : 0);
     $quantidade_produtos = (int) $objeto_produto->contar_quantidade_produtos((array) ['empresa' => (string) EMPRESA]);
 
     // var_dump($quantidade_produtos);
@@ -538,7 +541,7 @@ router_add('cadastro_produtos', function () {
                 unidade_medida = objeto_unidade_medida.value;
                 quantidade_alerta = objeto_quantidade_alerta.value;
 
-                let dados = { 'rota': 'salvar_dados_produto', 'codigo_produto': CODIGO_PRODUTO, 'empresa': CODIGO_EMPRESA, 'fornecedor': fornecedor, 'sku_produto': sku_produto, 'nome_produto': nome_produto, 'descricao': descricao, 'codigo_barras': codigo_barras, 'quantidade_alerta': quantidade_alerta, 'data_cadastro': data_cadastro, 'valor_venda': valor_venda, 'valor_custo':valor_custo, 'unidade_medida': unidade_medida, 'status_produto': status_produto, 'tipo_produto': tipo_produto };
+                let dados = { 'rota': 'salvar_dados_produto', 'codigo_produto': CODIGO_PRODUTO, 'empresa': CODIGO_EMPRESA, 'fornecedor': fornecedor, 'sku_produto': sku_produto, 'nome_produto': nome_produto, 'descricao': descricao, 'codigo_barras': codigo_barras, 'quantidade_alerta': quantidade_alerta, 'data_cadastro': data_cadastro, 'valor_venda': valor_venda, 'valor_custo': valor_custo, 'unidade_medida': unidade_medida, 'status_produto': status_produto, 'tipo_produto': tipo_produto };
 
                 sistema.request.post('/produtos.php', dados, function (retorno) {
                     validar_retorno(retorno, '/produtos.php');
@@ -583,7 +586,7 @@ router_add('cadastro_produtos', function () {
                     let select_fornecedores = document.querySelector('#fornecedor');
 
                     sistema.each(fornecedores, function (index, fornecedor) {
-                        select_fornecedores.appendChild(sistema.gerar_option(fornecedor._id.$oid, fornecedor.nome_usuario));
+                        select_fornecedores.appendChild(sistema.gerar_option(fornecedor.codigo_usuario, fornecedor.nome_usuario));
                     });
                 });
             }
@@ -605,7 +608,7 @@ router_add('cadastro_produtos', function () {
                         document.querySelector('#sku_produto').value = produto.sku_produto;
                     }
 
-                    if(produto.status == false){
+                    if (produto.status == false) {
                         status = 0;
                     }
 
@@ -616,10 +619,10 @@ router_add('cadastro_produtos', function () {
                     document.querySelector('#status_produto').value = status;
                     document.querySelector('#tipo_produto').value = tipo;
                     document.querySelector('#unidade_medida').value = produto.unidade_medida;
-                    document.querySelector('#data_cadastro').value = sistema.retornar_data(produto.data_cadastro, 'AMERICANO');
+                    document.querySelector('#data_cadastro').value = sistema.retornar_data(produto.data_cadastro, false, 'us');
                     tinymce.get('editor').setContent(produto.descricao);
                     document.querySelector('#codigo_barras').value = produto.codigo_barras;
-                    document.querySelector('#fornecedor').value = produto.fornecedor.$oid;
+                    document.querySelector('#fornecedor').value = produto.codigo_usuario;
                 });
             }
 
@@ -763,7 +766,7 @@ router_add('cadastro_produtos', function () {
                 window.onload = function () {
                     pesquisar_fornecedores();
 
-                    if (CODIGO_PRODUTO != '') {
+                    if (CODIGO_PRODUTO != 0) {
                         pesquisar_produto();
                     }
                 }

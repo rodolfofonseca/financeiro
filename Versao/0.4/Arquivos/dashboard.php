@@ -14,10 +14,10 @@ router_add('index', function () {
     $mes_anterior = $mes_atual - 1;
     $mes_proximo = $mes_atual + 1;
 
-    $data_inicio_mes_anterior = $ano_atual.'-'.str_pad($mes_anterior, 2, '0', STR_PAD_LEFT).'-01';
-    $data_final_mes_anterior = $ano_atual.'-'.str_pad($mes_anterior, 2, '0', STR_PAD_LEFT).'-'.cal_days_in_month(CAL_GREGORIAN, $mes_anterior, $ano_atual);
-    $data_inicio_mes_proximo = $ano_atual.'-'.str_pad($mes_proximo, 2, '0', STR_PAD_LEFT).'-01';
-    $data_final_mes_proximo = $ano_atual.'-'.str_pad($mes_proximo, 2, '0', STR_PAD_LEFT).'-'.cal_days_in_month(CAL_GREGORIAN, $mes_proximo, $ano_atual);
+    $data_inicio_mes_anterior = $ano_atual . '-' . str_pad($mes_anterior, 2, '0', STR_PAD_LEFT) . '-01';
+    $data_final_mes_anterior = $ano_atual . '-' . str_pad($mes_anterior, 2, '0', STR_PAD_LEFT) . '-' . cal_days_in_month(CAL_GREGORIAN, $mes_anterior, $ano_atual);
+    $data_inicio_mes_proximo = $ano_atual . '-' . str_pad($mes_proximo, 2, '0', STR_PAD_LEFT) . '-01';
+    $data_final_mes_proximo = $ano_atual . '-' . str_pad($mes_proximo, 2, '0', STR_PAD_LEFT) . '-' . cal_days_in_month(CAL_GREGORIAN, $mes_proximo, $ano_atual);
 
     $objeto_conta = new Contas();
     $objeto_contas_pagar_receber = new ContasPagarReceber();
@@ -411,7 +411,7 @@ router_add('index', function () {
                     $texto = (string) 'BOA NOITE ' . $login_usuario;
                 }
 
-                if($retorno_contas_vencidas['quantidade_contas'] >= 1){
+                if ($retorno_contas_vencidas['quantidade_contas'] >= 1) {
                     $texto = $texto . '<br/> ATENÇÃO, VOCÊ POSSUI CONTAS VENCIDAS!';
                 }
 
@@ -443,7 +443,7 @@ router_add('index', function () {
             }
             ?>
             <div class="row">
-                
+
                 <div class="col-md-4">
                     <div class="card">
                         <div class="card-header">
@@ -477,7 +477,7 @@ router_add('index', function () {
             </div>
             <br />
             <div class="row">
-            <div class="col-md-6">
+                <div class="col-md-6">
                     <div class="card">
                         <div class="card-header">
                             <div class="card-title">Saldo nas Contas</div>

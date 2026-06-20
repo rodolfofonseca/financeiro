@@ -403,10 +403,10 @@ router_add('index', function () {
                     </div>
                 </div>
             </div>
-            <?php         
-            if($retorno_inativacao_usuario['quantidade'] > 0){
+            <?php
+            if ($retorno_inativacao_usuario['quantidade'] > 0) {
                 $texto = (string) retornar_texto_data($login_usuario);
-                $texto = '<br/>'.$retorno_inativacao_usuario['mensagem'];
+                $texto = '<br/>' . $retorno_inativacao_usuario['mensagem'];
                 ?>
                 <div class="bg-primary rounded welcome-wrap position-relative mb-3">
                     <div class="row">

@@ -1,6 +1,11 @@
 <?php
 class Extenso
 {
+    /**
+     * Função responsável por  remover formatação de números
+     * @param mixed $strNumero
+     * @return string
+     */
     public static function removerFormatacaoNumero($strNumero)
     {
 

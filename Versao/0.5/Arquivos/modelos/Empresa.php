@@ -11,7 +11,7 @@ class Empresa implements InterfaceModelo
     private mixed $data_cadastro;
     private string $logo;
     private string $telefone;
-    
+
     public function tabela()
     {
         return (string) 'empresa';
@@ -19,7 +19,7 @@ class Empresa implements InterfaceModelo
 
     public function modelo()
     {
-          return (array) ['nome_empresa' => (string) '', 'nome_fantasia' => (string) '', 'cnpj' => (string) '', 'endereco' => (string) '', 'data_cadastro' => 'date', 'cidade' => (string) '', 'logo' => (string) '', 'telefone' => (string) ''];
+        return (array) ['nome_empresa' => (string) '', 'nome_fantasia' => (string) '', 'cnpj' => (string) '', 'endereco' => (string) '', 'data_cadastro' => 'date', 'cidade' => (string) '', 'logo' => (string) '', 'telefone' => (string) ''];
     }
 
     /**
@@ -44,8 +44,8 @@ class Empresa implements InterfaceModelo
         $this->cnpj = (string) (isset($dados['cnpj']) ? (string) $dados['cnpj'] : '');
         $this->endereco = (string) (isset($dados['endereco']) ? (string) $dados['endereco'] : '');
         $this->data_cadastro = (isset($dados['data_cadastro']) ? model_date($dados['data_cadastro']) : model_date());
-        $this->logo = (string) (isset($dados['logo']) ? (string) $dados['logo']:'');
-        $this->telefone = (string) (isset($dados['telefone']) ? (string) $dados['telefone']:'');
+        $this->logo = (string) (isset($dados['logo']) ? (string) $dados['logo'] : '');
+        $this->telefone = (string) (isset($dados['telefone']) ? (string) $dados['telefone'] : '');
     }
 
     /**

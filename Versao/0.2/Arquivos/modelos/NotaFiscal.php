@@ -41,7 +41,7 @@ class NotaFiscal implements InterfaceModelo
         $this->data_nota = (isset($dados['data_nota']) ? model_date($dados['data_nota']) : model_date());
         $this->valor_nota = (float) (isset($dados['valor_nota']) ? (float) doubleval(str_replace(',', '.', $dados['valor_nota'])) : 0);
         $this->chave_nota = (string) (isset($dados['chave_nota']) ? (string) $dados['chave_nota'] : '');
-        $this->tipo_nota = (string) (isset($dados['tipo_nota']) ? (string) $dados['tipo_nota']:'OUTRAS');
+        $this->tipo_nota = (string) (isset($dados['tipo_nota']) ? (string) $dados['tipo_nota'] : 'OUTRAS');
     }
 
     public function salvar_dados_arquivo($dados, $file)
@@ -53,18 +53,18 @@ class NotaFiscal implements InterfaceModelo
 
             $pasta = (string) 'anexos/notas_fiscais';
 
-            if(is_dir($pasta) == false){
+            if (is_dir($pasta) == false) {
                 mkdir($pasta, 0777, true);
             }
 
-            $nome_arquivo = (string) $pasta.'/' . $this->chave_nota . "." . $extensao;
+            $nome_arquivo = (string) $pasta . '/' . $this->chave_nota . "." . $extensao;
 
             if (move_uploaded_file($file['arquivo_nota']['tmp_name'], $nome_arquivo)) {
                 return (bool) true;
             } else {
                 return (bool) false;
             }
-        }else{
+        } else {
             return (bool) false;
         }
     }
@@ -80,11 +80,13 @@ class NotaFiscal implements InterfaceModelo
         }
     }
 
-    public function pesquisar($filtro) {
+    public function pesquisar($filtro)
+    {
         return (array) model_one((string) $this->tabela(), (array) $filtro['filtro']);
     }
 
-    public function pesquisar_todos($filtro) {
+    public function pesquisar_todos($filtro)
+    {
         return (array) model_all((string) $this->tabela(), (array) $filtro['filtro'], (array) $filtro['ordenacao'], (int) $filtro['limite']);
     }
 }

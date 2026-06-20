@@ -1,6 +1,3 @@
-configuracao.env
-configuracao_usuario.ini
-.env
 teste.php
 documentos.code-workspace
 json.json
@@ -15,3 +12,5 @@ imagens/produtos/
 funcoes_desenvolver.md
 atualizacao.md
 google.json
+classes/configuracao.php
+sqlSistema.sql

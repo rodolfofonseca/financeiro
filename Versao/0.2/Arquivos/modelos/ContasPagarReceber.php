@@ -26,7 +26,8 @@ class ContasPagarReceber implements InterfaceModelo
         return (string) 'contas_pagar_receber';
     }
 
-    public function modelo(){
+    public function modelo()
+    {
         return (array) ['empresa' => 'objectId', 'nome_conta' => (string) '', 'descricao' => (string) '', 'valor_conta' => (double) 0, 'valor_pago' => (double) 0, 'valor_juro_desconto' => (double) 0, 'tipo_juro_desconto' => (string) '', 'tipo_conta' => (string) '', 'data_cadastro' => 'date', 'data_vencimento' => 'date', 'data_baixa' => 'date', 'status_conta' => (string) '', 'comprovante' => (string) ''];
     }
 
@@ -54,7 +55,7 @@ class ContasPagarReceber implements InterfaceModelo
         $this->data_vencimento = (isset($dados['data_vencimento']) ? model_date($dados['data_vencimento']) : model_date());
         $this->data_baixa = (isset($dados['data_baixa']) ? model_date($dados['data_baixa']) : model_date());
         $this->status_conta = (string) (isset($dados['status_conta']) ? (string) $dados['status_conta'] : 'AGUARDANDO');
-        $this->comprovante = (string) (isset($dados['anexa_documentos']) ? (string) $dados['anexa_documentos']:'NAO');
+        $this->comprovante = (string) (isset($dados['anexa_documentos']) ? (string) $dados['anexa_documentos'] : 'NAO');
     }
 
     public function salvar_dados($dados)
@@ -62,7 +63,7 @@ class ContasPagarReceber implements InterfaceModelo
         $this->colocar_dados($dados);
 
         if ($this->codigo_conta_pagar_receber != null) {
-            return (bool) model_update((string) $this->tabela(), (array)['_id', '===', $this->codigo_conta_pagar_receber], (array) ['empresa' => $this->empresa, 'nome_conta' => (string) $this->nome_conta, 'descricao' => (string) $this->descricao, 'valor_conta' => (float) $this->valor_conta, 'valor_pago' => (float) $this->valor_pago, 'valor_juro_desconto' => (float) $this->valor_juro_desconto, 'tipo_juro_desconto' => (string) $this->tipo_juro_desconto, 'tipo_conta' => (string) $this->tipo_conta, 'data_cadastro' => $this->data_cadastro, 'data_vencimento' => $this->data_vencimento, 'data_baixa' => $this->data_baixa, 'status_conta' => (string) $this->status_conta, 'comprovante' => (string) $this->comprovante]);
+            return (bool) model_update((string) $this->tabela(), (array) ['_id', '===', $this->codigo_conta_pagar_receber], (array) ['empresa' => $this->empresa, 'nome_conta' => (string) $this->nome_conta, 'descricao' => (string) $this->descricao, 'valor_conta' => (float) $this->valor_conta, 'valor_pago' => (float) $this->valor_pago, 'valor_juro_desconto' => (float) $this->valor_juro_desconto, 'tipo_juro_desconto' => (string) $this->tipo_juro_desconto, 'tipo_conta' => (string) $this->tipo_conta, 'data_cadastro' => $this->data_cadastro, 'data_vencimento' => $this->data_vencimento, 'data_baixa' => $this->data_baixa, 'status_conta' => (string) $this->status_conta, 'comprovante' => (string) $this->comprovante]);
         } else {
             return (bool) model_insert((string) $this->tabela(), (array) ['empresa' => $this->empresa, 'nome_conta' => (string) $this->nome_conta, 'descricao' => (string) $this->descricao, 'valor_conta' => (float) $this->valor_conta, 'valor_pago' => (float) $this->valor_pago, 'valor_juro_desconto' => (float) $this->valor_juro_desconto, 'tipo_juro_desconto' => (string) $this->tipo_juro_desconto, 'tipo_conta' => (string) $this->tipo_conta, 'data_cadastro' => $this->data_cadastro, 'data_vencimento' => $this->data_vencimento, 'data_baixa' => $this->data_baixa, 'status_conta' => (string) $this->status_conta, 'comprovante' => (string) $this->comprovante]);
         }
@@ -123,7 +124,8 @@ class ContasPagarReceber implements InterfaceModelo
         return (bool) model_update((string) $this->tabela(), (array) ['and' => [['empresa', '===', model_id($dados['empresa'])], ['data_vencimento', '<=', model_date('', '23:59:59')], ['status_conta', '===', (string) 'AGUARDANDO']]], (array) ['status_conta' => (string) 'VENCIDA']);
     }
 
-    public function alterar_anexo_documento($codigo_conta){
+    public function alterar_anexo_documento($codigo_conta)
+    {
         return (bool) model_update((string) $this->tabela(), ['_id', '===', $codigo_conta], (array) ['comprovante' => (string) 'SIM']);
     }
 
@@ -243,7 +245,8 @@ class ContasPagarReceber implements InterfaceModelo
         return (array) $retorno;
     }
 
-    public function deletar_conta($filtro){
+    public function deletar_conta($filtro)
+    {
         return (bool) model_delete((string) $this->tabela(), (array) $filtro['filtro']);
     }
 }

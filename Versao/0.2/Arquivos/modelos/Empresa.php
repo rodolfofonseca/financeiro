@@ -15,7 +15,8 @@ class Empresa implements InterfaceModelo
         return (string) 'empresa';
     }
 
-    public function modelo(){
+    public function modelo()
+    {
         return (array) ['nome_empresa' => (string) '', 'nome_fantasia' => (string) '', 'cnpj' => (string) '', 'endereco' => (string) '', 'data_cadastro' => 'date', 'cidade' => (string) ''];
     }
 
@@ -36,7 +37,7 @@ class Empresa implements InterfaceModelo
         $this->cnpj = (string) (isset($dados['cnpj']) ? (string) $dados['cnpj'] : '');
         $this->endereco = (string) (isset($dados['endereco']) ? (string) $dados['endereco'] : '');
         $this->data_cadastro = (isset($dados['data_cadastro']) ? model_date($dados['data_cadastro']) : model_date());
-        $this->cidade = (string) (isset($dados['cidade']) ? (string) $dados['cidade']:'');
+        $this->cidade = (string) (isset($dados['cidade']) ? (string) $dados['cidade'] : '');
     }
 
     public function salvar_dados($dados)

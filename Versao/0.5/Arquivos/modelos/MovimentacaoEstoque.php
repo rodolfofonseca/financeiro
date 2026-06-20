@@ -23,7 +23,7 @@ class MovimentacaoEstoque implements InterfaceModelo
     }
     public function modelo()
     {
-        return (array) ['empresa' => 'objectId', 'produto' => 'objectId', 'pedido' => 'objectId','data_movimentacao' => 'date', 'quantidade' => (float) 0, 'tipo_movimentacao' => 'bool'];
+        return (array) ['empresa' => 'objectId', 'produto' => 'objectId', 'pedido' => 'objectId', 'data_movimentacao' => 'date', 'quantidade' => (float) 0, 'tipo_movimentacao' => 'bool'];
     }
 
     /**
@@ -45,7 +45,7 @@ class MovimentacaoEstoque implements InterfaceModelo
 
         $this->empresa = (isset($dados['empresa']) ? model_id($dados['empresa']) : '');
         $this->produto = (isset($dados['produto']) ? model_id($dados['produto']) : '');
-        $this->pedido = (isset($dados['pedido']) ? model_id($dados['pedido']):'');
+        $this->pedido = (isset($dados['pedido']) ? model_id($dados['pedido']) : '');
         $this->data_movimentacao = (isset($dados['data_movimentacao']) ? model_date($dados['data_movimentacao']) : model_date());
         $this->quantidade = (float) (isset($dados['quantidade']) ? (float) floatval(str_replace(',', '.', $dados['quantidade'])) : 0);
         $this->tipo_movimentacao = (bool) (isset($dados['tipo_movimentacao']) ? (bool) filter_var($dados['tipo_movimentacao'], FILTER_VALIDATE_BOOLEAN) : false);
@@ -152,7 +152,8 @@ class MovimentacaoEstoque implements InterfaceModelo
      * @param mixed $filtro
      * @return bool
      */
-    public function deletar_movimentacao($filtro){
+    public function deletar_movimentacao($filtro)
+    {
         return (bool) model_delete((string) $this->tabela(), (array) $filtro['filtro']);
     }
 }
