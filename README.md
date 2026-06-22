@@ -43,6 +43,9 @@ Os uploads ficam em `anexos/`. O Docker Compose usa um volume nomeado para `/var
 # financeiro
 Sistema de controle financeiro para pessoas físicas e jurídicas
 
+## ATUALIZAÇÃO alfa 0.6.1 LANÇAMENTO 21/06/2026
+Correção de pequenos bugs
+
 ## ATUALIZAÇÃO 0.6 LANÇAMENTO 20/06/2026
 Troca do banco de dados para o postgres
 
