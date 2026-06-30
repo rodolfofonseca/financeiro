@@ -113,92 +113,83 @@ class Extratos implements InterfaceModelo
      */
     public function baixar_extrato($dados)
     {
-        // $this->colocar_dados($dados);
+        $this->colocar_dados($dados);
 
-        // $extrato = (array) $this->pesquisar((array) ['filtro' => (array) ['where' => [['codigo_extrato', '=', $this->codigo_extrato]]]]);
+        $extrato = (array) $this->pesquisar((array) ['filtro' => (array) ['where' => [['codigo_extrato', '=', $this->codigo_extrato]]]]);
 
-        // if (empty($extrato) == false) {
-        //     $objeto_conta_fornecedor = new ContasFornecedores();
-        //     $objeto_conta_pagar_receber = new ContasPagarReceber();
-        //     $objeto_usuario = new Usuario();
-        //     $objeto_codigo_barras = new EAN13();
+        if (empty($extrato) == false) {
+            $objeto_conta_fornecedor = new ContasFornecedores();
+            $objeto_conta_pagar_receber = new ContasPagarReceber();
+            $objeto_usuario = new Usuario();
+            $objeto_codigo_barras = new EAN13();
 
-        //     $conta_fornecedor = (array) $objeto_conta_fornecedor->pesquisar((array) ['filtro' => (array) ['fornecedor', '=', $extrato['usuario']]]);
-        //     $usuario = (array) $objeto_usuario->pesquisar((array) ['filtro' => (array) ['_id', '===', $extrato['usuario']]]);
+            date_default_timezone_set('America/Sao_Paulo');
+            $dataHoraAtual = (string) date('Y-m-d');
 
-        //     if (empty($usuario) == false) {
-        //         if (empty($conta_fornecedor) == true) {
-        //             $array_cadastro_conta_fornecedor = (array) ['empresa' => $extrato['empresa'], 'fornecedor' => $extrato['usuario'], 'data_cadastro' => model_date(), 'status_conta' => (bool) true, 'nome_conta' => (string) 'EXTRATO - ' . $usuario['nome_usuario'], 'descricao_conta' => (string) 'CONTA CRIADA AUTOMATICAMENTE PARA O FUNCIONÁRIO ' . $usuario['nome_usuario']];
+            $conta_fornecedor = (array) $objeto_conta_fornecedor->pesquisar((array) ['filtro' => (array) ['where' => [['codigo_usuario', '=', $extrato['codigo_usuario']]]]]);
+            $usuario = (array) $objeto_usuario->pesquisar((array) ['filtro' => (array) ['where' => (array) [['codigo_usuario', '=', $extrato['codigo_usuario']]]]]);
 
-        //             $retorno_cadastro_conta_fornecedor = (bool) $objeto_conta_fornecedor->salvar_dados($array_cadastro_conta_fornecedor);
+            if(empty($usuario) == false){
+                if(empty($conta_fornecedor) == false){
+                    $transacao = (string) $objeto_codigo_barras->getFullCode('');
+                    $array_cadastro_conta_pagar_receber = (array) ['cliente_fornecedor' => (int) $extrato['codigo_usuario'], 'conta_fornecedor' => (int) $conta_fornecedor['codigo_conta_fornecedor'], 'empresa' => (int) $extrato['codigo_empresa'], 'nome_conta' => (string) 'EXTRATO '.$usuario['nome_usuario'], 'descricao' => (string) 'CONTA GERADA AUTOMÁTICAMENTE ATRAVÉS DO EXTRATO', 'valor_conta' => (float) $extrato['valor_liquido'], 'comprovante' => (string) 'NAO', 'boleto' => (string) 'NAO', 'transacao' => (string) $transacao, 'data_cadastro' => (string) $dataHoraAtual, 'data_vencimento' => $dataHoraAtual];
 
-        //             if ($retorno_cadastro_conta_fornecedor == true) {
-        //                 $conta_fornecedor = (array) $objeto_conta_fornecedor->pesquisar((array) ['filtro' => (array) ['fornecedor', '===', $extrato['usuario']]]);
-        //                 if (empty($conta_fornecedor) == true) {
-        //                     return (array) ['status' => (bool) false];
-        //                 }
-        //             } else {
-        //                 return (array) ['status' => (bool) false];
-        //             }
-        //         }
+                    $retorno_conta_pagar_receber = (bool) $objeto_conta_pagar_receber->salvar_dados($array_cadastro_conta_pagar_receber);
 
-        //         $transacao = (string) $objeto_codigo_barras->getFullCode('');
-
-        //         $array_cadastro_conta_pagar_receber = (array) ['empresa' => $extrato['empresa'], 'cliente_fornecedor' => $usuario['_id'], 'conta_fornecedor' => $conta_fornecedor['_id'], 'nome_conta' => (string) 'EXTRATO ' . $usuario['nome_usuario'], 'descricao' => (string) 'CONTA GERADA AUTOMÁTICAMENTE ATRAVÉS DO EXTRATO', 'valor_conta' => (float) $extrato['valor_liquido'], 'valor_pago' => (float) 0, 'valor_juro_desconto' => (float) 0, 'tipo_juro_desconto' => (string) '', 'tipo_conta' => (string) 'PAGAR', 'data_cadastro' => model_date(), 'data_vencimento' => $extrato['data_extrato'], 'data_baixa' => model_date(), 'status_conta' => (string) 'AGUARDANDO', 'comprovante' => (string) 'NAO', 'boleto' => (string) 'NAO', 'transacao' => (string) $transacao];
-
-        //         $retorno_conta_pagar_receber = (bool) $objeto_conta_pagar_receber->salvar_dados($array_cadastro_conta_pagar_receber);
-
-        //         if ($retorno_conta_pagar_receber == true) {
-        //             $array_udpate_extrato = (array) ['status' => (string) 'PAGO'];
-        //             return (array) ['status' => (bool) model_update((string) $this->tabela(), ['_id', '===', $this->codigo_extrato], (array) $array_udpate_extrato)];
-        //         } else {
-        //             return (array) ['status' => (bool) false];
-        //         }
-        //     } else {
-        //         return (array) ['status' => (bool) false];
-        //     }
-        // } else {
-        //     return (array) ['status' => (bool) false];
-        // }
-        return (array) ['status' => (bool) false];
+                    if($retorno_conta_pagar_receber == true){
+                        $array_update_extrato = (array) ['status' => (string) 'PAGO', 'data_pagamento' => (string) $dataHoraAtual];
+                        return (array) ['status' => (bool) model_update((string) $this->tabela(), (array) ['where' => [['codigo_extrato', '=', (int) $this->codigo_extrato]]], $array_update_extrato)];
+                    }else{
+                        return (array) ['status' => (array) $retorno_conta_pagar_receber];
+                    }
+                }else{
+                    return (array) ['status' => (bool) false];
+                }
+            }else{
+                return (array) ['status' => (bool) false];
+            }
+        }else{
+            return (array) ['status' => (bool) false];
+        }
     }
 
-    public function montar_array(){
+    public function montar_array()
+    {
         $dados = (array) [];
 
-        if($this->empresa != 0){
+        if ($this->empresa != 0) {
             $dados['codigo_empresa'] = (int) $this->empresa;
         }
 
-        if($this->usuario != 0){
+        if ($this->usuario != 0) {
             $dados['codigo_usuario'] = (int) $this->usuario;
         }
 
-        if($this->total_bruto != 0){
+        if ($this->total_bruto != 0) {
             $dados['valor_bruto'] = (float) $this->total_bruto;
         }
 
-        if($this->valor_entrada != 0){
+        if ($this->valor_entrada != 0) {
             $dados['valor_entrada'] = (float) $this->valor_entrada;
         }
 
-        if($this->total_desconto != 0){
+        if ($this->total_desconto != 0) {
             $dados['valor_desconto'] = (float) $this->total_desconto;
         }
 
-        if($this->valor_liquido != 0){
+        if ($this->valor_liquido != 0) {
             $dados['valor_liquido'] = (float) $this->valor_liquido;
         }
 
-        if($this->data_extrato != ''){
+        if ($this->data_extrato != '') {
             $dados['data_extrato'] = (string) $this->data_extrato;
         }
 
-        if($this->data_pagamento){
+        if ($this->data_pagamento) {
             $dados['data_pagamento'] = (string) $this->data_pagamento;
         }
 
-        if($this->status_extrato != ''){
+        if ($this->status_extrato != '') {
             $dados['status'] = (string) $this->status_extrato;
         }
 

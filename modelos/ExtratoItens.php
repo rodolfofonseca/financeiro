@@ -18,7 +18,7 @@ class ExtratoItens implements InterfaceModelo
 
     public function modelo()
     {
-        return (array) ['extrato' => 'objectId', 'item_extrato' => 'objectId', 'valor_lancamento_extrato' => (double) 0, 'data_lancamento_extrato' => 'date'];
+        return (array) [];
     }
 
     public function colocar_dados($dados)

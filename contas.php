@@ -34,10 +34,10 @@ router_add('pesquisar_contas', function () {
  */
 router_add('pesquisa_conta', function () {
     $objeto_conta = new Contas();
-    $codigo_conta = (string) (isset($_REQUEST['codigo_conta']) ? (string) $_REQUEST['codigo_conta'] : '');
+    $codigo_conta = (int) (isset($_REQUEST['codigo_conta']) ? (int) intval($_REQUEST['codigo_conta'], 10) : 0);
     $retorno = (array) [];
 
-    if ($codigo_conta != '') {
+    if ($codigo_conta != 0) {
         $retorno = (array) $objeto_conta->pesquisar((array) ['filtro' => (array) ['where' => [['codigo_conta', '=', $codigo_conta]]]]);
     }
 
@@ -67,6 +67,8 @@ router_add('deletar_conta', function () {
  */
 router_add('gerar_excell', function () {
     $objeto_contas = new Contas();
+    $data = new DateTime();
+    $data_atual = $data->format('Y-m-01');
 
     $retorno_contas = $objeto_contas->pesquisar_contas($_REQUEST);
 
@@ -138,7 +140,12 @@ router_add('gerar_excell', function () {
             $sheet->setCellValue('B' . $linha, (string) $contas['descricao']);
 
             $sheet->getStyle('C' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-            $sheet->setCellValue('C' . $linha, (string) $contas['status']);
+
+            if($contas['status'] == true){
+                $sheet->setCellValue('C' . $linha, (string) 'ATIVO');
+            }else{
+                $sheet->setCellValue('C' . $linha, (string) 'INATIVO');
+            }            
 
             $sheet->getStyle('D' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 
@@ -152,8 +159,6 @@ router_add('gerar_excell', function () {
                 $sheet->getStyle('E' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
                 $sheet->setCellValue('E' . $linha, (string) $contas['modulo_contabil']['conta_contabil']);
             }
-
-
 
             if ($visulizar_movimentacao == true) {
                 $linha = $linha + 2;
@@ -176,7 +181,7 @@ router_add('gerar_excell', function () {
 
                 $objeto_movimentacao = new Movimentacao();
 
-                $retorno_movimentacao = $objeto_movimentacao->pesquisar_movimentacoes($_REQUEST);
+                $retorno_movimentacao = $objeto_movimentacao->pesquisar_movimentacoes((array) ['conta' => $contas['codigo_conta'], 'data_inicio' => $data_atual]);
 
                 if (empty($retorno_movimentacao) == false) {
                     foreach ($retorno_movimentacao as $movimentacao) {
@@ -192,7 +197,20 @@ router_add('gerar_excell', function () {
                         $sheet->setCellValue('C' . $linha, (string) convert_date($movimentacao['data_lancamento']));
 
                         $sheet->getStyle('D' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-                        $sheet->setCellValue('D' . $linha, (string) $movimentacao['tipo_lancamento']);
+
+                        if($movimentacao['transferencia'] == false){
+                if($movimentacao['tipo_lancamento'] == true){
+                    $sheet->setCellValue('E' . $linha, (string) 'CREDITO');
+                }else{
+                    $sheet->setCellValue('E' . $linha, (string) 'DEBITO');
+                }
+            }else{
+                if($movimentacao['tipo_lancamento'] == true){
+                    $sheet->setCellValue('E' . $linha, (string) 'TRANFERENCIA CREDITO');
+                }else{
+                    $sheet->setCellValue('E' . $linha, (string) 'TRANSFERENCIA DEBITO');
+                }
+            }
                     }
                     $linha = $linha + 2;
                 }
@@ -469,6 +487,9 @@ router_add('index', function () {
             sistema.abrir_modal(1200, 500, url, 'Relatório de Movimentações');
         }
 
+        /**
+         * Função responsável por gerar a planilha do excell com os dados das contas.
+         */
         function gerar_excell() {
             let nome_conta = document.querySelector('#nome_conta').value;
             let descricao = document.querySelector('#descricao').value;

@@ -95,19 +95,12 @@ router_add('login_usuario', function () {
             $_SESSION['google_agenda'] = (bool) $retorno_sistema['google_agenda'];
         }
 
-        // $objeto_movimentacao = new Movimentacao();
-        // $retorno_movimentacao = (bool) $objeto_movimentacao->deletar_antigo((array) ['empresa' => (string) $_SESSION['codigo_empresa']]);
-
-        // $objeto_contas_pagar_receber = new ContasPagarReceber();
-        // $retorno_contas_pagar_receber = (bool) $objeto_contas_pagar_receber->deletar_contas_pagar_receber_antigas((array) ['empresa' => (string) $_SESSION['codigo_empresa']]);
-
-        if ($versao_sistema == 'alfa 0.6.1') {
+        if ($versao_sistema == 'alfa 0.6.2') {
             header('location:dashboard.php');
         } else {
             header('location:index.php');
         }
     } else {
-        // header('location:dashboard.php');
         header('location:index.php');
     }
 

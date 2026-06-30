@@ -196,21 +196,23 @@ router_add('imprimir_extrato', function () {
             <tbody>
                 <?php
                 foreach ($retorno_extrato_itens as $extrato_item) {
-                    if ($extrato_item['tipo_item_extrato'] == true) {
-                        echo '<tr>';
-                        echo '<td>'.$extrato_item['codigo_extrato_item'].'</td>';
-                        $item_extrato = (array) $objeto_itens_extrato->pesquisar(['filtro' => ['where' => [['codigo_item_extrato', '=', $extrato_item['codigo_item_extrato']]]]]);
-                        echo '<td>' . $item_extrato['nome_item_extrato'] . '</td>';
+                    $item_extrato = (array) $objeto_itens_extrato->pesquisar(['filtro' => ['where' => [['codigo_item_extrato', '=', $extrato_item['codigo_item_extrato']]]]]);
+                    if (empty($item_extrato) == false) {
+                        if ($item_extrato['tipo_item_extrato'] == true) {
+                            echo '<tr>';
+                            echo '<td>' . $extrato_item['codigo_extrato_item'] . '</td>';
+                            echo '<td>' . $item_extrato['nome_item_extrato'] . '</td>';
 
-                        if (array_key_exists('data_lancamento_extrato', $extrato_item) == true) {
-                            echo '<td>' . $extrato_item['data_lancamento_extrato'] . '</td>';
-                        } else {
-                            echo '<td>' . $data->format('d/m/Y') . '</td>';
+                            if (array_key_exists('data_lancamento_extrato', $extrato_item) == true) {
+                                echo '<td>' . $extrato_item['data_lancamento_extrato'] . '</td>';
+                            } else {
+                                echo '<td>' . $data->format('d/m/Y') . '</td>';
+                            }
+
+                            echo '<td class="text-end">R$ ' . formatar_numero($extrato_item['valor_lancamento_extrato'], 2, ',', '.') . '</td>';
+                            echo '</tr>';
+                            $total_proventos = (float) arredondar($total_proventos, '+', $extrato_item['valor_lancamento_extrato']);
                         }
-
-                        echo '<td class="text-end">R$ ' . formatar_numero($extrato_item['valor_lancamento_extrato'], 2, ',', '.') . '</td>';
-                        echo '</tr>';
-                        $total_proventos = (float) arredondar($total_proventos, '+', $extrato_item['valor_lancamento_extrato']);
                     }
                 }
                 ?>
@@ -231,22 +233,25 @@ router_add('imprimir_extrato', function () {
             <tbody>
                 <?php
                 foreach ($retorno_extrato_itens as $extrato_item) {
-                    if ($extrato_item['tipo_item_extrato'] == false) {
-                        echo '<tr>';
-                        echo '<td>'.$extrato_item['codigo_extrato_item'].'</td>';
-                        
-                        $item_extrato = (array) $objeto_itens_extrato->pesquisar(['filtro' => ['where' => [['codigo_item_extrato', '=', $extrato_item['codigo_item_extrato']]]]]);
-                        echo '<td>' . $item_extrato['nome_item_extrato'] . '</td>';
+                    $item_extrato = (array) $objeto_itens_extrato->pesquisar(['filtro' => ['where' => [['codigo_item_extrato', '=', $extrato_item['codigo_item_extrato']]]]]);
 
-                        if (array_key_exists('data_lancamento_extrato', $extrato_item) == true) {
-                            echo '<td>' . $extrato_item['data_lancamento_extrato'] . '</td>';
-                        } else {
-                            echo '<td>' . $data->format('d/m/Y') . '</td>';
+                    if (empty($item_extrato) == false) {
+                        if ($item_extrato['tipo_item_extrato'] == false) {
+                            echo '<tr>';
+                            echo '<td>' . $extrato_item['codigo_extrato_item'] . '</td>';
+
+                            echo '<td>' . $item_extrato['nome_item_extrato'] . '</td>';
+
+                            if (array_key_exists('data_lancamento_extrato', $extrato_item) == true) {
+                                echo '<td>' . $extrato_item['data_lancamento_extrato'] . '</td>';
+                            } else {
+                                echo '<td>' . $data->format('d/m/Y') . '</td>';
+                            }
+
+                            echo '<td class="text-end">R$ ' . formatar_numero($extrato_item['valor_lancamento_extrato'], 2, ',', '.') . '</td>';
+                            echo '</tr>';
+                            $total_descontos = (float) arredondar($total_descontos, '+', $extrato_item['valor_lancamento_extrato']);
                         }
-
-                        echo '<td class="text-end">R$ ' . formatar_numero($extrato_item['valor_lancamento_extrato'], 2, ',', '.') . '</td>';
-                        echo '</tr>';
-                        $total_descontos = (float) arredondar($total_descontos, '+', $extrato_item['valor_lancamento_extrato']);
                     }
                 }
 
@@ -410,8 +415,20 @@ router_add('index', function () {
          * @param {*} codigo_extrato
          */
         function baixar_extrato(codigo_extrato) {
-            sistema.request.post('/extrato.php', { 'rota': 'baixar_extrato', 'codigo_extrato': codigo_extrato }, function (retorno) {
-                validar_retorno(retorno, '/extrato.php');
+            Swal.fire({
+                title: "Marcar como pago?",
+                text: "Deseja realmente marcar como pago esse extrato? Ao marcar como pago, a conta será criada automáticamente pelo sistema!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "SIM, Marcar!"
+            }).then((result) => {
+                if (result.isConfirmed){
+                    sistema.request.post('/extrato.php', { 'rota': 'baixar_extrato', 'codigo_extrato': codigo_extrato }, function (retorno) {
+                        validar_retorno(retorno, '/extrato.php');
+                    });
+                } 
             });
         }
 
@@ -630,18 +647,18 @@ router_add('cadastro_extrato', function () {
                 }
 
                 let dados = {
-                        'rota': 'salvar_dados',
-                        'codigo_extrato': codigo_extrato,
-                        'empresa': EMPRESA,
-                        'usuario': usuario,
-                        'total_bruto': valor_bruto,
-                        'valor_entrada': valor_entrada,
-                        'valor_liquido': valor_liquido,
-                        'total_desconto': valor_desconto,
-                        'data_extrato': data_extrato,
-                        'data_pagamento': data_pagamento,
-                        'status_extrato': status_extratro
-                    };
+                    'rota': 'salvar_dados',
+                    'codigo_extrato': codigo_extrato,
+                    'empresa': EMPRESA,
+                    'usuario': usuario,
+                    'total_bruto': valor_bruto,
+                    'valor_entrada': valor_entrada,
+                    'valor_liquido': valor_liquido,
+                    'total_desconto': valor_desconto,
+                    'data_extrato': data_extrato,
+                    'data_pagamento': data_pagamento,
+                    'status_extrato': status_extratro
+                };
 
                 if (validacao == true) {
                     sistema.request.post('/extrato.php', dados, function (retorno) {

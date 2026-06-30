@@ -125,14 +125,16 @@ class ContasPagarReceber implements InterfaceModelo
      */
     public function baixar_contas($dados)
     {
-        $this->colocar_dados($dados);
+        $this->colocar_dados($dados);        
 
         $conta = (array) $this->pesquisar((array) ['filtro' => (array) ['where' => [['codigo_conta_pagar_receber', '=', $this->codigo_conta_pagar_receber]]]]);
 
+        
         if (empty($conta) == false) {
             $this->status_conta = (string) 'PAGO';
             $retorno_update = (bool) model_update((string) $this->tabela(), ['where' => [['codigo_conta_pagar_receber', '=', $this->codigo_conta_pagar_receber]]], (array) $this->montar_array());
-
+            // file_put_contents('conta.json', json_encode(['conta' => $conta, 'update' => $retorno_update]));
+            
             if ($retorno_update == true) {
                 $objeto_movimentacao = new Movimentacao();
                 $objeto_usuario = new Usuario();
@@ -149,9 +151,8 @@ class ContasPagarReceber implements InterfaceModelo
 
                 $retorno_movimentacao = (bool) $objeto_movimentacao->salvar_dados($dados_movimentacao);
 
-                $retorno_update_usuario = (bool) $objeto_usuario->salvar_dados((array) ['codigo_usuario' => (int) intval($conta['codigo_usuario'], 10), 'ultimo_login' => model_date(), 'status_usuario' => (bool) true]);
-
-                return (bool) $retorno_movimentacao;
+                $retorno_update_usuario = (bool) $objeto_usuario->update_ultimo_login((array) ['codigo_usuario' => (int) intval($conta['codigo_usuario'], 10)]);
+                return (bool) true;
             } else {
                 return (bool) false;
             }
@@ -584,15 +585,15 @@ class ContasPagarReceber implements InterfaceModelo
         }
 
         if ($this->valor_conta != 0) {
-            $dados['valor_conta'] = (string) formatar_numero($this->valor_conta, 2, '.');
+            $dados['valor_conta'] = (float) formatar_numero($this->valor_conta, 2, '.');
         }
 
         if ($this->valor_pago != 0) {
-            $dados['valor_pago'] = (string) formatar_numero($this->valor_pago, 2, '.');
+            $dados['valor_pago'] = (float) formatar_numero($this->valor_pago, 2, '.');
         }
 
         if ($this->valor_juro_desconto != 0) {
-            $dados['valor_juro_desconto'] = (string) formatar_numero($this->valor_juro_desconto, 2, '.');
+            $dados['valor_juro_desconto'] = (float) formatar_numero($this->valor_juro_desconto, 2, '.');
         }
 
         if ($this->data_cadastro != '') {

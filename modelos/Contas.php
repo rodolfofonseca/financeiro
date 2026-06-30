@@ -152,10 +152,6 @@ class Contas implements InterfaceModelo
     public function montar_array(){
         $dados = (array) [];
 
-        if($this->saldo_conta != 0){
-            $dados['saldo_conta'] = (float) $this->saldo_conta;
-        }
-
         if($this->empresa != 0){
             $dados['codigo_empresa'] = (int) $this->empresa;
         }
@@ -173,6 +169,7 @@ class Contas implements InterfaceModelo
         }
 
         $dados['status'] = (bool) $this->status;
+        $dados['saldo_conta'] = (float) $this->saldo_conta;
 
         return (array) $dados;
     }

@@ -45,6 +45,9 @@ router_add('deletar_movimentacao', function () {
     echo json_encode(['status' => (bool) $retorno]);
 });
 
+/**
+ * TODO Rota responsável por gerar o relatório do excell com as contas e as movimentações.
+ */
 router_add('gerar_excell', function () {
     $objeto_movimentacao = new Movimentacao();
     $login_usuario = (string) (isset($_REQUEST['login_usuario']) ? (string) $_REQUEST['login_usuario'] : '');
@@ -105,7 +108,20 @@ router_add('gerar_excell', function () {
             $sheet->setCellValue('D' . $linha, (string) convert_date($movimentacao['data_lancamento'], 'd/m/Y H:i:s'));
 
             $sheet->getStyle('E' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-            $sheet->setCellValue('E' . $linha, (string) $movimentacao['tipo_lancamento']);
+
+            if($movimentacao['transferencia'] == false){
+                if($movimentacao['tipo_lancamento'] == true){
+                    $sheet->setCellValue('E' . $linha, (string) 'CREDITO');
+                }else{
+                    $sheet->setCellValue('E' . $linha, (string) 'DEBITO');
+                }
+            }else{
+                if($movimentacao['tipo_lancamento'] == true){
+                    $sheet->setCellValue('E' . $linha, (string) 'TRANFERENCIA CREDITO');
+                }else{
+                    $sheet->setCellValue('E' . $linha, (string) 'TRANSFERENCIA DEBITO');
+                }
+            }
         }
 
         $writer = new Xlsx($spreadsheet);
@@ -286,7 +302,7 @@ router_add('index', function () {
             sistema.request.post('/contas.php', {
                 'rota': 'pesquisar_contas',
                 'empresa': codigo_empresa,
-                'status': 'ATIVO'
+                'status': true
             }, function (retorno) {
                 let select = document.querySelector('#conta');
                 let conta = retorno.dados;

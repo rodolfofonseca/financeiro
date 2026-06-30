@@ -1,25 +1,16 @@
 <?php
-function pesquisa_banco_aggregate($tabela, $pipeline)
-{
-  $classe = new DB();
-  $retorno = $classe->connect($tabela);
-  $connection = $classe->connection;
-
-  return $connection->aggregate($pipeline, ['allowDiskUse' => TRUE]);
-}
-
 /**
  * Função responsável por realizar o arredondamento de cálculos
- * @param double $valor valor em reais
- * @param double $operacao que deseja realizar dentro da função! EX '*'
- * @param double $quantidade a quantidade do item
+ * @param float $valor valor em reais
+ * @param float $operacao que deseja realizar dentro da função! EX '*'
+ * @param float $quantidade a quantidade do item
  * @param int $casas_decimais a quantidade de casas decimais que deseja que a função retorne 
  */
 function arredondar($valor, $operacao = '', $quantidade = null, $casas_decimais = 2)
 {
   //  converte a quantidade que foi recebida pelo parâmetro em float para garantir que estaja no tipo correto
-  $valor = (double) doubleval($valor);
-  $quantidade = (double) doubleval($quantidade);
+  $valor = (float) doubleval($valor);
+  $quantidade = (float) doubleval($quantidade);
 
   //Se a quantidade for maior que zero realiza o cálculo de acordo com a operação que foi recebida por parâmetro.
   if ($quantidade != null && $operacao != '') {
@@ -35,12 +26,12 @@ function arredondar($valor, $operacao = '', $quantidade = null, $casas_decimais 
     }
 
     //O valor precisa ser formatado para calcular corretamente quando for por ex: 15.549888888880;
-    $valor = (double) formatar_numero($valor, 4, '.', '');
+    $valor = (float) formatar_numero($valor, 4, '.', '');
   }
   // verifica se o valor será um inteiro, para retorná-lo de forma direta, sem tratamento
   if (mb_strpos(strval($valor), '.')) {
     $auxPrecisao = (int) 3;
-    $auxComparacao = (double) 5 * pow(10, $auxPrecisao - 1);
+    $auxComparacao = (float) 5 * pow(10, $auxPrecisao - 1);
 
     $ultimoPonto = strripos($valor, '.') + 1;
     $valor = substr($valor, 0, $ultimoPonto) . substr($valor, $ultimoPonto, 4); // <- deixo o número com 4 casas decimais, caso vier a mais ou a menos
@@ -60,22 +51,22 @@ function arredondar($valor, $operacao = '', $quantidade = null, $casas_decimais 
       }
     }
 
-    $numero = (double) round(($numero / pow(10, $casas_decimais)), intval($casas_decimais, 10));
-    return doubleval($numero);
+    $numero = (float) round(($numero / pow(10, $casas_decimais)), intval($casas_decimais, 10));
+    return floatval($numero);
   }
   return $valor;
 }
 
 /** FORMATAR NÚMERO
  * - Responsável por alterar a formatação do valor passado
- * @param $numero Deve ser informado o número a ser formatado
- * @param $decimais Pode ser informado a quantidade de números decimais
- * @param $decimal Pode ser informado o separador do decimal
- * @param $milhar Pode ser informado o separador dos milhares
+ * @param mixed $numero Deve ser informado o número a ser formatado
+ * @param mixed $decimais Pode ser informado a quantidade de números decimais
+ * @param mixed $decimal Pode ser informado o separador do decimal
+ * @param mixed $milhar Pode ser informado o separador dos milhares
  */
 function formatar_numero($numero, $decimais = 2, $decimal = ',', $milhar = '')
 {
-  $numero = (double) arredondar($numero, '', 0, $decimais);
+  $numero = (float) arredondar($numero, '', 0, $decimais);
   return (string) number_format($numero, $decimais, $decimal, $milhar);
 }
 ?>

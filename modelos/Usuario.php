@@ -50,8 +50,8 @@ class Usuario implements InterfaceModelo
     public function colocar_dados($dados)
     {
         if (array_key_exists('codigo_usuario', $dados) == true) {
-            if ($dados['codigo_usuario'] != '') {
-                $this->id_usuario = $dados['codigo_usuario'];
+            if ($dados['codigo_usuario'] != 0) {
+                $this->id_usuario = (int) intval($dados['codigo_usuario'], 10);
             } else {
                 $this->id_usuario = 0;
             }

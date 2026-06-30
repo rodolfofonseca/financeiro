@@ -46,7 +46,12 @@ function montar_corpo_excell_contas($sheet, $contas, $linha)
     }
 
     $sheet->getStyle('E' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-    $sheet->getCell('E' . $linha)->setValue((string) $contas['valor_conta'])->getStyle()->getNumberFormat()->setFormatCode('#,##0.00');
+
+    if($contas['valor_conta'] == null){
+        $sheet->getCell('E' . $linha)->setValue((string) '0')->getStyle()->getNumberFormat()->setFormatCode('#,##0.00');
+    }else{
+        $sheet->getCell('E' . $linha)->setValue((string) $contas['valor_conta'])->getStyle()->getNumberFormat()->setFormatCode('#,##0.00');
+    }
 
     $sheet->getStyle('F' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
     if ($contas['status_conta'] == 'PAGO') {
@@ -82,12 +87,13 @@ function montar_corpo_excell_contas($sheet, $contas, $linha)
 
     $sheet->getStyle('K' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 
-    if ($contas['tipo_conta'] == 'RECEBER') {
+    if ($contas['tipo_conta'] == true) {
         $sheet->getStyle('K' . $linha)->getFont()->setBold(true);
+        $sheet->setCellValue('K' . $linha, (string) 'RECEBER');
     } else {
         $sheet->getStyle('K' . $linha)->getFont()->setBold(false);
+        $sheet->setCellValue('K' . $linha, (string) 'PAGAR');
     }
-    $sheet->setCellValue('K' . $linha, (string) $contas['tipo_conta']);
 
     $sheet->getStyle('L' . $linha)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 
@@ -797,10 +803,9 @@ router_add('index', function () {
                         }
 
                         linha.appendChild(sistema.gerar_td(['text-left'], sistema.cortar_string(conta.nome_conta, 15), 'inner', false, '', 'CLIENTE/FORNECEDOR('+nome_usuario+')'));
-                        linha.appendChild(sistema.gerar_td(['text-left'], sistema.cortar_string(conta.descricao, 30), 'inner', false, '', conta.descricao));
 
                         if (conta.hasOwnProperty('transacao') == true) {
-                            linha.appendChild(sistema.gerar_td(['text-left', 'fw-bold'], conta.transacao, 'inner', false, '', conta.transacao));
+                            linha.appendChild(sistema.gerar_td(['text-left', 'fw-bold'], conta.transacao, 'inner', false, '', conta.descricao));
                         } else {
                             linha.appendChild(sistema.gerar_td(['text-left'], '', 'inner', false, '', ''));
                         }
@@ -1059,7 +1064,7 @@ router_add('index', function () {
                 sistema.request.post('/contas.php', {
                     'rota': 'pesquisar_contas',
                     'empresa': EMPRESA,
-                    'status': 'ATIVO'
+                    'status': true
                 }, function (retorno) {
                     let contas = retorno.dados;
                     let tamanho_retorno = contas.length;
@@ -1106,7 +1111,6 @@ router_add('index', function () {
 
                 sistema.request.post('/contas_pagar_receber.php', objeto_json, function (retorno) {
                     validar_retorno(retorno, '/contas_pagar_receber.php');
-                    console.log(retorno);
                 });
 
             }
@@ -1273,7 +1277,6 @@ router_add('index', function () {
                                                     <tr class="text-center">
                                                         <th scope="col">#</th>
                                                         <th scope="col">Nome Conta</th>
-                                                        <th scope="col">Descrição</th>
                                                         <th scope="col">Transação</th>
                                                         <th scope="col">Valor</th>
                                                         <th scope="col">Vencimento</th>
