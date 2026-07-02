@@ -81,26 +81,37 @@ class FechamentoContabilGeral implements InterfaceModelo
     {
         $this->colocar_dados($dados);        
 
-        $data_inicial = (string) $this->ano_referencia . '-' . $this->mes_referencia . '-01';
         $data_final = (string) '';
+        $data_inicial = (string) '';
+
+        if($this->mes_referencia < 10){
+            $data_inicial = (string) $this->ano_referencia . '-0' . $this->mes_referencia . '-01';
+        }else{
+            $data_inicial = (string) $this->ano_referencia . '-' . $this->mes_referencia . '-01';
+        }
 
         if ($this->mes_referencia == 4 || $this->mes_referencia == 6 || $this->mes_referencia == 9 || $this->mes_referencia == 11) {
-            $data_final = (string) $this->ano_referencia . '-' . $this->mes_referencia . '-30';
+            if($this->mes_referencia < 10){
+                $data_final = (string) $this->ano_referencia . '-0' . $this->mes_referencia . '-30';
+            }else{
+                $data_final = (string) $this->ano_referencia . '-' . $this->mes_referencia . '-30';
+            }
         } else if ($this->mes_referencia == 2) {
-            $data_final = (string) $this->ano_referencia . '-' . $this->mes_referencia . '-28';
-        } else {
-            $data_final = (string) $this->ano_referencia . '-' . $this->mes_referencia . '-31';
+            $data_final = (string) $this->ano_referencia . '-0' . $this->mes_referencia . '-28';
+        } else if($this->mes_referencia <10){
+            $data_final = (string) $this->ano_referencia . '-0' . $this->mes_referencia . '-31';
         }
 
         $objeto_movimentacao = new Movimentacao();
-
-        $retorno_pesquisa_movimentacao = (array) $objeto_movimentacao->pesquisar_todos(['filtro' => (array) ['where' => [['codigo_empresa', '=', $this->empresa], ['data_lancamento', '>=', model_date($data_inicial, '00:00:00')], ['data_lancamento', '<=', model_date($data_final, '23:59:59')]]], 'ordenacao' => (array) [['data_movimentacao', 'ASC']], 'limite' => (int) 0]);
+        
+        $filtro = (array) ['filtro' => ['where' => [['codigo_empresa', '==', $this->empresa], ['data_lancamento', '>=', model_date($data_inicial, '00:00:00')], ['data_lancamento', '<=', model_date($data_final, '23:59:59')]]], 'ordenacao' => [], 'limite' => (int) 0];
+        $retorno_pesquisa_movimentacao = (array) $objeto_movimentacao->pesquisar_todos($filtro);
 
         if (empty($retorno_pesquisa_movimentacao) == false) {
             foreach ($retorno_pesquisa_movimentacao as $movimentacao) {
-                if ($movimentacao['tipo_lancamento'] == 'CREDITO') {
+                if ($movimentacao['tipo_lancamento'] == true) {
                     $this->total_credito = (double) arredondar($this->total_credito, '+', $movimentacao['valor_lancamento'], 2);
-                } else if ($movimentacao['tipo_lancamento'] == 'DEBITO') {
+                } else if ($movimentacao['tipo_lancamento'] == false) {
                     $this->total_debito = (double) arredondar($this->total_debito, '+', $movimentacao['valor_lancamento'], 2);
                 }
             }
@@ -115,8 +126,6 @@ class FechamentoContabilGeral implements InterfaceModelo
         } else {
             $this->resultado = (string) 'NEUTRO';
         }
-
-        // file_put_contents('dados.json', json_encode(['dados' => $dados, 'variavel' => $this->empresa, 'montado' => $this->montar_array()]));
 
         return (bool) model_insert((string) $this->tabela(), (array) $this->montar_array());
     }

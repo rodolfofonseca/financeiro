@@ -43,6 +43,9 @@ Os uploads ficam em `anexos/`. O Docker Compose usa um volume nomeado para `/var
 # financeiro
 Sistema de controle financeiro para pessoas físicas e jurídicas
 
+## ATUALIZAÇÃO alfa 0.7 LANÇAMENTO 02/07/2026
+Correção do Fechamento contábil para calcular o fechamento de forma correta
+
 ## ATUALIZAÇÃO alfa 0.6.2 LANÇAMENTO 30/06/2026
 Correção dos lançamentos de movimentações, para deixar o saldo da conta ficar negativo <br/>
 Correção de relatórios do excell<br/>
