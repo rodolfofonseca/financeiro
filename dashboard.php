@@ -37,7 +37,7 @@ router_add('index', function () {
     $retorno_contas_futuras = (array) $objeto_contas_pagar_receber->relatorio_contas_pagar_mensal(EMPRESA, $ano_atual);
     $retorno_contas_vencidas = (array) $objeto_contas_pagar_receber->somar_conta_vencida(EMPRESA);
 
-    $retorno_fechamento_contabil = (array) $objeto_fechamento_contabil_geral->pesquisar_todos((array)['filtro' => ['where' => [['codigo_empresa', '=', EMPRESA]]], 'ordenacao' => (array) [['codigo_fechamento_contabil_geral', 'DESC']], 'limite' => (int) 12]);
+    $retorno_fechamento_contabil = (array) $objeto_fechamento_contabil_geral->pesquisar_todos((array) ['filtro' => ['where' => [['codigo_empresa', '=', EMPRESA]]], 'ordenacao' => (array) [['codigo_fechamento_contabil_geral', 'ASC']], 'limite' => (int) 12]);
     ?>
     <script>
         const CORES = {
@@ -114,7 +114,7 @@ router_add('index', function () {
                     nomes['data' + soma_contador] = conta.nome_conta + ' ( = ) 0';
                 } else if (conta.saldo_conta < 0) {
                     nomes['data' + soma_contador] = conta.nome_conta + ' ( - ) ' + conta.saldo_conta;
-                } else if(conta.saldo_conta > 0){
+                } else if (conta.saldo_conta > 0) {
                     nomes['data' + soma_contador] = conta.nome_conta + ' ( + ) ' + conta.saldo_conta;
                 }
 
@@ -150,7 +150,7 @@ router_add('index', function () {
             sistema.each(CONTAS_PAGAR_RECEBER, function (contador, conta) {
                 let soma_contador = (contador + 1);
 
-                nomes['data' + soma_contador] = conta['tipo_conta']+' '+conta['status_conta'] + ' (' + conta['quantidade'] + ') R$: ' + sistema.number_format(conta['total_previsto']);
+                nomes['data' + soma_contador] = conta['tipo_conta'] + ' ' + conta['status_conta'] + ' (' + conta['quantidade'] + ') R$: ' + sistema.number_format(conta['total_previsto']);
                 valor_contas.push(['data' + soma_contador, conta['total_previsto']]);
             });
 
@@ -183,10 +183,10 @@ router_add('index', function () {
             sistema.each(CONTAS_PAGAR_MES, function (contador, conta) {
                 let soma_contador = (contador + 1);
 
-                if(conta['total_baixado'] != 0){
+                if (conta['total_baixado'] != 0) {
                     nomes['data' + soma_contador] = conta['tipo_conta'] + ' ' + conta['status_conta'] + ' ' + sistema.number_format(conta['total_baixado']);
                     valor_contas.push(['data' + soma_contador, conta['total_baixado']]);
-                }else{
+                } else {
                     nomes['data' + soma_contador] = conta['tipo_conta'] + ' ' + conta['status_conta'] + ' ' + sistema.number_format(conta['total_previsto']);
                     valor_contas.push(['data' + soma_contador, conta['total_previsto']]);
                 }
@@ -221,10 +221,10 @@ router_add('index', function () {
             sistema.each(CONTAS_PAGAR_MES_ANTERIOR, function (contador, conta) {
                 let soma_contador = (contador + 1);
 
-                if(conta['total_baixado'] != 0){
+                if (conta['total_baixado'] != 0) {
                     nomes['data' + soma_contador] = conta['tipo_conta'] + ' ' + conta['status_conta'] + ' ' + sistema.number_format(conta['total_baixado']);
                     valor_contas.push(['data' + soma_contador, conta['total_baixado']]);
-                }else{
+                } else {
                     nomes['data' + soma_contador] = conta['tipo_conta'] + ' ' + conta['status_conta'] + ' ' + sistema.number_format(conta['total_previsto']);
                     valor_contas.push(['data' + soma_contador, conta['total_previsto']]);
                 }
@@ -259,10 +259,10 @@ router_add('index', function () {
             sistema.each(CONTAS_PAGAR_MES_PROXIMO, function (contador, conta) {
                 let soma_contador = (contador + 1);
 
-                if(conta['total_baixado'] != 0){
+                if (conta['total_baixado'] != 0) {
                     nomes['data' + soma_contador] = conta['tipo_conta'] + ' ' + conta['status_conta'] + ' ' + sistema.number_format(conta['total_baixado']);
                     valor_contas.push(['data' + soma_contador, conta['total_baixado']]);
-                }else{
+                } else {
                     nomes['data' + soma_contador] = conta['tipo_conta'] + ' ' + conta['status_conta'] + ' ' + sistema.number_format(conta['total_previsto']);
                     valor_contas.push(['data' + soma_contador, conta['total_previsto']]);
                 }
@@ -291,36 +291,44 @@ router_add('index', function () {
          * Função responsável por montar o relatório de fechamento contábil
         */
         function relatorio_fechamento_contabil() {
+
             let debito = ['data1'];
             let credito = ['data2'];
             let resultado = ['data3'];
+            let categorias = [];
+
+            const meses = [
+                '',
+                'JANEIRO',
+                'FEVEREIRO',
+                'MARÇO',
+                'ABRIL',
+                'MAIO',
+                'JUNHO',
+                'JULHO',
+                'AGOSTO',
+                'SETEMBRO',
+                'OUTUBRO',
+                'NOVEMBRO',
+                'DEZEMBRO'
+            ];
+
             let names = {
-                'data1': 'DEBITO',
-                'data2': 'CRÉDITO',
-                'data3': 'RESULTADO'
+                data1: 'DÉBITO',
+                data2: 'CRÉDITO',
+                data3: 'RESULTADO'
             };
 
             sistema.each(FECHAMENTO_CONTABIL, function (contador, fechamento) {
-                if(fechamento.total_debito != null){
-                    debito.push(fechamento.total_debito);
-                }else{
-                    debito.push(0);    
-                }
 
-                if(fechamento.total_credito != null){
-                    credito.push(fechamento.total_credito);
-                }else{
-                    credito.push(0);
-                }
+                categorias.push(meses[fechamento.mes_referencia]);
 
-                if(fechamento.valor_resultado != null){
-                    resultado.push(fechamento.valor_resultado);
-                }else{
-                    resultado.push(0);
-                }
+                debito.push(fechamento.total_debito || 0);
+                credito.push(fechamento.total_credito || 0);
+                resultado.push(fechamento.valor_resultado || 0);
             });
 
-            var chart = c3.generate({
+            c3.generate({
                 bindto: '#fechamento_contabil',
                 data: {
                     columns: [
@@ -338,88 +346,83 @@ router_add('index', function () {
                 axis: {
                     x: {
                         type: 'category',
-                        categories: ['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO']
-                    },
-                },
-                legend: {
-                    show: false,
-                },
-                padding: {
-                    bottom: 0,
-                    top: 0
-                },
-            });
-        }
-
-        /** 
-         * Função responsável por montar o relatório de histório de contas
-        */
-        function historico_contas() {
-
-            let series = {};
-            let categories = [];
-            let mesesUnicos = [];
-
-            sistema.each(CONTAS_FUTURAS, function (contador, contas) {
-                let chaveMes = contas.ano + '-' + String(contas.mes).padStart(2, '0');
-
-                let chaveSerie = contas.tipo_conta + ' - ' + contas.status_conta;
-
-                if (!mesesUnicos.includes(chaveMes)) {
-                    mesesUnicos.push(chaveMes);
-                }
-
-                if (!series[chaveSerie]) {
-                    series[chaveSerie] = [chaveSerie];
-                }
-
-                if (!series[chaveSerie + '_' + chaveMes]) {
-                    series[chaveSerie + '_' + chaveMes] = contas.valor_total;
-                }
-            });
-
-            mesesUnicos.sort();
-
-            let columns = [];
-
-            Object.keys(series).forEach(function (key) {
-
-                if (key.indexOf('_') === -1) {
-
-                    let arr = [key];
-                    
-                    mesesUnicos.forEach(function (mes) {
-
-                        let valor = series[key + '_' + mes] || 0;
-                        arr.push(valor);
-
-                    });
-
-                    columns.push(arr);
-                }
-            });
-
-            var chart = c3.generate({
-                bindto: '#historico_contas',
-                data: {
-                    columns: columns,
-                    type: 'spline'
-                },
-                axis: {
-                    x: {
-                        type: 'category',
-                        categories: mesesUnicos
+                        categories: categorias
                     }
                 },
                 legend: {
-                    show: true
-                },
-                padding: {
-                    bottom: 0,
-                    top: 0
+                    show: false
                 }
             });
         }
+            /** 
+             * Função responsável por montar o relatório de histório de contas
+            */
+            function historico_contas() {
+
+                let series = {};
+                let categories = [];
+                let mesesUnicos = [];
+
+                sistema.each(CONTAS_FUTURAS, function (contador, contas) {
+                    let chaveMes = contas.ano + '-' + String(contas.mes).padStart(2, '0');
+
+                    let chaveSerie = contas.tipo_conta + ' - ' + contas.status_conta;
+
+                    if (!mesesUnicos.includes(chaveMes)) {
+                        mesesUnicos.push(chaveMes);
+                    }
+
+                    if (!series[chaveSerie]) {
+                        series[chaveSerie] = [chaveSerie];
+                    }
+
+                    if (!series[chaveSerie + '_' + chaveMes]) {
+                        series[chaveSerie + '_' + chaveMes] = contas.valor_total;
+                    }
+                });
+
+                mesesUnicos.sort();
+
+                let columns = [];
+
+                Object.keys(series).forEach(function (key) {
+
+                    if (key.indexOf('_') === -1) {
+
+                        let arr = [key];
+
+                        mesesUnicos.forEach(function (mes) {
+
+                            let valor = series[key + '_' + mes] || 0;
+                            arr.push(valor);
+
+                        });
+
+                        columns.push(arr);
+                    }
+                });
+
+                var chart = c3.generate({
+                    bindto: '#historico_contas',
+                    data: {
+                        columns: columns,
+                        type: 'spline'
+                    },
+                    axis: {
+                        x: {
+                            type: 'category',
+                            categories: mesesUnicos
+                        }
+                    },
+                    legend: {
+                        show: true
+                    },
+                    padding: {
+                        bottom: 0,
+                        top: 0
+                    }
+                });
+            }
     </script>
 
     <div class="page-wrapper">
@@ -567,15 +570,15 @@ router_add('index', function () {
             </div>
         </div>
         <script>
-            window.onload = function () {
-                montar_relatorio_contas();
-                montar_relatorio_contas_pagar();
-                relatorio_fechamento_contabil();
-                historico_contas();
-                montar_relatorio_contas_pagar_mes();
-                montar_relatorio_contas_pagar_mes_anterior();
-                montar_relatorio_contas_pagar_mes_proximo();
-            }
+                window.onload = function () {
+                    montar_relatorio_contas();
+                    montar_relatorio_contas_pagar();
+                    relatorio_fechamento_contabil();
+                    historico_contas();
+                    montar_relatorio_contas_pagar_mes();
+                    montar_relatorio_contas_pagar_mes_anterior();
+                    montar_relatorio_contas_pagar_mes_proximo();
+                }
         </script>
         <?php
         require_once 'includes/footer.php';

@@ -89,11 +89,15 @@ class ItensPedidos implements InterfaceModelo
 
     /** 
      * Função responsável por retornar o código do item do pedido
-     * @param BysonId $this->codigo_itens_pedido = retorna o código em objeto do mongo.
+     * @param mixed $this->codigo_itens_pedido = retorna o código em objeto do mongo.
      */
     public function get_codigo_item_pedido()
     {
         return $this->codigo_itens_pedido;
+    }
+
+    public function montar_array(){
+        return (array) [];
     }
 }
 ?>

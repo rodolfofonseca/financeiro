@@ -127,5 +127,10 @@ class CustoMedio implements InterfaceModelo
             $this->valor_custo = (double) arredondar((double) $valor_custo_temp, (string) '/', (int) $quantidade_itens_custo, (int) 2);
         }
     }
+
+    public function montar_array()
+    {
+        return (array) [];
+    }
 }
 ?>

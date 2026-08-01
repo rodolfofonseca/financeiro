@@ -443,4 +443,8 @@ class Pedidos implements InterfaceModelo
 
         return (bool) model_update((string) $this->tabela(), (array) ['_id', '===', $this->codigo_pedido], (array) ['status' => (string) 'CANCELADO']);
     }
+
+    public function montar_array(){
+        return (array) [];
+    }
 }

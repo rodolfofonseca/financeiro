@@ -95,7 +95,7 @@ router_add('login_usuario', function () {
             $_SESSION['google_agenda'] = (bool) $retorno_sistema['google_agenda'];
         }
 
-        if ($versao_sistema == 'alfa 0.7') {
+        if ($versao_sistema == 'alfa 0.8') {
             header('location:dashboard.php');
         } else {
             header('location:index.php');
