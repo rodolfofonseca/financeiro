@@ -43,7 +43,15 @@ Os uploads ficam em `anexos/`. O Docker Compose usa um volume nomeado para `/var
 # financeiro
 Sistema de controle financeiro para pessoas físicas e jurídicas
 
-## ATUALIZAÇÃO alga 0.8 LANÇAMENTO 01/08/2026
+## ATUALIZAÇÃO alfa 0.0.1 LANÇAMENTO 03/09/2026
+Correção de Bugs
+
+## ATUALIZAÇÃO alfa 0.9 LANÇAMENTO 31/08/2026
+Correção de Bugs
+Alteração da forma como o sistema apresenta as contas a pagar e a receber
+Correção do sistema de salvar foto do avatar
+
+## ATUALIZAÇÃO alfa 0.8 LANÇAMENTO 01/08/2026
 Correção de Bugs
 
 ## ATUALIZAÇÃO alfa 0.7 LANÇAMENTO 02/07/2026
