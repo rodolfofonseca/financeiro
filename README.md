@@ -43,8 +43,14 @@ Os uploads ficam em `anexos/`. O Docker Compose usa um volume nomeado para `/var
 # financeiro
 Sistema de controle financeiro para pessoas físicas e jurídicas
 
-## ATUALIZAÇÃO alfa 0.0.1 LANÇAMENTO 03/09/2026
-Correção de Bugs
+## ATUALIZAÇÃO alfa 0.10 LANÇAMENTO LANÇAMENTO 01/10/2026
+Correção do dashboard para mostrar o valor das contas canceladas.
+Alteração para mostrar o nome do fornecedor nas contas
+Criação de ação para cancelar a conta diretamente pela tabela
+Correção para mostrar as informações da conta e do fornecedor no caso de edição
+Desenvolvimento de módulo de histórico de ações da conta para rastreabilidade de alterações.
+Criação de alerta ao usuário, informando quando novas funcionalidades estiverem liberadas
+Correção do sistema de upload de fotos das contas
 
 ## ATUALIZAÇÃO alfa 0.9 LANÇAMENTO 31/08/2026
 Correção de Bugs
@@ -108,3 +114,6 @@ Adicionado nas movimentações o saldo da conta atual
 Criação de menu para o cadastro de notas fiscais de entrada e de saída
 Desenvolvimento de campo para o usuário cadastrar comprovantes de pagamentos das contas, caso o sistema esteja configurado para receber comprovantes
 Desenvolvimento de novos relatórios no dashboard.
+
+## ATUALIZAÇÃO alfa 0.0.1 LANÇAMENTO 03/09/2026
+Correção de Bugs
