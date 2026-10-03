@@ -43,7 +43,10 @@ Os uploads ficam em `anexos/`. O Docker Compose usa um volume nomeado para `/var
 # financeiro
 Sistema de controle financeiro para pessoas físicas e jurídicas
 
-## ATUALIZAÇÃO alfa 0.10 LANÇAMENTO LANÇAMENTO 01/10/2026
+## ATUALIZAÇÃO alfa 0.10.1 LANÇAMENTO 03/10/2026
+Correção no módulo de contas pagar receber que não atualizava a página 
+
+## ATUALIZAÇÃO alfa 0.10 LANÇAMENTO 01/10/2026
 Correção do dashboard para mostrar o valor das contas canceladas.
 Alteração para mostrar o nome do fornecedor nas contas
 Criação de ação para cancelar a conta diretamente pela tabela
